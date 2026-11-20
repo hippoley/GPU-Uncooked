@@ -2,17 +2,31 @@
 <html lang="zh"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>GPU UNCOOKED: Memory Abyss</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#061322;color:#e6fcff;font-family:system-ui, sans-serif}
-header{display:flex;align-items:center;justify-content:space-between;max-width:1120px;margin:auto;padding:20px 12px}header b{color:#ffca75;letter-spacing:.12em}
-main{max-width:1120px;margin:auto;padding:0 12px 20px}.stage{position:relative;border:4px solid #4e8294;border-radius:14px;overflow:hidden;box-shadow:0 20px 60px #0009}
-canvas{display:block;width:100%;image-rendering:pixelated;touch-action:none}.hud{position:absolute;top:9px;left:9px;right:9px;display:flex;justify-content:space-between;gap:5px;font:700 clamp(10px,1.5vw,14px) monospace;pointer-events:none}
-.hud span{background:#031525d9;border:1px solid #47869d;padding:7px;border-radius:6px}.hud b{color:#ffcb75}
-#modal{position:absolute;inset:0;background:#001320c9;display:grid;place-items:center;padding:10px}#modal.hide{display:none}.dialog{background:#0b2639;border:2px solid #8bdcda;max-width:530px;padding:22px;text-align:center;box-shadow:10px 10px #05131c;max-height:95%;overflow:auto}
-h1{color:#ffcb75;font-size:clamp(28px,5vw,47px);line-height:1.05;margin:10px 0}p{line-height:1.7;color:#b4d5df}button{border:0;background:#ffcb75;color:#142637;padding:11px 16px;font-weight:800;cursor:pointer;border-radius:6px;min-width:60px}button:focus-visible{outline:3px solid white;outline-offset:2px}
-.alt{background:#23506a;color:white}.buttons{display:flex;gap:9px;justify-content:center;flex-wrap:wrap}.controls{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:12px 0}.pad{display:flex;gap:8px}.help{color:#9bbdcd;font-size:13px}.story{background:#0a2336;padding:18px;border:1px solid #365f70;border-radius:11px}.story strong{color:#ffc987}small{color:#82a8bd}
-@media(max-width:640px){header{padding:12px}header small{font-size:10px}.dialog{padding:12px}.hud span{padding:4px}.controls{justify-content:center}}
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&display=swap');
+:root{color-scheme:dark;--gold:#ffcd7d;--cyan:#93eefa;--glass:#071f34c9}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -20%,#174967,#03111f 66%);color:#e7f9ff;font-family:Rajdhani,system-ui,"Microsoft YaHei",sans-serif;min-height:100vh}
+header{display:flex;align-items:center;justify-content:space-between;max-width:1220px;margin:auto;padding:22px 18px}header b{font-size:clamp(18px,2.1vw,27px);color:#ffe0a2;letter-spacing:.15em;text-shadow:0 3px #17233d}header small{font-size:13px;letter-spacing:.14em;color:#9ddde7}
+main{max-width:1220px;margin:auto;padding:0 16px 32px}
+.stage{position:relative;border:2px solid #5e9fb6;border-radius:18px;overflow:hidden;background:#051a2d;box-shadow:0 35px 110px #000b,0 0 46px #20dbf515,inset 0 0 0 2px #072b40}
+canvas{display:block;width:100%;height:auto;image-rendering:pixelated;touch-action:none}
+.hud{position:absolute;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;gap:8px;font:700 clamp(10px,1.7vw,16px) Rajdhani,monospace;pointer-events:none;letter-spacing:.05em}
+.hud span{background:#03182ee6;border:1px solid #65bcdd95;padding:8px 12px;border-radius:8px;box-shadow:0 6px 0 #0315236b,0 0 25px #16c8fa1a;backdrop-filter:blur(8px);white-space:nowrap}.hud b{color:#ffe09d;font-variant-numeric:tabular-nums}
+#modal{position:absolute;inset:0;background:linear-gradient(135deg,#020e1de8,#061b2dd5);display:grid;place-items:center;padding:14px}
+#modal.hide{display:none}
+.dialog{background:linear-gradient(160deg,#103c55f7,#081a31f7);border:1px solid #84dde7;border-radius:15px;max-width:610px;padding:32px;text-align:center;box-shadow:0 26px 80px #000c,0 0 0 5px #0a385568;max-height:93%;overflow:auto}
+.dialog:before{content:"✦  THE DEEP SEA IS CALLING  ✦";display:block;color:#86e0e6;letter-spacing:.3em;font-size:12px;margin-bottom:20px}
+h1{color:#ffdb98;font-size:clamp(34px,6vw,59px);line-height:1.05;margin:10px 0;text-shadow:0 4px #48364a;letter-spacing:-.04em}
+p{line-height:1.65;color:#bad8df;font-size:clamp(14px,1.7vw,18px)}
+button{border:1px solid #ffd89b;background:linear-gradient(180deg,#fff1b7,#e4a75e);color:#1b3040;padding:11px 18px;font:800 16px Rajdhani,system-ui,sans-serif;cursor:pointer;border-radius:9px;min-width:60px;box-shadow:0 5px 0 #925d38;transition:filter .16s,transform .16s}
+button:hover{filter:brightness(1.12);transform:translateY(-2px)}button:focus-visible{outline:3px solid white;outline-offset:3px}button:active{transform:translateY(3px);box-shadow:0 2px #925d38}
+.alt{background:linear-gradient(180deg,#1c5371,#133149);border-color:#44849d;color:#e2fcff;box-shadow:0 5px #0a2235}.buttons{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.controls{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:16px 0}.pad{display:flex;gap:8px}.help{color:#afcfdd;font-size:15px}
+.story{background:linear-gradient(120deg,#0d293b,#10263d);padding:22px;border:1px solid #335e72;border-radius:13px;box-shadow:inset 0 0 36px #06cee607}.story strong{font-size:18px;color:#ffda95}.story p{font-size:15px;margin:9px 0}
+small{color:#8fb2c3}.readout{color:#80e7e9;font-weight:700}
+@media(max-width:640px){header{padding:14px 4px}header small{font-size:10px}main{padding:0 6px 22px}.dialog{padding:13px}.dialog:before{margin-bottom:7px;font-size:9px}p{font-size:13px}.hud{gap:3px;top:5px;left:5px;right:5px}.hud span{font-size:10px;padding:4px 5px;border-radius:4px}.controls{justify-content:center}.help{font-size:12px}.pad button{min-width:44px;padding:9px}}
+@media(prefers-reduced-motion:reduce){button{transition:none}}
 </style>
-<header><b>GPU UNCOOKED</b><small>MEMORY ABYSS · ORIGINAL ARCADE PROTOTYPE</small></header>
+<header><b>GPU UNCOOKED</b><small>MEMORY ABYSS <span style="color:#eab874">/</span> DEEP DIVE EDITION</small></header>
 <main><div class="stage"><canvas id="scene" width="960" height="540"></canvas>
 <div class="hud"><span>O₂ <b id="o">100</b> UNITS</span><span>PACKETS <b id="p">0</b>/8</span><span>SECTORS <b id="s">0</b></span><span>CREDITS <b id="c">0</b></span><span>WARP <b id="pulse-status">READY</b></span></div>
 <div id="modal"><div class="dialog"><small id="subtitle">EXPEDITION 01</small><h1 id="title">潜入显存海沟</h1><p id="desc">收集闪光数据晶体，避开红色 Cache Miss 鱼，在氧气耗尽前回到海面。白天探索，回基地经营升级；每次收集都对应 CUDA 的真实内存地址知识。</p><div class="buttons" id="actions"><button id="go">开始下潜 ▶</button></div></div></div></div>
@@ -22,6 +36,7 @@ h1{color:#ffcb75;font-size:clamp(28px,5vw,47px);line-height:1.05;margin:10px 0}p
 <script type="module">
 import {footprint, expeditionReward} from "./mission.mjs";
 import {pulseTargets,pulseReady} from "./pulse.mjs";
+import {renderWorld} from "./render.mjs";
 (()=>{"use strict";
 const $=id=>document.getElementById(id),canvas=$("scene"),g=canvas.getContext("2d");
 const W=960,H=540,ship={x:470,y:80,vx:0,vy:0};let phase="menu",last=0,t=0,oxygen=100,maxO=100,credits=0,count=0,stride=1,stones=[],enemies=[],found=[],bubbles=[],challenge=1,signal="",signalUntil=0,particles=[],lastPulse=-99,pulseRing=0;
@@ -56,22 +71,7 @@ oxygen=Math.max(0,oxygen-dt*(ship.y>120?3:1.2));if(!oxygen){settle(false);return
 for(const s of stones)if(!s.got&&Math.hypot(s.x-ship.x,s.y-ship.y)<27)collect(s);
 for(const e of enemies){if((e.stunnedUntil||0)>t)continue;e.x+=e.dx*dt;if(e.x<40||e.x>925)e.dx*=-1;if(Math.hypot(e.x-ship.x,e.y+Math.sin(t*2+e.phase)*7-ship.y)<36)oxygen=Math.max(0,oxygen-dt*21)}
 if(count>=8&&ship.y<=90){settle(true);return}hud()}
-function rect(x,y,w,h,c){g.fillStyle=c;g.fillRect(x,y,w,h)}
-function draw(){
-const grad=g.createLinearGradient(0,0,0,H);grad.addColorStop(0,"#116985");grad.addColorStop(.5,"#0a3c60");grad.addColorStop(1,"#061a33");g.fillStyle=grad;g.fillRect(0,0,W,H);
-for(let i=0;i<14;i++){const x=i*78+8,y=225+(i*47)%180;rect(x,y,43,H-y,i%2?"#0d3651":"#15506a");rect(x+8,y-15,25,15,"#15475e")}
-for(let i=0;i<20;i++){const x=i*52+13;g.strokeStyle="#258e8690";g.lineWidth=4;g.beginPath();g.moveTo(x,H);g.quadraticCurveTo(x+Math.sin(t+i)*13,H-35,x+Math.sin(t+i)*21,H-62-i%4*12);g.stroke()}
-for(const b of bubbles)rect(b.x,b.y,b.r,b.r,"#a6ffff66");
-for(const p of particles){g.globalAlpha=Math.max(0,p.life*2);rect(p.x,p.y,5,5,"#ffdb8d");g.globalAlpha=1}
-rect(0,0,W,55,"#0a425a");rect(344,55,280,5,"#a2e1d6");rect(438,40,85,15,"#f1d89c");
-g.fillStyle="#dff8e7";g.font="bold 14px monospace";g.fillText("↑ RETURN TO PLATFORM",377,30);
-for(const s of stones)if(!s.got){g.save();g.translate(s.x,s.y);g.rotate(Math.PI/4);g.shadowColor="#5efde1";g.shadowBlur=18;rect(-10,-10,20,20,"#77fada");rect(-4,-4,8,8,"#f4ffbc");g.restore();g.fillStyle="#b8fef0";g.font="12px monospace";g.fillText(s.index,s.x-8,s.y-20)}
-for(const e of enemies){g.save();g.translate(e.x,e.y+Math.sin(t*2+e.phase)*7);g.fillStyle=(e.stunnedUntil||0)>t?"#8ba7fb":"#ed6472";g.beginPath();g.ellipse(0,0,25,14,0,0,7);g.fill();g.beginPath();g.moveTo(-18,0);g.lineTo(-36,-15);g.lineTo(-36,15);g.fill();rect(13,-5,5,5,"#fff1ca");g.restore()}
-if(pulseRing>0){g.save();g.strokeStyle="#a5fff4";g.lineWidth=4;g.globalAlpha=pulseRing/.4;g.beginPath();g.arc(ship.x,ship.y,105*(1-pulseRing/.4),0,Math.PI*2);g.stroke();g.restore()}
-g.save();g.translate(ship.x,ship.y);g.scale(ship.vx<0?-1:1,1);g.shadowColor="#ffd68b";g.shadowBlur=22;rect(-20,-12,42,26,"#edb65c");rect(-12,-19,22,9,"#f3d78d");rect(0,-9,16,16,"#215273");rect(4,-6,9,9,"#b2e9ec");rect(-26,-7,7,14,"#fbce6c");rect(-9,13,12,7,"#f7c467");g.restore();
-if(phase==="dive"&&signal&&t<signalUntil){g.font="bold 19px monospace";g.fillStyle="#ffe091";g.fillText(signal,348,144)}
-if(phase==="dive"&&count>=8){g.font="bold 22px monospace";g.fillStyle="#ffdf91";g.fillText("MISSION COMPLETE · RETURN ↑",290,112)}
-}
+function draw(){renderWorld(g,{time:t,ship,stones,enemies,bubbles,particles,pulseRing,phase,signal,signalUntil,count,oxygen});}
 function frame(ms){const dt=Math.min(.04,(ms-last)/1000||0);last=ms;update(dt);draw();requestAnimationFrame(frame)}requestAnimationFrame(frame)
 })();
 </script></html>

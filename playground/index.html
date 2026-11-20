@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="GPU Uncooked: turn a restaurant into a first-principles GPU performance lesson. Change the kitchen, find the bottleneck, then learn the Roofline model.">
+<title>GPU Uncooked — The Kitchen Lab</title>
+<link rel="stylesheet" href="./style.css">
+<script type="module" src="./app.mjs"></script>
+</head>
+<body>
+<header class="top"><a href="https://github.com/hippoley/GPU-Uncooked" aria-label="GPU Uncooked on GitHub">GPU <span>UNCOOKED</span></a><span class="tag">EP01 / Interactive lesson</span></header>
+<main>
+<section class="hero">
+<p class="eyebrow">THE GPU KITCHEN · EXPERIMENT 01</p>
+<h1>1,000 cooks.<br><em>Still a slow kitchen?</em></h1>
+<p class="lead">When the pantry can only deliver so many ingredients, adding chefs won't fix your dinner rush. Adjust the knobs and discover the same trade-off behind GPU performance.</p>
+<p class="note">Illustrative capacity model, not real GPU hardware data.</p>
+</section>
+<section class="lab" aria-labelledby="lab-title">
+<div class="controls">
+<h2 id="lab-title">Run the restaurant</h2>
+<p>One order requires one cook for the selected cooking time and one delivered ingredient bundle.</p>
+<label for="cooks">Cooks <output id="cooks-value" for="cooks">8</output></label>
+<input id="cooks" type="range" min="1" max="128" step="1" value="8">
+<label for="cook-time">Seconds to cook an order <output id="cook-time-value" for="cook-time">8</output></label>
+<input id="cook-time" type="range" min="1" max="20" step="1" value="8">
+<label for="ingredients">Ingredient bundles per second <output id="ingredients-value" for="ingredients">4</output></label>
+<input id="ingredients" type="range" min="1" max="16" step="1" value="4">
+<label for="orders">Customer orders <output id="orders-value" for="orders">1000</output></label>
+<input id="orders" type="range" min="100" max="5000" step="100" value="1000">
+<div class="buttons"><button id="challenge" type="button">Try the bottleneck challenge</button><button id="reset" class="secondary" type="button">Reset</button></div>
+</div>
+<div class="results" aria-live="polite">
+<h2>Kitchen dashboard</h2>
+<div class="metrics"><div><span>Meals per second</span><strong id="throughput">1.00</strong></div><div><span>Time to serve all orders*</span><strong id="duration">1000s</strong></div></div>
+<p id="diagnosis" class="diagnosis">Add cooks to see what changes.</p>
+<div class="meter"><div class="meter-top"><span>Cooking capacity</span><b id="compute-label"></b></div><div class="track"><div id="compute-bar" class="fill blue"></div></div></div>
+<div class="meter"><div class="meter-top"><span>Ingredient supply</span><b id="supply-label"></b></div><div class="track"><div id="supply-bar" class="fill orange"></div></div></div>
+<p id="lesson" class="lesson"></p><p class="foot">*Steady-state approximation: excludes startup, queues, batching, communication and fixed overheads.</p>
+</div>
+</section>
+<section class="reveal">
+<p class="eyebrow">UNDER THE HOOD</p>
+<h2>Now translate the kitchen into silicon.</h2>
+<div class="mapping"><article><span>👨‍🍳</span><h3>Cooks</h3><p>Parallel compute capacity — not literally a GPU core count.</p></article><article><span>📦</span><h3>Pantry supply</h3><p>How quickly data reaches computation. GPU memory hierarchy is more complex than one delivery line.</p></article><article><span>🍽️</span><h3>Meals / second</h3><p>Useful throughput of one workload, not peak FLOPS on a marketing slide.</p></article></div>
+<h2>The real idea: Roofline</h2><p>Performance has two ceilings: available computation and data movement. The simplified Roofline equation is:</p>
+<pre>attainable performance ≤ min(peak compute, arithmetic intensity × memory bandwidth)</pre>
+<p>This restaurant model illustrates a capacity bottleneck, not the full Roofline equation. Real kernels also encounter latency, caching, instruction dependencies, occupancy, launch overhead and numerical constraints.</p>
+<div class="next"><h3>Can you prove it on a real GPU?</h3><p>Our hardware campaign will compare RTX 4090 and A100, but this interactive lesson works without either card. No measured result is published yet.</p><a href="https://github.com/hippoley/GPU-Uncooked/blob/main/campaigns/4090-vs-a100.md">Read the hardware experiment plan ↗</a></div>
+</section>
+</main>
+<footer>GPU Uncooked · One question. One experiment. One receipt. <a href="https://github.com/hippoley/GPU-Uncooked">Contribute on GitHub ↗</a></footer>
+</body>
+</html>

@@ -1,0 +1,47 @@
+name: Publish CUDA Playground to GitHub Pages
+on:
+  push:
+    branches: [main]
+    paths:
+      - "playground/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate static entry points
+        run: |
+          test -f playground/chapters/index.html
+          test -f playground/chapters/01-thread-mapping/index.html
+          test -f playground/chapters/02-warp-divergence/index.html
+          test -f playground/chapters/03-memory-coalescing/index.html
+      - name: Prepare Pages artifact
+        run: |
+          mkdir -p public
+          cp -a playground/. public/
+          cp playground/chapters/index.html public/index.html
+          touch public/.nojekyll
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+  deploy:
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

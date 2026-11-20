@@ -17,38 +17,43 @@ h1{color:#ffcb75;font-size:clamp(28px,5vw,47px);line-height:1.05;margin:10px 0}p
 <div class="hud"><span>OXYGEN <b id="o">100</b>%</span><span>PACKETS <b id="p">0</b>/8</span><span>SECTORS <b id="s">0</b></span><span>CREDITS <b id="c">0</b></span></div>
 <div id="modal"><div class="dialog"><small id="subtitle">EXPEDITION 01</small><h1 id="title">潜入显存海沟</h1><p id="desc">收集闪光数据晶体，避开红色 Cache Miss 鱼，在氧气耗尽前回到海面。白天探索，回基地经营升级；每次收集都对应 CUDA 的真实内存地址知识。</p><div class="buttons" id="actions"><button id="go">开始下潜 ▶</button></div></div></div></div>
 <div class="controls"><div class="help">WASD / 方向键移动 · 收集 8 个晶体后回到顶部撤离</div><div class="pad"><button class="alt" data-key="left">◀</button><button class="alt" data-key="up">▲</button><button class="alt" data-key="down">▼</button><button class="alt" data-key="right">▶</button></div></div>
-<div class="story"><strong>CUDA 真知识，而不是装饰。</strong><p>晶体代表 4 字节 float。它们的“数据索引”决定触及哪些 32B 对齐扇区。连续访问与跨步访问会有不同的扇区覆盖率。游戏报告使用地址模型，不冒充真实 GPU 事务或硬件性能测量。</p></div>
+<div class="story"><strong>CUDA 真知识，而不是装饰。</strong><p>现在相邻地址带来更高的游戏结算奖励。选择连续数据布局，并优先回收相邻索引晶体，能增加局部性分数；跨步访存任务作为可重复挑战。这个奖励是游戏机制，不是 GPU 运行速度。</p><p>晶体代表 4 字节 float。它们的“数据索引”决定触及哪些 32B 对齐扇区。连续访问与跨步访问会有不同的扇区覆盖率。游戏报告使用地址模型，不冒充真实 GPU 事务或硬件性能测量。</p></div>
 <small>原创游戏原型。借鉴探索→收获→基地升级的高层循环，不复制《潜水员戴夫》的美术、角色、音乐或关卡。</small></main>
-<script>
+<script type="module">
+import {footprint, expeditionReward} from "./mission.mjs";
 (()=>{"use strict";
 const $=id=>document.getElementById(id),canvas=$("scene"),g=canvas.getContext("2d");
-const W=960,H=540,ship={x:470,y:80,vx:0,vy:0};let phase="menu",last=0,t=0,oxygen=100,maxO=100,credits=0,count=0,stride=1,stones=[],enemies=[],found=[],bubbles=[],challenge=1;
+const W=960,H=540,ship={x:470,y:80,vx:0,vy:0};let phase="menu",last=0,t=0,oxygen=100,maxO=100,credits=0,count=0,stride=1,stones=[],enemies=[],found=[],bubbles=[],challenge=1,signal="",signalUntil=0,particles=[];
 const key=new Set(),rand=(a,b)=>a+Math.random()*(b-a);
 for(let i=0;i<70;i++)bubbles.push({x:rand(0,W),y:rand(0,H),v:rand(7,30),r:rand(1,3)});
 document.addEventListener("keydown",e=>{const k=e.key.toLowerCase();if(k.startsWith("arrow")||k===" ")e.preventDefault();key.add(k)});
 document.addEventListener("keyup",e=>key.delete(e.key.toLowerCase()));
 for(const b of document.querySelectorAll("[data-key]")){const k=b.dataset.key;b.onpointerdown=e=>{e.preventDefault();key.add(k)};b.onpointerup=b.onpointerleave=b.onpointercancel=()=>key.delete(k)}
-function hud(){$("o").textContent=Math.ceil(oxygen);$("p").textContent=count;$("s").textContent=new Set(found.map(i=>Math.floor(4*i/32))).size;$("c").textContent=credits}
+function hud(){$("o").textContent=Math.ceil(oxygen);$("p").textContent=count;$("s").textContent=footprint(found).count;$("c").textContent=credits}
 function buttons(actions){const node=$("actions");node.replaceChildren();for(const [label,cb,alt] of actions){const b=document.createElement("button");b.textContent=label;if(alt)b.className="alt";b.onclick=cb;node.append(b)}}
 function overlay(title,desc,actions,subtitle="MISSION REPORT"){phase="base";$("modal").classList.remove("hide");$("subtitle").textContent=subtitle;$("title").textContent=title;$("desc").innerHTML=desc;buttons(actions)}
-function dive(){oxygen=maxO;count=0;found=[];ship.x=470;ship.y=78;ship.vx=ship.vy=0;
+function dive(){oxygen=maxO;count=0;found=[];particles=[];signal="";ship.x=470;ship.y=78;ship.vx=ship.vy=0;
 stones=Array.from({length:13},(_,i)=>({i,index:i*stride,x:175+(i%7)*102+rand(-17,17),y:185+Math.floor(i/7)*150+rand(-17,17),got:false}));
 enemies=Array.from({length:4},(_,i)=>({x:rand(120,850),y:230+i*63,dx:i%2?-64:62,phase:rand(0,5)}));
 phase="dive";$("modal").classList.add("hide");hud()}
-function settle(success){const n=new Set(found.map(i=>Math.floor(i*4/32))).size;
-const payout=success?count*20+Math.ceil(oxygen):count*6;credits+=payout;hud();
-const report=count?"回收 "+count+" 个 float，共 "+count*4+"B；触及 "+n+" 个对齐 32B 扇区。教学覆盖率 "+(count*4/(n*32)*100).toFixed(1)+"%。":"没有收集到晶体。";
+function settle(success){const result=expeditionReward(found,oxygen,success);const payout=result.reward;credits+=payout;hud();
+const report=count?"回收 "+count+" 个 float，共 "+result.requestedBytes+"B；触及 "+result.count+" 个对齐 32B 扇区。教学覆盖率 "+(result.coverage*100).toFixed(1)+"%。<br>局部性奖励 <b>+"+result.localityBonus+"</b> credits。":"没有收集到晶体。";
 overlay(success?"回收成功！":"紧急撤离",'<b style="color:#ffca75">+'+payout+' CREDITS</b><br>'+report+'<br>这并非 GPU 实测性能。',[[ "返回基地",base ]])}
 function base(){overlay("基地 · 设备升级","当前资金 "+credits+" credits，氧气容量 "+maxO+"。<br>下一潜可选择两种 CUDA 数据布局：连续（stride 1）或跨步（stride 8）。",[
 ["连续内存 · 再潜",()=>{stride=1;challenge++;dive()}],["跨步访存 · 再潜",()=>{stride=8;challenge++;dive()}],["升级氧气仓 · 80",()=>{if(credits>=80){credits-=80;maxO+=25}base()},true]],"RESEARCH STATION")}
 $("go").onclick=dive;
-function update(dt){t+=dt;for(const b of bubbles){b.y-=b.v*dt;if(b.y<0){b.y=H;b.x=rand(0,W)}}if(phase!=="dive")return;
+function update(dt){t+=dt;particles=particles.filter(p=>p.life>0);for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt}for(const b of bubbles){b.y-=b.v*dt;if(b.y<0){b.y=H;b.x=rand(0,W)}}if(phase!=="dive")return;
 const dx=Number(key.has("d")||key.has("arrowright")||key.has("right"))-Number(key.has("a")||key.has("arrowleft")||key.has("left"));
 const dy=Number(key.has("s")||key.has("arrowdown")||key.has("down"))-Number(key.has("w")||key.has("arrowup")||key.has("up"));
 ship.vx+=(dx*188-ship.vx)*Math.min(1,dt*8);ship.vy+=(dy*188-ship.vy)*Math.min(1,dt*8);
 ship.x=Math.max(27,Math.min(W-27,ship.x+ship.vx*dt));ship.y=Math.max(58,Math.min(H-36,ship.y+ship.vy*dt));
 oxygen=Math.max(0,oxygen-dt*(ship.y>120?3:1.2));if(!oxygen){settle(false);return}
-for(const s of stones)if(!s.got&&Math.hypot(s.x-ship.x,s.y-ship.y)<27){s.got=true;found.push(s.index);count++}
+for(const s of stones)if(!s.got&&Math.hypot(s.x-ship.x,s.y-ship.y)<27){
+ const before=footprint(found).count;s.got=true;found.push(s.index);count++;
+ const after=footprint(found).count;
+ signal=after===before?"COALESCED! + LOCALITY":"NEW SECTOR TOUCHED";signalUntil=t+1.2;
+ for(let i=0;i<10;i++)particles.push({x:s.x,y:s.y,vx:rand(-90,90),vy:rand(-100,40),life:.5});
+}
 for(const e of enemies){e.x+=e.dx*dt;if(e.x<40||e.x>925)e.dx*=-1;if(Math.hypot(e.x-ship.x,e.y+Math.sin(t*2+e.phase)*7-ship.y)<36)oxygen=Math.max(0,oxygen-dt*21)}
 if(count>=8&&ship.y<=90){settle(true);return}hud()}
 function rect(x,y,w,h,c){g.fillStyle=c;g.fillRect(x,y,w,h)}
@@ -57,11 +62,13 @@ const grad=g.createLinearGradient(0,0,0,H);grad.addColorStop(0,"#116985");grad.a
 for(let i=0;i<14;i++){const x=i*78+8,y=225+(i*47)%180;rect(x,y,43,H-y,i%2?"#0d3651":"#15506a");rect(x+8,y-15,25,15,"#15475e")}
 for(let i=0;i<20;i++){const x=i*52+13;g.strokeStyle="#258e8690";g.lineWidth=4;g.beginPath();g.moveTo(x,H);g.quadraticCurveTo(x+Math.sin(t+i)*13,H-35,x+Math.sin(t+i)*21,H-62-i%4*12);g.stroke()}
 for(const b of bubbles)rect(b.x,b.y,b.r,b.r,"#a6ffff66");
+for(const p of particles){g.globalAlpha=Math.max(0,p.life*2);rect(p.x,p.y,5,5,"#ffdb8d");g.globalAlpha=1}
 rect(0,0,W,55,"#0a425a");rect(344,55,280,5,"#a2e1d6");rect(438,40,85,15,"#f1d89c");
 g.fillStyle="#dff8e7";g.font="bold 14px monospace";g.fillText("↑ RETURN TO PLATFORM",377,30);
 for(const s of stones)if(!s.got){g.save();g.translate(s.x,s.y);g.rotate(Math.PI/4);g.shadowColor="#5efde1";g.shadowBlur=18;rect(-10,-10,20,20,"#77fada");rect(-4,-4,8,8,"#f4ffbc");g.restore();g.fillStyle="#b8fef0";g.font="12px monospace";g.fillText(s.index,s.x-8,s.y-20)}
 for(const e of enemies){g.save();g.translate(e.x,e.y+Math.sin(t*2+e.phase)*7);g.fillStyle="#ed6472";g.beginPath();g.ellipse(0,0,25,14,0,0,7);g.fill();g.beginPath();g.moveTo(-18,0);g.lineTo(-36,-15);g.lineTo(-36,15);g.fill();rect(13,-5,5,5,"#fff1ca");g.restore()}
 g.save();g.translate(ship.x,ship.y);g.scale(ship.vx<0?-1:1,1);g.shadowColor="#ffd68b";g.shadowBlur=22;rect(-20,-12,42,26,"#edb65c");rect(-12,-19,22,9,"#f3d78d");rect(0,-9,16,16,"#215273");rect(4,-6,9,9,"#b2e9ec");rect(-26,-7,7,14,"#fbce6c");rect(-9,13,12,7,"#f7c467");g.restore();
+if(phase==="dive"&&signal&&t<signalUntil){g.font="bold 19px monospace";g.fillStyle="#ffe091";g.fillText(signal,348,144)}
 if(phase==="dive"&&count>=8){g.font="bold 22px monospace";g.fillStyle="#ffdf91";g.fillText("MISSION COMPLETE · RETURN ↑",290,112)}
 }
 function frame(ms){const dt=Math.min(.04,(ms-last)/1000||0);last=ms;update(dt);draw();requestAnimationFrame(frame)}requestAnimationFrame(frame)

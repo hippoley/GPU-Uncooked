@@ -30,7 +30,7 @@ output[i] = input[source_index];
  for(const id of s.sectors){const span=document.createElement("span");span.className="sector";span.textContent=`#${id}: ${id*32}–${id*32+31}`;sectors.append(span);}
  $("lane-info").textContent="Select a lane to inspect its load address and touched sector.";
 }
-function update(){attempted=false;$("feedback").textContent="Predict unique sectors, then check your answer.";draw();}
+function update(){attempted=false;$("memory-explorer").hidden=true;$("feedback").textContent="Predict unique sectors, then check your answer.";draw();}
 for(const id of ["stride","offset"])$(id).addEventListener("input",update);
 document.querySelectorAll("[data-preset]").forEach(b=>b.addEventListener("click",()=>{
  const patterns={aligned:[1,0],misaligned:[1,1],stride2:[2,0],stride8:[8,0]};
@@ -39,7 +39,7 @@ document.querySelectorAll("[data-preset]").forEach(b=>b.addEventListener("click"
 $("check").addEventListener("click",()=>{
  if(attempted){$("feedback").textContent="Already scored. Choose another challenge.";return;}
  const value=$("guess").value.trim();if(!value){$("feedback").textContent="Enter your prediction first.";return;}
- const answer=grade(Number(value),config());attempted=true;attempts++;if(answer.correct)correct++;
+ const answer=grade(Number(value),config());attempted=true;$("memory-explorer").hidden=false;attempts++;if(answer.correct)correct++;
  $("score").textContent=`${correct} / ${attempts}`;
  $("feedback").textContent=answer.correct?`Correct! Exactly ${answer.answer} distinct aligned 32-byte sectors are touched.`:`The address model touches ${answer.answer} sectors. Change stride and select lanes to see why.`;
 });

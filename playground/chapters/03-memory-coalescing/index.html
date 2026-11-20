@@ -14,9 +14,9 @@
 <div class="row"><button data-preset="aligned">Aligned</button><button data-preset="misaligned">Misaligned</button><button data-preset="stride2">Stride 2</button><button data-preset="stride8">Stride 8</button></div>
 <label for="guess">Predict unique 32-byte sectors</label><input id="guess" type="number" min="1" max="32" placeholder="Your guess">
 <div class="row"><button id="check">Check prediction</button><button id="next" class="secondary">Next challenge</button></div>
-<p id="feedback" class="feedback" aria-live="polite">Make a prediction, then see which sector IDs are touched.</p><p class="eyebrow">Challenge score: <span id="score">0 / 0</span></p>
+<p id="feedback" class="feedback" aria-live="polite">Make a prediction and press Check to unlock the memory explorer.</p><p class="eyebrow">Challenge score: <span id="score">0 / 0</span></p>
 </div>
-<div class="panel"><h2>Interactive · Load addresses</h2><p>Click a lane to inspect its address and sector. Colored groups represent the same 32-byte aligned sector.</p>
+<div class="panel" id="memory-explorer" hidden><h2>Interactive · Load addresses</h2><p>Click a lane to inspect its address and sector. Colored groups represent the same 32-byte aligned sector.</p>
 <div class="warp-label">WARP 0 · 32 LANES</div><div class="lanes" id="lanes" aria-label="Selectable warp lanes"></div>
 <p class="feedback" id="lane-info" aria-live="polite">Select a lane.</p>
 <div class="metrics"><div><small>Useful requested bytes</small><b id="requested">128 B</b></div><div><small>Unique 32B sectors</small><b id="sectors">4</b></div><div><small>Sector coverage proxy*</small><b id="fraction">100%</b></div></div>

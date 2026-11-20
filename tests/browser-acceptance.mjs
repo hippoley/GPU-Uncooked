@@ -54,6 +54,8 @@ for(const device of [{name:"desktop",width:1440,height:900},{name:"mobile",width
  await page.keyboard.up("ArrowDown");
  await page.waitForTimeout(200);
  assert.ok(Number(await page.locator("#o").innerText())<Number(before),"Arcade oxygen depletes during active dive");
+ await page.locator("#pulse-button").click();
+ assert.notEqual(await page.locator("#pulse-status").innerText(),"READY","Pulse enters cooldown");
  await page.screenshot({path:"browser-artifacts/"+device.name+"-arcade.png",fullPage:true});
  await page.close();
 }

@@ -48,6 +48,7 @@ for(const device of [{name:"desktop",width:1440,height:900},{name:"mobile",width
  assert.equal(await page.locator("#title").innerText(),"潜入显存海沟");
  await page.locator("#go").click();
  assert.equal(await page.locator("#modal").isHidden(),true);
+ assert.equal(await page.locator("#mission-title").innerText(),"第一潜：探索失落的 L2 遗迹");
  const before=await page.locator("#o").innerText();
  await page.keyboard.down("ArrowDown");
  await page.waitForTimeout(1700);
@@ -56,6 +57,8 @@ for(const device of [{name:"desktop",width:1440,height:900},{name:"mobile",width
  assert.ok(Number(await page.locator("#o").innerText())<Number(before),"Arcade oxygen depletes during active dive");
  await page.locator("#pulse-button").click();
  assert.notEqual(await page.locator("#pulse-status").innerText(),"READY","Pulse enters cooldown");
+ assert.equal(await page.locator("#mission-card").isVisible(),true);
+ assert.equal(await page.locator("#mission-kicker").isVisible(),true);
  await page.screenshot({path:"browser-artifacts/"+device.name+"-arcade.png",fullPage:true});
  await page.close();
 }

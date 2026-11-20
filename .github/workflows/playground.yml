@@ -3,7 +3,7 @@ on:
   pull_request:
     paths:
       - "playground/**"
-      - "tests/playground.test.mjs"
+      - "tests/*.test.mjs"
       - ".github/workflows/playground.yml"
   push:
     branches:
@@ -21,4 +21,4 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - run: node --test tests/playground.test.mjs
+      - run: node --test tests/*.test.mjs

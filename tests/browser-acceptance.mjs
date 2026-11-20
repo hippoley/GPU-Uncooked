@@ -44,9 +44,20 @@ for(const device of [{name:"desktop",width:1440,height:900},{name:"mobile",width
  await page.locator("#check").click();
  assert.equal(await page.locator("#sectors").innerText(),"32");
  await page.screenshot({path:"browser-artifacts/"+device.name+"-chapter03.png",fullPage:true});
+ await page.goto("http://127.0.0.1:8765/playground/arcade/index.html",{waitUntil:"networkidle"});
+ assert.equal(await page.locator("#title").innerText(),"潜入显存海沟");
+ await page.locator("#go").click();
+ assert.equal(await page.locator("#modal").isHidden(),true);
+ const before=await page.locator("#o").innerText();
+ await page.keyboard.down("ArrowDown");
+ await page.waitForTimeout(250);
+ await page.keyboard.up("ArrowDown");
+ await page.waitForTimeout(300);
+ assert.ok(Number(await page.locator("#o").innerText())<Number(before),"Arcade oxygen depletes during active dive");
+ await page.screenshot({path:"browser-artifacts/"+device.name+"-arcade.png",fullPage:true});
  await page.close();
 }
 await browser.close();
-writeFileSync("browser-artifacts/report.json",JSON.stringify({status:failures.length?"failed":"passed",failures,devices:["desktop","mobile"],chapters:3},null,2));
+writeFileSync("browser-artifacts/report.json",JSON.stringify({status:failures.length?"failed":"passed",failures,devices:["desktop","mobile"],chapters:3,arcade:true},null,2));
 assert.deepEqual(failures,[]);
 console.log("PASS: three chapters, challenge, explorer, navigation, screenshots in desktop and mobile");

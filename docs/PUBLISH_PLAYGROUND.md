@@ -6,9 +6,9 @@ The three chapters pass Node model tests. Chromium automation tested desktop (14
 
 ## Production publication
 
-The repository includes `.github/workflows/pages.yml`. It is intentionally configured to deploy **only from main** (or manually), not from a Draft PR. The contents of `playground/` become the Pages site, and `playground/chapters/index.html` is copied to the site root `index.html`.
+The repository includes `.github/workflows/pages.yml`. It is configured to support both the feature preview branch and main, plus manual dispatch. Deploying the feature branch permits a public preview **without merging** the Draft PR. GitHub Pages may serve the same canonical site URL for both sources, so the last successful deployment determines visible content. The contents of `playground/` become the Pages site, and `playground/chapters/index.html` is copied to the site root `index.html`.
 
-A repo administrator must select **Settings → Pages → Build and deployment → Source: GitHub Actions**. The current GitHub connection does not provide a Pages-settings mutation. After reviewing and merging PR #2, run the `Publish CUDA Playground to GitHub Pages` workflow on main, or allow its main push trigger. Confirm the deployment URL reported by the workflow and manually open Chapters 01–03 on desktop and mobile.
+A repo administrator must select **Settings → Pages → Build and deployment → Source: GitHub Actions**. The current GitHub connection does not provide a Pages-settings mutation. For an early preview, select **Settings → Pages → Build and deployment → Source: GitHub Actions**, then run the `Publish CUDA Playground to GitHub Pages` workflow on the feature branch if it appears in Actions, or push a new feature-branch commit after GitHub recognizes the workflow. After reviewing/merging PR #2, the main push trigger can publish the reviewed version. Confirm the deployment URL reported by the workflow and manually open Chapters 01–03 on desktop and mobile.
 
 The *expected* Pages URL (only after successful activation/deployment, not currently verified) is:
 ```
@@ -25,4 +25,4 @@ https://hippoley.github.io/GPU-Uncooked/
 
 ## If deployment is blocked
 
-Do not report the expected URL as live. Check repository Pages settings, workflow permissions (`pages: write`, `id-token: write`), and GitHub Actions logs. Keep PR #2 as Draft until the chosen merge criteria are met.
+Do not report the expected URL as live. Check repository Pages settings, workflow permissions (`pages: write`, `id-token: write`), and GitHub Actions logs. Keep PR #2 as Draft until the chosen merge criteria are met. A successful deployment of the feature branch is only a preview, not a sign that GPU performance evidence has passed.

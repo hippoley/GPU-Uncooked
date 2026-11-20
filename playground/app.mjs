@@ -83,4 +83,5 @@ byId("pause").addEventListener("click",()=>{
 render();
 if(window.matchMedia("(prefers-reduced-motion: reduce)").matches){
  running=false;byId("pause").textContent="Play animation";
-}else requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);

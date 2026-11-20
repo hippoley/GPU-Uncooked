@@ -1,7 +1,7 @@
 name: Publish CUDA Playground to GitHub Pages
 on:
   push:
-    branches: [main]
+    branches: [main, feat/interactive-gpu-kitchen-playground]
     paths:
       - "playground/**"
       - ".github/workflows/pages.yml"

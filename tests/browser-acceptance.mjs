@@ -6,7 +6,7 @@ mkdirSync("browser-artifacts",{recursive:true});
 const browser=await chromium.launch({headless:true});
 const failures=[];
 for(const device of [{name:"desktop",width:1440,height:900},{name:"mobile",width:390,height:844}]){
- const page=await browser.newPage({viewport:device,deviceScaleFactor:1});
+ const page=await browser.newPage({viewport:{width:device.width,height:device.height},deviceScaleFactor:1});
  page.on("pageerror",error=>failures.push(device.name+": "+error.message));
  const visit=async(chapter,path)=>{
    const response=await page.goto(base+path,{waitUntil:"networkidle"});

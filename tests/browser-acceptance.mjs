@@ -50,9 +50,9 @@ for(const device of [{name:"desktop",width:1440,height:900},{name:"mobile",width
  assert.equal(await page.locator("#modal").isHidden(),true);
  const before=await page.locator("#o").innerText();
  await page.keyboard.down("ArrowDown");
- await page.waitForTimeout(250);
+ await page.waitForTimeout(1700);
  await page.keyboard.up("ArrowDown");
- await page.waitForTimeout(300);
+ await page.waitForTimeout(200);
  assert.ok(Number(await page.locator("#o").innerText())<Number(before),"Arcade oxygen depletes during active dive");
  await page.screenshot({path:"browser-artifacts/"+device.name+"-arcade.png",fullPage:true});
  await page.close();

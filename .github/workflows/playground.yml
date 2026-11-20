@@ -10,7 +10,7 @@ on:
       - "feat/interactive-gpu-kitchen-playground"
     paths:
       - "playground/**"
-      - "tests/playground.test.mjs"
+      - "tests/*.test.mjs"
       - ".github/workflows/playground.yml"
 jobs:
   node-test:

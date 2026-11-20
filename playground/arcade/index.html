@@ -14,7 +14,7 @@ h1{color:#ffcb75;font-size:clamp(28px,5vw,47px);line-height:1.05;margin:10px 0}p
 </style>
 <header><b>GPU UNCOOKED</b><small>MEMORY ABYSS · ORIGINAL ARCADE PROTOTYPE</small></header>
 <main><div class="stage"><canvas id="scene" width="960" height="540"></canvas>
-<div class="hud"><span>OXYGEN <b id="o">100</b>%</span><span>PACKETS <b id="p">0</b>/8</span><span>SECTORS <b id="s">0</b></span><span>CREDITS <b id="c">0</b></span></div>
+<div class="hud"><span>O₂ <b id="o">100</b> UNITS</span><span>PACKETS <b id="p">0</b>/8</span><span>SECTORS <b id="s">0</b></span><span>CREDITS <b id="c">0</b></span></div>
 <div id="modal"><div class="dialog"><small id="subtitle">EXPEDITION 01</small><h1 id="title">潜入显存海沟</h1><p id="desc">收集闪光数据晶体，避开红色 Cache Miss 鱼，在氧气耗尽前回到海面。白天探索，回基地经营升级；每次收集都对应 CUDA 的真实内存地址知识。</p><div class="buttons" id="actions"><button id="go">开始下潜 ▶</button></div></div></div></div>
 <div class="controls"><div class="help">WASD / 方向键移动 · 收集 8 个晶体后回到顶部撤离</div><div class="pad"><button class="alt" data-key="left">◀</button><button class="alt" data-key="up">▲</button><button class="alt" data-key="down">▼</button><button class="alt" data-key="right">▶</button></div></div>
 <div class="story"><strong>CUDA 真知识，而不是装饰。</strong><p>现在相邻地址带来更高的游戏结算奖励。选择连续数据布局，并优先回收相邻索引晶体，能增加局部性分数；跨步访存任务作为可重复挑战。这个奖励是游戏机制，不是 GPU 运行速度。</p><p>晶体代表 4 字节 float。它们的“数据索引”决定触及哪些 32B 对齐扇区。连续访问与跨步访问会有不同的扇区覆盖率。游戏报告使用地址模型，不冒充真实 GPU 事务或硬件性能测量。</p></div>

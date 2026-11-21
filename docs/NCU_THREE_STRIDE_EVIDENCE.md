@@ -48,7 +48,7 @@ It asks for three raw counters:
 - `dram__bytes_read.sum`
 - `dram__bytes_write.sum`
 
-The GPU and profiler version may not support a requested metric or the
+The capture explicitly uses `--page details --csv --print-units base` so that\nmetric rows match the parser; it does **not** mix incompatible raw-page CSV\nwith details-page CSV. `--cache-control all` flushes caches before replay\npasses; these are flush-conditioned observations, not warm-cache application\nperformance. The capture code parses every stride immediately and marks\nany unparseable output `INCOMPLETE`. The GPU and profiler version may not\nsupport a requested metric or the
 current user may lack performance-counter permission. An unsupported metric
 is a **failed/incomplete capture**, not zero traffic. Profile collection can
 replay kernels, perturb caches, and change observed durations.

@@ -12,7 +12,7 @@ import re
 import sys
 
 REQUIRED = {"inventory.json","compile.json","sass-command.json",
-            "ptx-command.json","gather","gather.ptx.txt","gather.sass.txt",
+            "ptx-command.json","gather","source-gather.cu","gather.ptx.txt","gather.sass.txt",
             "run-stride1.json","run-stride4.json","run-stride8.json"}
 def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
@@ -38,6 +38,8 @@ def verify(folder):
     disk_files={p.name for p in folder.iterdir() if p.is_file() and p.name!="manifest.json"}
     if disk_files!=set(files):
         raise ValueError("Unhashed or unlisted file detected")
+    if digest(folder/"source-gather.cu")!=m.get("source_sha256"):
+        raise ValueError("Captured CUDA source hash mismatch")
     d=m.get("device",{})
     if not isinstance(d.get("uuid"),str) or not d["uuid"].startswith("GPU-"):
         raise ValueError("Missing GPU identity")

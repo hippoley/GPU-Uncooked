@@ -7,6 +7,7 @@ const METRICS=[
 ];
 export function parseNcuComparison(value){
  if(!value||typeof value!=="object"||Array.isArray(value))throw new TypeError("Invalid comparison");
+ if(value.origin_bytes_rechecked!==true)throw new TypeError("Original binary and manifest have not been rechecked");
  if(value.schema!=="gpu-uncooked.ncu-comparison.v1"||
     value.classification!=="REPORTED_UNVERIFIED"||
     value.hardware_attested!==false)throw new TypeError("Cannot upgrade profiler claim");

@@ -6,9 +6,8 @@ import sys
 import tempfile
 import unittest
 from unittest.mock import patch
-from capture_gather_ncu_series import capture
-
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]/"tools"))
+from capture_gather_ncu_series import capture
 from summarize_gather_ncu_series import parse_raw_csv, summarize, REQUIRED
 
 HEADER = "ID,Kernel Name,Metric Name,Metric Unit,Metric Value\n"

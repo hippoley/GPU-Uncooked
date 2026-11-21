@@ -46,6 +46,38 @@ await page.keyboard.press("p");
 assert.equal(await page.locator("body").evaluate(el=>el.classList.contains("photo-mode")),true);
 await page.screenshot({path:"dist/city3d/standalone-cinematic.png"});
 await page.keyboard.press("p");
+// Real in-world interaction: spawn beside physical terminal; manually operate R,
+// open X-Ray, complete the budget, reload, prove journal replay and prop continuity.
+await page.goto(base+"/dist/city3d/index.html?spawn=freight&quality=low",{waitUntil:"domcontentloaded"});
+await page.waitForFunction(()=>document.documentElement.dataset.city3dReady==="true",null,{timeout:45000});
+await page.locator("#start").click();
+assert.equal(await page.locator("#freight-operate").isDisabled(),false,"Player must be physically within freight terminal radius");
+await page.locator("#xray-toggle").click();
+assert.equal(await page.locator("#cuda-xray").isVisible(),true);
+assert.equal(await page.locator("#xray-sectors").innerText(),"64");
+let actions=0;
+while((await page.locator("html").getAttribute("data-freight-model-completed"))!=="true"&&actions<16){
+ const before=Number(await page.locator("#xray-sectors").innerText());
+ await page.locator("#freight-operate").click();
+ const after=Number(await page.locator("#xray-sectors").innerText());
+ assert.ok(after<before,"Real street button must decrease sector cost");
+ actions++;
+}
+assert.equal(await page.locator("html").getAttribute("data-freight-model-completed"),"true");
+const completedSectors=await page.locator("#xray-sectors").innerText();
+assert.ok(Number(completedSectors)<=40);
+const receipt=await page.evaluate(()=>JSON.parse(localStorage.getItem("gpu-uncooked.city-freight.v1")));
+assert.equal(receipt.actions.length,actions);
+assert.equal(receipt.sectors,Number(completedSectors));
+await page.screenshot({path:"dist/city3d/standalone-cuda-xray.png"});
+await page.reload({waitUntil:"domcontentloaded"});
+await page.waitForFunction(()=>document.documentElement.dataset.city3dReady==="true",null,{timeout:45000});
+assert.equal(await page.locator("html").getAttribute("data-freight-model-sectors"),completedSectors);
+assert.equal(await page.locator("html").getAttribute("data-freight-model-completed"),"true");
+await page.locator("#start").click();
+await page.locator("#freight-reset").click();
+assert.equal(await page.locator("html").getAttribute("data-freight-model-sectors"),"64");
+assert.equal(await page.evaluate(()=>localStorage.getItem("gpu-uncooked.city-freight.v1")),null);
 console.log(JSON.stringify({status:"PASS",selfContained:true,compressedBytes:report.brotliBytes,
  drawCalls:metrics.drawCalls,triangles:metrics.triangles,cornerProps:metrics.cornerProps,externalRequests:external.length},null,2));
 await browser.close();

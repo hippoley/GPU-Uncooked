@@ -146,6 +146,25 @@ const rayMat=new THREE.LineBasicMaterial({color:0xf2bc83,transparent:true,opacit
 const packetGeo=new THREE.SphereGeometry(.14,12,10);
 const packetMaterials=[orangeGlow,cyanGlow];
 let selectedPath=null,selectedPacket=null;
+const detailCanvas=document.createElement("canvas");detailCanvas.width=768;detailCanvas.height=180;
+const detailContext=detailCanvas.getContext("2d");
+const detailTexture=new THREE.CanvasTexture(detailCanvas);detailTexture.colorSpace=THREE.SRGBColorSpace;
+const physicalReadout=mesh(new THREE.PlaneGeometry(4.15,.98),
+ new THREE.MeshBasicMaterial({map:detailTexture,transparent:true,depthWrite:false}),8,2.5,0);
+physicalReadout.rotation.x=-.36;
+function updatePhysicalReadout(lane){
+ detailContext.clearRect(0,0,768,180);
+ detailContext.fillStyle="#0e2430e6";detailContext.fillRect(0,0,768,180);
+ detailContext.strokeStyle="#b78b61";detailContext.lineWidth=5;
+ detailContext.strokeRect(4,4,760,172);
+ detailContext.fillStyle="#e9dbbd";detailContext.font="bold 49px ui-monospace,monospace";
+ detailContext.textAlign="center";detailContext.fillText("src["+lane.index+"] = "+lane.value.toFixed(2),384,79);
+ detailContext.fillStyle="#8cbbbd";detailContext.font="30px ui-monospace,monospace";
+ detailContext.fillText("BYTE "+lane.byteAddress+"   SECTOR "+lane.sector,384,131);
+ detailTexture.needsUpdate=true;
+ const pos=cellPositions[lane.index];
+ physicalReadout.position.set(pos.x,2.35,pos.z+.75);
+}
 let state=initialSnapshot(),model=kernelGather({stride:state.stride});
 let cameraPos=new THREE.Vector3(0,17,21),angleX=0,angleY=0,drag=null,zoom=1,frames=0,nowClock=0;
 const cameraFocus=new THREE.Vector3(0,0,0);
@@ -183,6 +202,7 @@ function updateLinks(){
 function updateGeometry(){
  model=kernelGather({stride:state.stride});
  const selected=model.lanes[state.selectedLane],active=new Set(model.lanes.map(x=>x.index));
+ updatePhysicalReadout(selected);
  laneObjects.forEach((item,i)=>{item.material=i===state.selectedLane?warmLit:offGlow;item.scale.y=i===state.selectedLane?1.35:1;});
  cellObjects.forEach((item,i)=>{item.material=i===selected.index?warmLit:active.has(i)?coolLit:offGlow;});
  updateLinks();
@@ -275,7 +295,7 @@ setView("source",true);
 renderer.render(scene,camera);
 $("loading").hidden=true;document.documentElement.dataset.materialReady="true";
 window.__MATERIAL_LAB={getSnapshot:()=>({...state}),getModel:()=>({stride:model.stride,sectors:model.sectorCount,addresses:model.lanes.map(l=>l.byteAddress),output:model.result.slice()}),
-  getRenderer:()=>({drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles})};
+  getRenderer:()=>({drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles}),getCamera:()=>({focusX:cameraFocus.x,focusY:cameraFocus.y,focusZ:cameraFocus.z})};
 function frame(t){
  const dt=Math.min(.07,(t-(frame.last||t))/1000);frame.last=t;nowClock+=dt;frames++;
  const orbit=new THREE.Vector3(cameraPos.x*Math.cos(angleX)+Math.sin(angleX)*cameraPos.z,

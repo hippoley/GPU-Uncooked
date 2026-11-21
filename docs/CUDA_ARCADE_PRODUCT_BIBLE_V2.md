@@ -112,3 +112,18 @@ Browser stack stays framework-free until a reason to adopt a game engine emerges
 ## 9. Hard prohibitions
 
 No new game chapters that are just renamed sliders. No fake GPU numbers. No claim that browser tests imply engaging gameplay. No copying of existing game's visual IP. No silent overwrite of prior working prototypes; preserve links for comparison. Do not announce a Pages URL before a successful deploy and HTTP verification.
+
+## 10. Art-direction amendment — Neon Metro Crime-Cinema (2026-11-21)
+
+User-selected visual reference: the **cinematic color, environmental density and open-city swagger** associated with GTA VI, not the copyrighted title's assets, cast, logos, map, locations or UI. Independent visual identity: **GPU UNCOOKED — SILICON CITY**. Inspiration is limited to broad creative traits: warm sunset gradients, cyan/magenta neon reflections, palm/circuit silhouettes, dramatic street-level camera, sharply composed title cards, high-density city worlds, urban culture and playful satirical micro-stories. Do not use Rockstar marketing screenshots or GTA assets in distributed product.
+
+### Hub art direction
+- Name: SILICON CITY / THE SIX DISTRICTS. Arcade entry is an explorable metropolitan map *in future*, with a cinematic mission-select landing page now.
+- Hero: violet dusk sky to electric coral dusk; glassy floodlit skyline; one original roofline/circuit-road silhouette and luminous UI overlays. Logo is GPU UNCOOKED, not GTA typography or mark.
+- Genre-specific districts: Thread Factory — freight/warehouse quarter; Warp Rush — nightlife raceway; Memory Abyss — flooded neon marina; Cache Castle — finance and cloud datacenter district; Tensor Forge — molten industrial foundry; Cluster Command — spaceport/network interchange.
+- Typography: large editorial condensed headlines, small functional modern techno labels. High contrast for legibility, reduced motion option, mobile-first card composition.
+- Shot grammar: cinematic wide establishing frame, grounded physical space, foreground props, readable players and urban ambient storytelling; **no mandatory pixel-art uniformity**. Individual game genres may be 2D/2.5D/3D as practical.
+- Interaction: each entry card is a mission dossier with *PLAY* only when a game exists; *LAB* for existing experiments; and *IN DEVELOPMENT* for otherwise planned chapters.
+
+### Product boundary
+Do not promise GTA-like open-world scope. This is a curated game anthology. No unlicensed copy of brand marks, Lucia/Jason, official loading art, Vice City, specific map geometry, radio songs, character likenesses or mission sequences. The goal is a high-quality **original** metropolitan cinematic atmosphere.

@@ -132,6 +132,8 @@ for(const device of [{name:"desktop",width:1440,height:900},{name:"mobile",width
  assert.equal(await page.locator("html").getAttribute("data-city3d-ready"),"true");
  assert.equal(await page.locator("html").getAttribute("data-freight-cleared"),"true","Completed action must be visibly reflected back in city world");
  assert.match(await page.locator("#discovered").innerText(),/FREIGHT CLEARED/);
+ await page.locator("#start").click();
+ assert.equal(await page.locator("#intro").isHidden(),true);
  await page.screenshot({path:"browser-artifacts/"+device.name+"-freight-city-return.png",fullPage:true});
  await page.close();
 }

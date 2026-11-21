@@ -21,6 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Configure GitHub Pages publishing
+        uses: actions/configure-pages@v5
       - name: Validate static entry points
         run: |
           test -f playground/chapters/index.html

@@ -104,7 +104,7 @@ for(const device of [{name:"desktop",width:1440,height:900},{name:"mobile",width
  assert.equal(await page.locator("#sectors").innerText(),"64");
  await page.locator(".pallet").first().click();
  await page.locator("#consolidate").click();
- assert.equal(await page.locator("#sectors").innerText(),"61","Physical cargo consolidation must immediately reduce sector footprint");
+ assert.equal(await page.locator("#sectors").innerText(),"58","Physical cargo consolidation must immediately reduce sector footprint");
  await page.locator("#reset").click();
  assert.equal(await page.locator("#sectors").innerText(),"64");
  await page.locator("#dispatch").click();

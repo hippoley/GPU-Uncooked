@@ -22,3 +22,5 @@ jobs:
         with:
           node-version: "22"
       - run: node --test tests/*.test.mjs
+      - name: Report source-size budget (external Three.js is excluded)
+        run: node playground/city3d/size-report.mjs

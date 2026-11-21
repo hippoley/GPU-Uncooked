@@ -41,12 +41,12 @@ code{font-size:11px;color:#fbd5af}.steps{margin:0;padding-left:19px;color:#ccd0d
 <div class="banner"><section class="port" id="port"><div class="sun"></div><div class="skyline"></div><div class="crane"></div><div class="containers"><div class="container"></div><div class="container"></div><div class="container"></div></div><div class="quay"></div><div class="truck" id="truck"></div><div class="scene-title">SILICON PORT <span>DISPATCH TERMINAL / 32 LANES × 4 WAVES</span></div></section>
 <div class="stats"><div class="stat"><small>ACTIVE CONTRACT</small><strong id="job">01 / 03</strong></div><div class="stat"><small>SECTORS REQUIRED</small><strong id="sectors">64</strong></div><div class="stat"><small>TRANSPORT BUDGET</small><strong id="budget">40</strong></div><div class="stat"><small>CONTRACT CREDITS</small><strong id="credits">000</strong></div></div></div>
 <div class="controlgrid">
-<section class="card"><div class="panel-top"><div><h2>装箱调度台</h2><p class="hint">颜色表示地址所属的 32B 扇区。每一批车队对应 32 个工作位。点击两个货箱交换所在位置，或选择“按地址重新编组”观察车队路网如何改变。</p></div><div id="selection" style="font-size:11px;color:#c4d6e8;text-align:right">尚未选中货箱</div></div>
+<section class="card"><div class="panel-top"><div><h2>装箱调度台</h2><p class="hint">颜色表示地址所属的 32B 扇区。每一批车队对应 32 个工作位。点击某个货箱，再按“整批归仓”，就能把同一扇区的货物集中到该车队；也可以交换两个货箱，或花费整备成本重组整份清单。</p></div><div id="selection" style="font-size:11px;color:#c4d6e8;text-align:right">尚未选中货箱</div></div>
 <div class="fleets" id="fleets" aria-label="四支车队的地址布局"></div>
 <div class="meter"><div id="budget-fill" class="fill"></div></div><p class="hint" id="prediction" aria-live="polite">预计占用 64 个扇区，超出预算。</p>
-<div class="actions"><button class="action secondary" id="regroup">按地址重新编组 · 整备成本</button><button class="action secondary" id="reset">恢复原始装箱</button><button class="action" id="dispatch">▶ 派遣四支车队</button></div>
+<div class="actions"><button class="action secondary" id="consolidate" disabled>将选中扇区整批归仓</button><button class="action secondary" id="regroup">按地址重新编组 · 整备成本</button><button class="action secondary" id="reset">恢复原始装箱</button><button class="action" id="dispatch">▶ 派遣四支车队</button></div>
 <div id="result" hidden role="status" aria-live="polite"></div></section>
-<aside class="card"><h2>今晚的委托</h2><ol class="steps"><li>先观察街区混装，猜测运输会遇到什么。</li><li>亲手<strong>交换两个货箱</strong>，让同一车队处理地址更集中的货物。</li><li>也可以<strong>重组装箱</strong>，但整理仓库需要额外费用。</li><li>发车结算：预算内成功，超出预算则必须改变方案。</li></ol>
+<aside class="card"><h2>今晚的委托</h2><ol class="steps"><li>先观察街区混装，猜测运输会遇到什么。</li><li>先点选一个货箱，再执行<strong>整批归仓</strong>。观察扇区消耗立即降低，也能试着交换单个货箱。</li><li>也可以<strong>重组装箱</strong>，但整理仓库需要额外费用。</li><li>发车结算：预算内成功，超出预算则必须改变方案。</li></ol>
 <div class="callout"><strong>故事发生在城市，规律来自计算。</strong> 每个货箱映射一个 4B 数据地址；8 个相邻地址共享一个 32B 对齐扇区。每支车队的访问按一个假想 Warp 分组统计。改变编组就会改变各组访问的扇区数量。</div>
 <h2 style="margin-top:22px">任务结束后</h2><p class="hint">打开 CUDA 实验室，把这次的装箱选择换成 32 个线程的地址表达式，验证哪些直觉可迁移、哪些只是游戏近似。</p>
 <a href="../chapters/03-memory-coalescing/index.html">进入 Memory Coalescing Lab ↗</a>

@@ -6,6 +6,7 @@ import {traceGather,compareGatherStrides,TRACE_PHASES,phaseExplanation} from "./
 import {gatherAccounting,reconcileGather} from "./execution-accounting.mjs";
 import {inspectSassListing} from "./sass-inspector.mjs";
 import {parseNcuComparison} from "./ncu-comparison-view.mjs";
+import {validatePublicNcuReport,comparePublicNcuReports} from "./public-ncu-view.mjs";
 
 // Industrial material visual language: ceramic substrate, milled copper, satin metal,
 // glass passivation and address-bearing silicon cells. Not a literal GPU die floorplan.
@@ -452,6 +453,54 @@ $("ncu-comparison-file").addEventListener("change",async()=>{
  }
  document.documentElement.dataset.materialGpuMeasured="false";
 });
+const publicNcuFiles={left:null,right:null};
+for(const side of ["left","right"]){
+ $("public-ncu-"+side).addEventListener("change",async()=>{
+  const file=$("public-ncu-"+side).files?.[0];
+  if(!file)return;
+  const status=$("public-ncu-status");
+  try{
+   if(file.size>10000000)throw new Error("Third-party report JSON exceeds safe limit");
+   const parsed=validatePublicNcuReport(JSON.parse(await file.text()));
+   publicNcuFiles[side]=parsed;
+   status.textContent="THIRD_PARTY_UNVERIFIED / "+parsed.reportId+
+      " / "+parsed.rows.length+" raw metric rows / WAITING FOR PAIR";
+   if(publicNcuFiles.left&&publicNcuFiles.right){
+    const result=comparePublicNcuReports(publicNcuFiles.left,publicNcuFiles.right);
+    status.textContent="THIRD_PARTY_UNVERIFIED / "+result.metrics.length+
+     " unique shared metrics / NOT ATTESTED";
+    const container=$("public-ncu-table");
+    container.replaceChildren();
+    const table=document.createElement("table");
+    table.style.width="100%";
+    const header=document.createElement("tr");
+    for(const label of ["Metric · Unit",result.left,result.right]){
+     const cell=document.createElement("th");cell.textContent=label;header.append(cell);
+    }
+    table.append(header);
+    for(const item of result.metrics.slice(0,80)){
+     const tr=document.createElement("tr");
+     for(const value of [item.metric+" ["+item.unit+"]",item.left,item.right]){
+      const cell=document.createElement("td");cell.textContent=value;cell.style.padding="4px";tr.append(cell);
+     }
+     table.append(tr);
+    }
+    container.append(table);
+    $("public-ncu-provenance").textContent=
+     "LEFT SHA256 "+publicNcuFiles.left.sourceSha256+
+     "\\nRIGHT SHA256 "+publicNcuFiles.right.sourceSha256+
+     "\\nSOURCE COMMIT "+parsed.sourceRevision+
+     "\\nThird-party values are not gather counters.";
+   }
+  }catch(err){
+   publicNcuFiles[side]=null;
+   status.textContent="REJECTED / "+String(err.message).slice(0,160);
+   $("public-ncu-table").replaceChildren();
+   $("public-ncu-provenance").textContent="";
+  }
+  document.documentElement.dataset.materialGpuMeasured="false";
+ });
+}
 document.querySelectorAll("[data-stride]").forEach(b=>b.addEventListener("click",()=>apply({type:"STRIDE",value:Number(b.dataset.stride)})));
 document.querySelectorAll("[data-step]").forEach(b=>b.addEventListener("click",()=>apply({type:"STEP",value:b.dataset.step})));
 for(const [id,point] of [["focus-threads","dispatch"],["focus-memory","memory"],["focus-overview","source"]]){

@@ -145,9 +145,9 @@ function actor(root,shirt=0xeea170){
  p.scale.setScalar(.69);return {root:p,arms,legs};
 }
 export function createWorld({quality="medium"}={}){
- const scene=new THREE.Scene();scene.background=new THREE.Color(0x21172f);scene.fog=new THREE.FogExp2(0x27243a,.018);
- const hemi=new THREE.HemisphereLight(0xa8bbff,0x372338,2.05);scene.add(hemi);
- const moon=new THREE.DirectionalLight(0xffad9e,2.4);moon.position.set(-30,85,-35);moon.castShadow=false;moon.shadow.mapSize.set(512,512);moon.shadow.camera.left=-80;moon.shadow.camera.right=80;moon.shadow.camera.top=80;moon.shadow.camera.bottom=-80;scene.add(moon);
+ const scene=new THREE.Scene();scene.background=new THREE.Color(0x151c30);scene.fog=new THREE.FogExp2(0x1e2536,.012);
+ const hemi=new THREE.HemisphereLight(0xa2bde1,0x42313f,1.12);scene.add(hemi);
+ const moon=new THREE.DirectionalLight(0xffc0a3,1.45);moon.position.set(-30,85,-35);moon.castShadow=false;moon.shadow.mapSize.set(512,512);moon.shadow.camera.left=-80;moon.shadow.camera.right=80;moon.shadow.camera.top=80;moon.shadow.camera.bottom=-80;scene.add(moon);
  const ground=new THREE.Mesh(new THREE.PlaneGeometry(160,160),asphalt);ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
  const root=new THREE.Group();scene.add(root);
  const weather=makeWeather(THREE,83,"medium");root.add(weather.rain);

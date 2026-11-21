@@ -101,6 +101,9 @@ try{
   quality:sceneQuality,
   cornerProps:world.closeup?.metrics.authoredProps??0,
   cornerBatchCalls:world.closeup?.metrics.instancedDrawCalls??0,
+  facadeWindows:world.coherentArchitecture?.metrics.windowCount??0,
+  facadeInstancedBatches:world.coherentArchitecture?.metrics.instancedBatches??0,
+  facadeGeometryPieces:world.coherentArchitecture?.metrics.geometryPieces??0,
   disclaimer:"WebGL calls and software-renderer FPS are not proof of GTA VI-level fidelity or real GPU performance."
  };
  running=true;clearTimeout(fallbackTimeout);$("loading").hidden=true;document.documentElement.dataset.city3dReady="true";

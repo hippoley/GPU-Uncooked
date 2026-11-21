@@ -143,6 +143,14 @@ h2{font-size:26px;line-height:1.12;letter-spacing:-.04em;margin:11px 0 7px;font-
 <tr><td>4</td><td>16</td><td>UNKNOWN</td><td>UNKNOWN</td><td>UNKNOWN</td></tr>
 <tr><td>8</td><td>32</td><td>UNKNOWN</td><td>UNKNOWN</td><td>UNKNOWN</td></tr></tbody></table>
 <p class="copy">导入后仍为 REPORTED_UNVERIFIED。真实 GPU 身份、计数器归属、缓存状态及设备独立见证尚未认证。请勿将 L1 Sector 直接视作 HBM 读取次数。</p>
+<div class="heading">PUBLIC H100 · 第三方 Nsight 报告对照</div>
+<p class="copy">先用 tools/public_h100_reports.py 离线导出两份 report.json，再分别选择。这里只展示报告实际包含的同名同单位指标，不把第三方 WGMMA 数据当成我们 gather 的 H100 实测。</p>
+<input id="public-ncu-left" type="file" accept=".json,application/json" aria-label="Import RS-WGMMA public report">
+<input id="public-ncu-right" type="file" accept=".json,application/json" aria-label="Import Memdesc public report">
+<p id="public-ncu-status" role="status">UNKNOWN / PUBLIC REPORTS NOT IMPORTED</p>
+<pre id="public-ncu-provenance" style="white-space:pre-wrap;font:11px/1.5 ui-monospace,monospace"></pre>
+<div id="public-ncu-table" style="font:11px/1.6 ui-monospace,monospace;max-height:240px;overflow:auto"></div>
+<p class="copy">THIRD_PARTY_UNVERIFIED · 源报告来自公开 GitHub 仓库，设备身份由作者声明。仅比较两个报告同名同单位且唯一的指标，不计算未经证实的加速比。</p>
 <div class="heading">SASS 静态指令账 · 不等于实际执行次数</div>
 <div id="sass-static-summary" role="status" aria-live="polite">UNKNOWN · 尚未导入可解析的 gather SASS</div>
 <pre id="sass-static-breakdown" style="white-space:pre-wrap;max-height:150px;overflow:auto;font:11px/1.5 ui-monospace,monospace;color:#b0c7c9"></pre>

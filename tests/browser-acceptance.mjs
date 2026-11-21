@@ -78,6 +78,17 @@ for(const device of [{name:"desktop",width:1440,height:900},{name:"mobile",width
  await page.locator("#modal-actions button").click();
  assert.equal(await page.locator("#modal").isHidden(),true);
  await page.screenshot({path:"browser-artifacts/"+device.name+"-silicon-city.png",fullPage:true});
+ // Separate 3D acceptance: rendered WebGL must initialize, not just return HTTP 200.
+ await page.goto("http://127.0.0.1:8765/playground/city3d/index.html",{waitUntil:"domcontentloaded"});
+ await page.waitForFunction(()=>document.documentElement.dataset.city3dReady==="true"||document.documentElement.dataset.city3dReady==="false",{timeout:20000});
+ assert.equal(await page.locator("html").getAttribute("data-city3d-ready"),"true","True WebGL 3D scene must initialize");
+ assert.equal(await page.locator("#loading").isHidden(),true);
+ await page.locator("#start").click();
+ assert.equal(await page.locator("#intro").isHidden(),true);
+ await page.keyboard.down("ArrowLeft");
+ await page.waitForTimeout(250);
+ await page.keyboard.up("ArrowLeft");
+ await page.screenshot({path:"browser-artifacts/"+device.name+"-city3d.png",fullPage:true});
  await page.close();
 }
 await browser.close();

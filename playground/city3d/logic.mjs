@@ -22,8 +22,23 @@ export function normalizeMove({forward=0,right=0}={}){
 }
 export function advance(pos,axes,dt,speed=11){
  if(!pos||![pos.x,pos.z,dt,speed].every(Number.isFinite)||dt<0||dt>1||speed<0)throw new RangeError("Invalid input");
- const v=normalizeMove(axes),next={x:pos.x+v.right*dt*speed,z:pos.z-v.forward*dt*speed};
- return {x:Math.max(-54,Math.min(54,next.x)),z:Math.max(-54,Math.min(54,next.z))};
+ const v=normalizeMove(axes),target={x:pos.x+v.right*dt*speed,z:pos.z-v.forward*dt*speed};
+ const clamped={x:Math.max(-54,Math.min(54,target.x)),z:Math.max(-54,Math.min(54,target.z))};
+ const radius=.9;
+ const blocked=(x,z)=>BLOCKS.some(b=>Math.abs(x-b.x)<b.w/2+radius&&Math.abs(z-b.z)<b.d/2+radius);
+ // Axis-separated resolution keeps the character sliding along walls.
+ // Sweep from the previous position so low frame-rate motion cannot cross a facade.
+ const sweep=(from,to,axis,fixed)=>{
+  const distance=to-from,steps=Math.max(1,Math.ceil(Math.abs(distance)/.5));let value=from;
+  for(let i=1;i<=steps;i++){const candidate=from+distance*i/steps;
+   if(blocked(axis==="x"?candidate:fixed,axis==="z"?candidate:fixed))break;
+   value=candidate;
+  }
+  return value;
+ };
+ const x=sweep(pos.x,clamped.x,"x",pos.z);
+ const z=sweep(pos.z,clamped.z,"z",x);
+ return {x,z};
 }
 export function nearestMission(pos,range=TRIGGER_RADIUS){
  if(!pos||![pos.x,pos.z,range].every(Number.isFinite)||range<0)throw new RangeError("Invalid mission query");

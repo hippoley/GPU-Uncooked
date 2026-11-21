@@ -88,7 +88,8 @@ def main(argv=None):
             versions[label] = result["stdout"] + result["stderr"]
     try:
         source_sha = sha256(KERNEL)
-        build = run(["nvcc","-O2","-lineinfo","-arch="+arch,
+        build = run(["nvcc","-O2","-lineinfo","-gencode",
+                     "arch=compute_"+cap.replace(".","")+",code=["+arch+",compute_"+cap.replace(".","")+"]",
                      str(KERNEL),"-o","gather"],cwd=out,env=env)
         commands["compile"] = save_command(out,"compile.json",build)
         if build["exit_code"]:

@@ -12,6 +12,8 @@ on:
       - "tests/material-execution-accounting.test.mjs"
       - "tests/material-sass-inspector.test.mjs"
       - "tests/material-ncu-comparison-view.test.mjs"
+      - "tests/material-public-ncu-view.test.mjs"
+      - "playground/material-lab/public-ncu-view.mjs"
       - "tests/test_gather_receipt.py"
       - "tests/test_gather_ncu_comparison.py"
       - "tests/test_public_h100_reports.py"
@@ -33,6 +35,8 @@ on:
       - "tests/material-execution-accounting.test.mjs"
       - "tests/material-sass-inspector.test.mjs"
       - "tests/material-ncu-comparison-view.test.mjs"
+      - "tests/material-public-ncu-view.test.mjs"
+      - "playground/material-lab/public-ncu-view.mjs"
       - "tests/test_gather_receipt.py"
       - "tests/test_gather_ncu_comparison.py"
       - "tests/test_public_h100_reports.py"
@@ -56,7 +60,7 @@ jobs:
         with:
           node-version: "22"
       - name: Validate address, sector and code relationships
-        run: node --test tests/material-lab.test.mjs tests/material-evidence.test.mjs tests/material-receipt-view.test.mjs tests/material-microscope.test.mjs tests/material-execution-accounting.test.mjs tests/material-sass-inspector.test.mjs tests/material-ncu-comparison-view.test.mjs
+        run: node --test tests/material-lab.test.mjs tests/material-evidence.test.mjs tests/material-receipt-view.test.mjs tests/material-microscope.test.mjs tests/material-execution-accounting.test.mjs tests/material-sass-inspector.test.mjs tests/material-ncu-comparison-view.test.mjs tests/material-public-ncu-view.test.mjs
       - name: Verify offline receipt integrity tests (no GPU required)
         run: python3 -m unittest discover -s tests -p test_gather_receipt.py -v
       - name: Validate three-stride Nsight profile identity and attribution (fixtures only)

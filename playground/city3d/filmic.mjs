@@ -60,7 +60,8 @@ export function createFilmicCity(THREE,parent,scene,{seed=79,quality="medium"}={
   crossing.push({x:-8.4+i*2.7,y:.185,z,sx:1.25,sz:1.4});
  }
  const crossingMat=new THREE.MeshBasicMaterial({color:0xe5d5c0,transparent:true,opacity:.65,depthWrite:false});
- instanced(new THREE.PlaneGeometry(1,1),crossingMat,crossing.map(p=>({...p,r:0})));
+ const crossingGeo=new THREE.PlaneGeometry(1,1);crossingGeo.rotateX(-Math.PI/2);
+ instanced(crossingGeo,crossingMat,crossing);
  // A deliberately authored port gantry is the major silhouette and sightline destination.
  const gantry=new THREE.Group();gantry.name="PORT_ENTRY_GANTRY";group.add(gantry);
  for(const x of [-10.5,10.5]){

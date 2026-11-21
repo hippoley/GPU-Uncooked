@@ -110,8 +110,12 @@ for(const device of [{name:"desktop",width:1440,height:900},{name:"mobile",width
  await page.locator("#dispatch").click();
  await page.waitForTimeout(750);
  assert.match(await page.locator("#result").innerText(),/运输预算告急/);
- await page.locator("#regroup").click();
- assert.equal(await page.locator("#sectors").innerText(),"16");
+ // Win by four physically chosen consolidations; don't rely on one-click sorting.
+ for(const [i,expected] of [[0,"58"],[8,"52"],[16,"46"],[24,"40"]]){
+  await page.locator(".pallet").nth(i).click();
+  await page.locator("#consolidate").click();
+  assert.equal(await page.locator("#sectors").innerText(),expected);
+ }
  await page.locator("#dispatch").click();
  await page.locator("#result button").waitFor({state:"visible",timeout:5000});
  await page.locator("#result button").click();

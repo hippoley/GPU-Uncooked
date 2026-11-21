@@ -83,6 +83,10 @@ for(const device of [{name:"desktop",width:1440,height:900},{name:"mobile",width
  await page.waitForFunction(()=>document.documentElement.dataset.city3dReady==="true"||document.documentElement.dataset.city3dReady==="false",{timeout:20000});
  assert.equal(await page.locator("html").getAttribute("data-city3d-ready"),"true","True WebGL 3D scene must initialize");
  assert.equal(await page.locator("#loading").isHidden(),true);
+ const sceneStats=await page.evaluate(()=>window.__CITY3D_DIAGNOSTICS);
+ assert.ok(sceneStats?.webgl,"Real WebGL scene must be rendered");
+ assert.ok(sceneStats.drawCalls>0&&sceneStats.triangles>0,"A non-empty 3D scene must be rasterized");
+ assert.ok(sceneStats.textures>=6,"Procedural road, facade and neon map textures must exist");
  await page.locator("#start").click();
  assert.equal(await page.locator("#intro").isHidden(),true);
  await page.keyboard.down("ArrowLeft");

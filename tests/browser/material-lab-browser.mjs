@@ -57,13 +57,15 @@ const fixture={
  git_commit:"a".repeat(40),source_sha256:"b".repeat(64),
  source:{text:"__global__ void gather() {}",sha256:"c".repeat(64),truncated:false},
  ptx:{text:".entry gather()",sha256:"d".repeat(64),truncated:false},
- sass:{text:"FAKE FIXTURE SASS",sha256:"e".repeat(64),truncated:false},
+ sass:{text:"Function : _Z6gatherPKfPfi\\n /*0000*/ MOV R1, c[0x0][0x28] ;\\n /*0010*/ LDG.E R4, [R2] ;\\n /*0020*/ STG.E [R6], R4 ;\\n /*0030*/ EXIT ;",sha256:"e".repeat(64),truncated:false},
  runs:[1,4,8].map(stride=>({stride,exit_code:0,stdout:"PASS fixture"}))
 };
 await page.locator("#receipt-file").setInputFiles({
  name:"receipt-view.json",mimeType:"application/json",buffer:Buffer.from(JSON.stringify(fixture))
 });
 assert.match(await page.locator("#receipt-info").innerText(),/UNATTESTED \(NOT MEASURED\)/);
+assert.match(await page.locator("#sass-static-summary").innerText(),/4 SASS instruction rows/);
+assert.match(await page.locator("#sass-static-breakdown").innerText(),/Runtime instruction executions: UNKNOWN/);
 await page.locator('[data-receipt-tab="ptx"]').click();
 assert.match(await page.locator("#receipt-text").innerText(),/\.entry gather/);
 assert.equal(await page.locator("html").getAttribute("data-material-gpu-measured"),"false");

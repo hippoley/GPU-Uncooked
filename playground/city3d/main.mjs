@@ -41,15 +41,15 @@ canvas.addEventListener("pointermove",e=>{if(drag!==null){orbit-=(e.clientX-drag
 for(const ev of ["pointerup","pointercancel","pointerleave"])canvas.addEventListener(ev,()=>{drag=null});
 const fallbackTimeout=setTimeout(()=>{if(!running)error("三维引擎加载未成功。请检查是否能访问 jsDelivr、浏览器 WebGL 是否开启。现有 2D 游戏和 CUDA 实验仍可从章节首页访问。")},14000);
 function resize(){if(!renderer||!camera)return;const w=Math.max(1,wrap.clientWidth),h=Math.max(1,wrap.clientHeight);
- renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
+ renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=h>w?78:61;camera.updateProjectionMatrix()}
 try{
  // Load Three.js as an ESM package pinned in the HTML import map.
  const {THREE,scene,root,player,...rest}=await import("./world.mjs").then(m=>{const w=m.createWorld();return {...w,THREE:w.THREE}});
  world={scene,root,player,...rest,THREE};
  renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:"high-performance"});
- renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.6));
+ renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.15));
  renderer.setSize(wrap.clientWidth,wrap.clientHeight,false);
- renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.35;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+ renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.35;renderer.shadowMap.enabled=false;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
  camera=new THREE.PerspectiveCamera(61,wrap.clientWidth/wrap.clientHeight,.1,260);
  const target=new THREE.Vector3(pos.x,3,pos.z),camPoint=new THREE.Vector3(pos.x+17,12,pos.z+23);
  camera.position.copy(camPoint);camera.lookAt(target);
@@ -73,7 +73,9 @@ try{
   }
   world.update(elapsed,dt);
   const look=new THREE.Vector3(pos.x,2.6,pos.z);
-  const desired=new THREE.Vector3(pos.x+Math.sin(orbit+.6)*23,12.5,pos.z+Math.cos(orbit+.6)*23);
+  const portrait=wrap.clientHeight>wrap.clientWidth;
+  const radius=portrait?43:23,altitude=portrait?24:12.5;
+  const desired=new THREE.Vector3(pos.x+Math.sin(orbit+.6)*radius,altitude,pos.z+Math.cos(orbit+.6)*radius);
   const alpha=1-Math.exp(-dt*4.7);
   camera.position.lerp(desired,alpha);
   camera.lookAt(look);

@@ -55,6 +55,12 @@ assert.equal(await page.locator("#freight-operate").isDisabled(),false,"Player m
 await page.locator("#xray-toggle").click();
 assert.equal(await page.locator("#cuda-xray").isVisible(),true);
 assert.equal(await page.locator("#xray-sectors").innerText(),"64");
+assert.equal(await page.locator("#xray-memory-map > div").count(),32);
+assert.match(await page.locator("#xray-memory-map > div").first().getAttribute("title"),/lane 0/);
+await page.locator("[data-wave='1']").click();
+assert.equal(await page.locator("[data-wave='1']").getAttribute("aria-pressed"),"true");
+assert.equal(await page.locator("#xray-memory-map > div").count(),32);
+await page.locator("[data-wave='0']").click();
 let actions=0;
 while((await page.locator("html").getAttribute("data-freight-model-completed"))!=="true"&&actions<16){
  const before=Number(await page.locator("#xray-sectors").innerText());

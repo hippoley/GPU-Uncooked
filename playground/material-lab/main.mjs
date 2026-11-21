@@ -147,7 +147,7 @@ const packetGeo=new THREE.SphereGeometry(.14,12,10);
 const packetMaterials=[orangeGlow,cyanGlow];
 let selectedPath=null,selectedPacket=null;
 let state=initialSnapshot(),model=kernelGather({stride:state.stride});
-let cameraPos=new THREE.Vector3(0,23,30),angleX=0,angleY=0,drag=null,zoom=1,frame=0,nowClock=0;
+let cameraPos=new THREE.Vector3(0,23,30),angleX=0,angleY=0,drag=null,zoom=1,frames=0,nowClock=0;
 function lineForLane(lane){
  const address=model.lanes[lane];
  const start=lanePositions[lane],end=cellPositions[address.index];
@@ -261,7 +261,7 @@ $("loading").hidden=true;document.documentElement.dataset.materialReady="true";
 window.__MATERIAL_LAB={getSnapshot:()=>({...state}),getModel:()=>({stride:model.stride,sectors:model.sectorCount,addresses:model.lanes.map(l=>l.byteAddress),output:model.result.slice()}),
   getRenderer:()=>({drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles})};
 function frame(t){
- const dt=Math.min(.07,(t-(frame.last||t))/1000);frame.last=t;nowClock+=dt;frame++;
+ const dt=Math.min(.07,(t-(frame.last||t))/1000);frame.last=t;nowClock+=dt;frames++;
  const orbit=new THREE.Vector3(cameraPos.x*Math.cos(angleX)+Math.sin(angleX)*cameraPos.z,
   cameraPos.y*Math.cos(angleY),cameraPos.z*Math.cos(angleX)-Math.sin(angleX)*cameraPos.x);
  camera.position.lerp(orbit.multiplyScalar(zoom),1-Math.exp(-dt*3.2));

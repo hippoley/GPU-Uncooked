@@ -26,6 +26,27 @@ python3 tools/verify_gather_receipt.py ./receipts/gather-unique-run-id
 With operator permission and profiler access, append `--profile`. This runs Nsight
 Compute only for stride=8. Do not use it on shared infrastructure without approval.
 
+## Read the raw PTX/SASS in the 3D workbench (unattested)
+
+After a successful real-GPU capture and offline verification, export a bounded
+read-only representation:
+
+```bash
+python3 tools/export_gather_receipt_view.py \
+  ./receipts/gather-unique-run-id \
+  --output ./receipt-view.json
+```
+
+Open Inside CUDA / Material Lab, choose **Import receipt-view.json**, then inspect
+CUDA C++, PTX and SASS tabs. The import shows the claimed GPU UUID, pinned source
+commit and file hashes. The scene continues to label address edges **DERIVED**
+and the substrate **ILLUSTRATIVE**; importing a JSON file cannot attest its own
+provenance, validate hardware execution, or certify physical chip routes.
+
+The export requires the SHA-256 receipt integrity check and carries no raw
+Profiler counter claims. The browser is a **transcript inspector**, not a
+trusted GPU measurement backend or evidence promotion system.
+
 ## Receipt properties
 
 The capture writes the original CUDA source bytes, compile command and diagnostics,

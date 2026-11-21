@@ -51,6 +51,24 @@ h2{font-size:26px;line-height:1.12;letter-spacing:-.04em;margin:11px 0 7px;font-
 #receipt-info{color:#c6d4d9;font:11px/1.6 ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere}
 #receipt-text{font:10px/1.5 ui-monospace,monospace;max-height:160px;overflow:auto;white-space:pre-wrap;background:#070e16;border:1px solid #2b3f4a;padding:9px}
 #receipt-mode{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+#microscope{border:1px solid #536a6e;background:linear-gradient(150deg,#172a33,#0b161f);padding:14px;margin:12px 0}
+#microscope h3{margin:0 0 7px;font-size:16px;letter-spacing:-.02em}
+#micro-phases{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin:10px 0}
+#micro-phases button{font-size:10px;padding:9px 3px}
+#micro-phases button[aria-pressed="true"]{border-color:#e4b786;background:#3f3026;color:#ffe6c7}
+.micro-highlight{font:700 17px/1.3 ui-monospace,monospace;color:#f2d1a5;overflow-wrap:anywhere;padding:9px 0}
+#micro-detail{font:12px/1.6 system-ui,sans-serif;color:#c9d9dd;min-height:68px}
+#micro-regions{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:3px;margin:10px 0}
+#micro-regions button{font:10px ui-monospace,monospace;padding:7px 0;background:#15212b;border-color:#38505c;border-radius:2px}
+#micro-regions button.active{background:#b87541;color:#171c22}
+#micro-regions button.selected{outline:2px solid #f3d39e}
+.micro-legend{font:10px/1.5 ui-monospace,monospace;color:#91aab1}
+#micro-matrix{width:100%;border-collapse:collapse;font:11px/1.5 ui-monospace,monospace;margin:9px 0}
+#micro-matrix td,#micro-matrix th{padding:5px 4px;border-bottom:1px solid #33444a;text-align:right}
+#micro-matrix th:first-child,#micro-matrix td:first-child{text-align:left}
+#micro-matrix tr.active{color:#ffdda9;background:#48342577}
+#micro-code{font:11px/1.6 ui-monospace,monospace;color:#a8d6d6;background:#061018;padding:9px;white-space:pre-wrap}
+#micro-proof{font:10px/1.5 ui-monospace,monospace;color:#d8aa86;border-left:2px solid #ad7950;padding:8px;background:#2c201d77}
 @media(max-width:840px){#app{display:block;overflow:auto}#viewport{height:62dvh}#inspector{height:auto;overflow:visible}#top{padding:15px}#scene-label{left:15px;bottom:10px;padding:8px 10px;font-size:9px}#scene-ui{top:66px;left:15px}}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"}}</script>
@@ -64,6 +82,22 @@ h2{font-size:26px;line-height:1.12;letter-spacing:-.04em;margin:11px 0 7px;font-
 <div class="eyebrow">CODE ⇄ DATA ⇄ PHYSICAL MODEL</div><h2>一行 CUDA，进入芯片内部。</h2>
 <p class="copy">点击一条线程，观察它究竟取走哪一个数字。换一种地址排列，再看实际访问了多少个 32B 扇区。</p>
 <div class="panel"><div class="heading">A / 改变 CUDA 的 stride 参数</div><div class="grid"><button data-stride="1">1 · 连续</button><button data-stride="4">4 · 跨步</button><button data-stride="8">8 · 稀疏</button></div></div>
+<div id="microscope" aria-label="CUDA execution semantic microscope">
+<div class="eyebrow">DEEP DIVE 001 / INSTRUCTION MICROSCOPE · DERIVED</div>
+<h3>进入这一条线程：从寄存器值到地址请求</h3>
+<p class="copy">不是播放动画：每一步可以查清当前线程正在计算什么，整个 Warp 有哪些地址，读和写为什么不一样。</p>
+<div id="micro-phases" aria-label="Step through CUDA semantic stages"></div>
+<div class="micro-highlight" id="micro-value">SELECT A LANE</div>
+<div id="micro-detail"></div>
+<div class="micro-legend">当前语义操作（不是生成的 PTX 或 SASS）</div>
+<pre id="micro-code"></pre>
+<div class="heading">Warp 的 32 个相对 32B 区域 · 点击可查看参与的线程</div>
+<div id="micro-regions" aria-label="Select a 32-byte theoretical region"></div>
+<div class="micro-legend" id="micro-region-detail"></div>
+<div class="heading">同一份二进制 · 改变运行时 stride</div>
+<table id="micro-matrix"><thead><tr><th>stride</th><th>源区域</th><th>覆盖</th><th>有效比例</th><th>目的区域</th></tr></thead><tbody></tbody></table>
+<div id="micro-proof">真实 SASS 和 NCU 指标尚需 GPU 实机证据；此处每个值是源码导出的假设条件下的计算结果。</div>
+</div>
 <div class="panel"><div class="heading">B / 走进计算过程</div><div class="pipeline">
 <button data-step="source">01 源码</button><button data-step="dispatch">02 线程</button><button data-step="memory">03 访存</button><button data-step="result">04 结果</button>
 </div><div id="code" role="img" aria-label="The actual CUDA gather kernel, line highlighted to show current stage"></div></div>

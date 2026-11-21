@@ -49,3 +49,19 @@ Expected text labels include \`striped: correct=128/128, teaching-model sectors=
 6. Evaluate scene readability and real-GPU frame times separately from browser CI; synthetic gameplay score and software-renderer FPS do not measure real CUDA throughput.
 
 **Current claim:** first action → computation consequence → success/failure → replay → next contract → city continuity loop has been implemented in code, with unit and browser CI as separate evidence gates. Not a completed six-game globally affine system.
+
+## Manual optimization acceptance (added)
+
+A first-time player is offered two paths: free, deliberate sector consolidation or a paid global re-sort. The gameplay model now evaluates which displaced cargo best reduces the resulting sector count **within the player-selected convoy**, rather than always swapping the first arbitrary cargo. This local choice is deterministic, explicit in code and remains only a pedagogical logistics planner.
+
+A reproducible manual path on the striped manifest selects the initial slots 0, 8, 16 and 24 in turn, pressing *Consolidate sector* after each selection:
+
+| Action | Sector demand |
+|---|---:|
+| Before action | 64 |
+| Consolidate first cargo group | 58 |
+| Consolidate second cargo group | 52 |
+| Consolidate third cargo group | 46 |
+| Consolidate fourth cargo group | 40 (budget satisfied) |
+
+The browser acceptance now performs this action sequence rather than relying on the automatic sort. The contract always preserves all 128 distinct addresses. This models **inter-warp request regrouping before execution** as a shipping action; a CUDA kernel cannot arbitrarily change its memory access addresses without corresponding application/data-layout work. The in-game sorting/gathering cost is illustrative and not measured hardware preprocessing time.

@@ -44,5 +44,6 @@ jobs:
             dist/city3d/build-report.json
             dist/city3d/standalone-desktop.png
             dist/city3d/standalone-first-person.png
+            dist/city3d/standalone-cinematic.png
           if-no-files-found: warn
           retention-days: 14

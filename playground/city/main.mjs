@@ -22,6 +22,15 @@ function showDialog(d){
 function closeDialog(){mode="roam";$("modal").hidden=true;held.clear()}
 function interact(){if(mode!=="roam")return;const near=currentInteraction(player);if(near){visited.add(near.id);$("explored").innerHTML="DISCOVERED <strong>"+visited.size+" / 6</strong>";showDialog(near)}}
 $("start").addEventListener("click",closeDialog);$("interact").addEventListener("click",interact);
+const fullscreen=$("fullscreen");
+if(fullscreen)fullscreen.addEventListener("click",async()=>{
+ const stage=canvas.closest(".stage");
+ try{
+  if(document.fullscreenElement)await document.exitFullscreen();
+  else if(stage?.requestFullscreen)await stage.requestFullscreen();
+ }catch(error){fullscreen.title="浏览器未授予全屏权限";}
+});
+document.addEventListener("fullscreenchange",()=>{if(fullscreen)fullscreen.textContent=document.fullscreenElement?"⤡ 退出全屏":"⛶ 全屏"});
 document.addEventListener("keydown",e=>{
  const k=e.key.toLowerCase();
  if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(k))e.preventDefault();

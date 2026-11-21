@@ -5,6 +5,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]/"tools"))
 from summarize_gather_ncu_series import parse_raw_csv, summarize, REQUIRED
@@ -71,6 +72,53 @@ class NcuComparisonTests(unittest.TestCase):
         self.assertEqual([x["expected_source_32b_regions"] for x in result["rows"]],[4,16,32])
         self.assertEqual([x["source_region_bytes_span"] for x in result["rows"]],[128,512,1024])
         self.assertEqual([x["claimed_profiler_metrics"][REQUIRED[0]] for x in result["rows"]],[100,400,800])
+
+    def bind_origin_fixture(self):
+        # The original verifier is separately covered by test_gather_receipt.py.
+        # These tests isolate the extra cross-receipt identity requirement.
+        raw_manifest = {
+            "compiler_arch": "sm_90",
+            "git_commit": "f"*40,
+            "file_sha256": {"gather": sha(self.binary)}
+        }
+        (self.binary.parent/"manifest.json").write_text(json.dumps(raw_manifest))
+        self.manifest["source_manifest_sha256"] = sha(self.binary.parent/"manifest.json")
+        self.manifest["compiler_arch"] = "sm_90"
+        self.manifest["git_commit"] = "f"*40
+        self.refresh()
+        return self.binary.parent
+
+    def test_bound_origin_checks_actual_binary_and_gpu_identity(self):
+        raw = self.bind_origin_fixture()
+        with patch("summarize_gather_ncu_series.verify_raw_receipt",
+                   return_value={"device_uuid":self.manifest["device_uuid"]}):
+            v = summarize(self.folder,raw_folder=raw)
+        self.assertTrue(v["origin_bytes_rechecked"])
+        self.assertFalse(v["hardware_attested"])
+
+    def test_bound_origin_rejects_changed_binary_bytes(self):
+        raw = self.bind_origin_fixture()
+        self.binary.write_bytes(b"CHANGED BYTES")
+        with patch("summarize_gather_ncu_series.verify_raw_receipt",
+                   return_value={"device_uuid":self.manifest["device_uuid"]}):
+            with self.assertRaisesRegex(ValueError,"Original binary bytes"):
+                summarize(self.folder,raw_folder=raw)
+
+    def test_bound_origin_rejects_swapped_device_uuid(self):
+        raw = self.bind_origin_fixture()
+        with patch("summarize_gather_ncu_series.verify_raw_receipt",
+                   return_value={"device_uuid":"GPU-some-other-device"}):
+            with self.assertRaisesRegex(ValueError,"Original GPU UUID"):
+                summarize(self.folder,raw_folder=raw)
+
+    def test_bound_origin_rejects_mismatched_manifest(self):
+        raw = self.bind_origin_fixture()
+        self.manifest["source_manifest_sha256"] = "0"*64
+        self.refresh()
+        with patch("summarize_gather_ncu_series.verify_raw_receipt",
+                   return_value={"device_uuid":self.manifest["device_uuid"]}):
+            with self.assertRaisesRegex(ValueError,"manifest hash"):
+                summarize(self.folder,raw_folder=raw)
 
     def test_reject_missing_metric(self):
         self.edit_command(8,lambda d:d.update(stdout=d["stdout"].replace(REQUIRED[1],"not_a_counter")))

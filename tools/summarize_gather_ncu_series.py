@@ -30,7 +30,7 @@ def parse_raw_csv(text, *, metric_names=REQUIRED):
     if not isinstance(text, str) or len(text) > 10_000_000:
         raise ValueError("CSV text absent or unreasonably large")
     rows = list(csv.reader(io.StringIO(text)))
-    fields = {"Metric Name", "Metric Value", "Kernel Name"}
+    fields = {"Metric Name", "Metric Value", "Metric Unit", "Kernel Name"}
     headers = [(i, row) for i, row in enumerate(rows) if fields.issubset(row)]
     if len(headers) != 1:
         raise ValueError("No unique Nsight raw CSV header containing Kernel Name, Metric Name, Metric Value")
@@ -52,6 +52,10 @@ def parse_raw_csv(text, *, metric_names=REQUIRED):
         kernels.add(kernel)
         if launch_col is not None:
             launch_ids.add(row[launch_col].strip())
+        unit = row[indices["Metric Unit"]].strip().lower()
+        expected_unit = "sector" if name.startswith("l1tex__") else "byte"
+        if unit not in (expected_unit, expected_unit+"s"):
+            raise ValueError("Metric unit is incompatible: " + name + " / " + unit)
         if name in metrics:
             raise ValueError("Duplicate metric row: " + name)
         value = row[indices["Metric Value"]].replace(",", "").strip()

@@ -4,6 +4,7 @@ import {buildDerivedEvidence,describeWorldObject,measurementState} from "./evide
 import {parseReceiptView} from "./receipt-view.mjs";
 import {traceGather,compareGatherStrides,TRACE_PHASES,phaseExplanation} from "./instruction-microscope.mjs";
 import {gatherAccounting,reconcileGather} from "./execution-accounting.mjs";
+import {inspectSassListing} from "./sass-inspector.mjs";
 
 // Industrial material visual language: ceramic substrate, milled copper, satin metal,
 // glass passivation and address-bearing silicon cells. Not a literal GPU die floorplan.
@@ -363,6 +364,8 @@ function showReceipt(){
  if(!importedReceipt){
   target.textContent="无实际编译产物可显示。";
   info.textContent="NOT IMPORTED · NO GPU EXECUTION RECEIPT";
+  $("sass-static-summary").textContent="UNKNOWN / no SASS";
+  $("sass-static-breakdown").textContent="";
   return;
  }
  const r=importedReceipt;
@@ -372,6 +375,20 @@ function showReceipt(){
   "\nCaution: integrity is NOT independent GPU attestation";
  target.textContent=r.text[receiptTab].slice(0,6000)||
    "该收据中对应产物为空。";
+ try{
+  const listing=inspectSassListing(r.text.sass);
+  $("sass-static-summary").textContent="REPORTED_UNVERIFIED / STATIC LISTING / "+
+    listing.staticInstructionCount+" SASS instruction rows / "+listing.targetFunction;
+  $("sass-static-breakdown").textContent=
+    Object.entries(listing.byCategory).map(([kind,n])=>kind.padEnd(22)+" "+n).join("\n")+
+    "\n\nTop opcodes\n"+
+    Object.entries(listing.byOpcode).sort((a,b)=>b[1]-a[1]).slice(0,16).map(([op,n])=>op+" = "+n).join("\n")+
+    "\n\nRuntime instruction executions: UNKNOWN\nSM cycles: UNKNOWN";
+ }catch(err){
+  $("sass-static-summary").textContent="UNKNOWN / SASS parse rejected or target not found";
+  $("sass-static-breakdown").textContent=String(err.message).slice(0,200);
+ }
+
  document.documentElement.dataset.materialGpuMeasured="false";
 }
 $("receipt-file").addEventListener("change",async ()=>{
@@ -386,6 +403,8 @@ $("receipt-file").addEventListener("change",async ()=>{
   importedReceipt=parseReceiptView(parsed);
   showReceipt();
  }catch(err){
+  $("sass-static-summary").textContent="UNKNOWN / invalid receipt";
+  $("sass-static-breakdown").textContent="";
   $("receipt-info").textContent="REJECTED / "+String(err.message).slice(0,180);
   $("receipt-text").textContent="未接受该收据；硬件执行仍未验证。";
  }

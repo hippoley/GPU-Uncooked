@@ -1,8 +1,9 @@
 import * as THREE from "three";
 import {DISTRICTS} from "./logic.mjs";
+import {createRoadMaterial,createFacadeMaterial,makeWeather,makePuddleGlints} from "./procedural.mjs";
 const rand=(i)=>{const n=Math.sin(i*93.17+19.6)*52793.23;return n-Math.floor(n)};
 const mat=(color,emissive=0x000000,intensity=0)=>new THREE.MeshStandardMaterial({color,metalness:.3,roughness:.58,emissive,emissiveIntensity:intensity});
-const asphalt=mat(0x171c2e),concrete=mat(0x303048),cream=mat(0xe2b08e),glass=mat(0x133c64,0x2d91b5,.38);
+const asphalt=createRoadMaterial(THREE),concrete=mat(0x303048),cream=mat(0xe2b08e),glass=mat(0x133c64,0x2d91b5,.38);
 const pink=mat(0xf265a4,0xe54789,.65),cyan=mat(0x4de2d8,0x2ce8e4,.8),yellow=mat(0xffcc85,0xffba6c,.55);
 const boxGeometries=new Map();
 const boxGeometry=(w,h,d)=>{
@@ -30,7 +31,7 @@ const signThemes=[
  {key:"CLUSTER CMD",fill:0x304469,lit:"#a6beff",accent:cyan}
 ];
 function building(root,seed,x,z,w,d,height,theme){
- const facade=mat(theme.fill),trim=theme.accent;
+ const facade=createFacadeMaterial(THREE,theme.fill,seed+27),trim=theme.accent;
  box(root,w,height,d,x,height/2,z,facade);
  box(root,w+1,.6,d+1,x,height+.2,z,trim);
  box(root,w+2,.4,d+2,x,height+1,z,concrete);
@@ -93,11 +94,13 @@ function actor(root,shirt=0xeea170){
  return {root:p,arms,legs};
 }
 export function createWorld(){
- const scene=new THREE.Scene();scene.background=new THREE.Color(0x21172f);scene.fog=new THREE.FogExp2(0x291c3e,.008);
+ const scene=new THREE.Scene();scene.background=new THREE.Color(0x21172f);scene.fog=new THREE.FogExp2(0x27243a,.018);
  const hemi=new THREE.HemisphereLight(0xa8bbff,0x372338,2.05);scene.add(hemi);
  const moon=new THREE.DirectionalLight(0xffad9e,2.4);moon.position.set(-30,85,-35);moon.castShadow=false;moon.shadow.mapSize.set(512,512);moon.shadow.camera.left=-80;moon.shadow.camera.right=80;moon.shadow.camera.top=80;moon.shadow.camera.bottom=-80;scene.add(moon);
  const ground=new THREE.Mesh(new THREE.PlaneGeometry(160,160),asphalt);ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
  const root=new THREE.Group();scene.add(root);
+ const weather=makeWeather(THREE,83,"medium");root.add(weather.rain);
+ makePuddleGlints(THREE,root,57);
  // two streets cross at the player spawn, continuous driveable world
  for(let z of [-14,14])box(root,120,.13,1.1,0,.08,z,mat(0xb7a4b0));
  for(let x of [-15,15])box(root,1.1,.13,120,x,.08,0,mat(0xb7a4b0));
@@ -142,6 +145,7 @@ export function createWorld(){
  for(let i=0;i<10;i++){const a=actor(root,[0x85c6b6,0x9376aa,0xe18eb0,0xedb477][i%4]);a.root.position.set(i%2?18:-18,0,-47+i*9.1);walkers.push({a,i})}
  const player=actor(root,0xec9a6b);player.root.position.set(0,0,6);
  return {THREE,scene,root,player,cars,walkers,markers,update(t,dt){
+  weather.update(dt);
   for(const item of markers){item.gem.rotation.y+=dt;item.gem.position.y=4.1+Math.sin(t*2+item.d.x)*.35;item.ring.rotation.z=t*.18}
   for(const entry of cars){if(entry.axis==="x"){entry.mesh.position.x+=dt*entry.speed;if(entry.mesh.position.x>52)entry.mesh.position.x=-52}else{entry.mesh.position.z+=dt*entry.speed;if(entry.mesh.position.z>51)entry.mesh.position.z=-50}}
   for(const w of walkers){w.a.root.position.z+=dt*(w.i%2?1:-1)*1.2;if(w.a.root.position.z>49)w.a.root.position.z=-48;if(w.a.root.position.z< -49)w.a.root.position.z=48;

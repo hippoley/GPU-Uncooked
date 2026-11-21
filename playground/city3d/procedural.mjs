@@ -42,6 +42,27 @@ export function createRoadMaterial(THREE,seed=71){
  roughMap.colorSpace=THREE.NoColorSpace;bumpMap.colorSpace=THREE.NoColorSpace;
  return new THREE.MeshStandardMaterial({map:color,roughnessMap:roughMap,bumpMap,bumpScale:.10,roughness:.85,metalness:.4,color:0xffffff});
 }
+/** Reusable real-scale paving stones, curb seams and fine aggregate.
+ * One small canvas texture repeated across sidewalks, no network image assets.
+ */
+export function createPavementMaterial(THREE,seed=121){
+ const n=256,canvas=document.createElement("canvas");canvas.width=canvas.height=n;
+ const ctx=canvas.getContext("2d"),im=ctx.createImageData(n,n);
+ for(let y=0;y<n;y++)for(let x=0;x<n;x++){
+  const idx=(y*n+x)*4;
+  const row=Math.floor(y/32),offset=row%2?16:0;
+  const jointX=(x+offset)%32,jointY=y%32;
+  const seam=jointX<2||jointY<2;
+  const chip=hash2(x,y,seed+13),patch=noise(x/34,y/34,seed);
+  const grain=(chip-.5)*15,shade=62+patch*30+grain-(seam?32:0);
+  im.data[idx]=Math.max(0,shade*.88);
+  im.data[idx+1]=Math.max(0,shade*.97);
+  im.data[idx+2]=Math.max(0,shade*1.03);
+  im.data[idx+3]=255;
+ }
+ ctx.putImageData(im,0,0);
+ return new THREE.MeshStandardMaterial({map:texture(THREE,canvas,12),color:0xffffff,metalness:.07,roughness:.92});
+}
 export function createFacadeMaterial(THREE,color,seed=27){
  const canvas=document.createElement("canvas");canvas.width=128;canvas.height=128;const ctx=canvas.getContext("2d");
  const im=ctx.createImageData(128,128),shade=new THREE.Color(color),rr=shade.r*255,gg=shade.g*255,bb=shade.b*255;

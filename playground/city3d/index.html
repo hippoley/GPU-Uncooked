@@ -25,6 +25,19 @@ button:focus-visible,a:focus-visible{outline:3px solid #8dfff0;outline-offset:3p
 #perf{position:absolute;bottom:120px;left:20px;z-index:3;font-size:10px;color:#93c3cc;background:#0b1326af;padding:6px}
 @media(max-width:640px){.top{padding:13px}.stat{padding:7px;font-size:10px}.bottom{bottom:83px;left:8px;right:8px}.objective{padding:7px 9px;max-width:70%}.objective strong{font-size:13px}.objective p{font-size:10px}.prompt{padding:6px;font-size:10px;max-width:29%}.controls{right:7px;bottom:8px;gap:4px}.controls button{font-size:12px;padding:9px;min-width:40px}#perf{bottom:168px;left:8px}.card{padding:20px}}
 .photo-mode .top,.photo-mode .bottom,.photo-mode .controls,.photo-mode #quality-tools,.photo-mode #perf{display:none!important}
+
+#cuda-xray{position:absolute;top:155px;left:18px;z-index:5;width:min(355px,calc(100vw - 36px));background:#0a1527e8;border:1px solid #6cd8d0a6;border-radius:12px;padding:14px 16px;box-shadow:0 12px 40px #060814bb;backdrop-filter:blur(12px);pointer-events:auto;font-size:12px}
+#cuda-xray[hidden]{display:none}#cuda-xray h2{font-size:15px;margin:0 0 8px;color:#aef8ed}
+#cuda-xray .wave-bars{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:12px 0}
+#cuda-xray .wave-bars div{background:#172c40;border:1px solid #567c83;border-radius:5px;padding:7px;text-align:center}
+#cuda-xray .wave-bars strong{display:block;color:#ffdaa6;font-size:18px}
+#cuda-xray p{line-height:1.5;margin:8px 0;color:#c7d3df}
+#cuda-xray code{color:#f4c68b}
+#cuda-world-actions{position:absolute;left:18px;bottom:142px;z-index:5;display:flex;gap:7px;pointer-events:auto}
+#cuda-world-actions button{padding:9px 11px;font-size:12px}
+#world-feedback{background:#091b29e0;border:1px solid #83c4ba99;border-radius:7px;color:#e2f7ed;max-width:280px;padding:10px;font-size:12px;line-height:1.45}
+#world-feedback[data-status="operational"]{border-color:#67e2ad}
+@media(max-width:640px){#cuda-world-actions{left:8px;bottom:205px}#cuda-xray{left:8px;top:90px;max-height:48vh;overflow:auto}#world-feedback{max-width:170px;font-size:10px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"}}</script>
@@ -32,7 +45,17 @@ button:focus-visible,a:focus-visible{outline:3px solid #8dfff0;outline-offset:3p
 <canvas id="viewport" tabindex="0" aria-label="GPU Uncooked 三维城市，WASD 移动，靠近任务地点按 E 互动"></canvas>
 <div class="layer top"><div class="logo">GPU <em>UNCOOKED</em><small>SILICON CITY 3D · VERTICAL SLICE</small></div><div class="stat">NIGHT SHIFT <strong>20:45 · CITY CENTER</strong><span id="discovered">DISCOVERED 0 / 6</span></div></div>
 <div class="layer bottom"><div class="objective"><small>DISTRICT MISSION</small><strong id="mission">夜游 Silicon City</strong><p id="hint">WASD 移动 · 鼠标拖动镜头 · E 互动</p></div><div class="prompt" id="prompt">EXPLORE THE CITY</div></div>
-<div id="perf">GPU CITY · WebGL 3D</div>
+<div id="perf">GPU CITY · WebGL 3D</div><div id="cuda-world-actions"><button class="alt" id="xray-toggle" aria-pressed="false">X · 计算透视</button><button class="alt" id="freight-operate" disabled>R · 整理货物</button><div id="world-feedback" aria-live="polite">走近线程工厂的货物终端，按 R 操作；X 查看计算透视。</div></div>
+<section id="cuda-xray" hidden aria-label="GPU 世界计算透视">
+<h2>CUDA X-RAY · 计算透视</h2>
+<p id="xray-location">港口编组状态 · 教学模型</p>
+<div class="wave-bars"><div>WARP 0<strong id="wave-0">16</strong></div><div>WARP 1<strong id="wave-1">16</strong></div><div>WARP 2<strong id="wave-2">16</strong></div><div>WARP 3<strong id="wave-3">16</strong></div></div>
+<p>触及扇区：<strong id="xray-sectors">64</strong> / 预算 40 · 请求数据 512B</p>
+<p id="xray-cost">当前扇区覆盖量：2048B</p>
+<p>地址示意：<code>sector = floor((index × 4) / 32)</code></p>
+<p id="xray-action">操作必须在街道货物终端附近进行。</p>
+<p style="font-size:10px">这里是确定性 32B 扇区模型，不是 Nsight Compute 的真实 GPU 测量。</p>
+</section>
 <div id="quality-tools" style="position:absolute;z-index:4;top:104px;right:15px;background:#081326cf;border:1px solid #6c9cad88;border-radius:8px;padding:8px 10px;font-size:11px;display:flex;gap:7px;align-items:center">
 <span style="color:#a2dbdf">CITY DETAIL</span>
 <a style="color:#f7d2a5" href="?quality=low">LOW</a>

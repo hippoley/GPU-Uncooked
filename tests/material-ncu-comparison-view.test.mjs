@@ -6,7 +6,7 @@ function sample(){
  return {
   schema:"gpu-uncooked.ncu-comparison.v1",
   classification:"REPORTED_UNVERIFIED",
-  hardware_attested:false,
+  hardware_attested:false,origin_bytes_rechecked:true,
   binary_sha256:"a".repeat(64),source_manifest_sha256:"b".repeat(64),series_manifest_sha256:"c".repeat(64),
   device_uuid_claim:"GPU-FAKE-FIXTURE",
   rows:[1,4,8].map((stride,i)=>({
@@ -26,6 +26,7 @@ test("legitimate-shape sample stays reported-unverified",()=>{
 });
 test("forged attestation and malformed comparison are rejected",()=>{
  assert.throws(()=>parseNcuComparison({...sample(),hardware_attested:true}),/Cannot upgrade/);
+ assert.throws(()=>parseNcuComparison({...sample(),origin_bytes_rechecked:false}),/not been rechecked/);
  assert.throws(()=>parseNcuComparison({...sample(),classification:"MEASURED"}),/Cannot upgrade/);
  assert.throws(()=>parseNcuComparison({...sample(),binary_sha256:"fake"}),/receipt hash/);
  const bad=sample();bad.rows[2].stride=4;

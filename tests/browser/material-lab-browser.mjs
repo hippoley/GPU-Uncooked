@@ -81,7 +81,7 @@ assert.equal(await page.locator("html").getAttribute("data-material-gpu-measured
 const ncuMetrics=["l1tex__t_sectors_pipe_lsu_mem_global_op_ld.sum",
  "dram__bytes_read.sum","dram__bytes_write.sum"];
 const ncuComparison={schema:"gpu-uncooked.ncu-comparison.v1",
- classification:"REPORTED_UNVERIFIED",hardware_attested:false,
+ classification:"REPORTED_UNVERIFIED",hardware_attested:false,origin_bytes_rechecked:true,
  binary_sha256:"a".repeat(64),source_manifest_sha256:"b".repeat(64),
  series_manifest_sha256:"c".repeat(64),device_uuid_claim:"GPU-TEST-FIXTURE",
  rows:[1,4,8].map((stride,i)=>({

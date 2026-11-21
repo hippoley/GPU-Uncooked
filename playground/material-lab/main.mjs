@@ -2,6 +2,7 @@ import * as THREE from "three";
 import {LANE_COUNT,INPUT_COUNT,STEPS,initialSnapshot,kernelGather,sourceForStride,transition} from "./physics.mjs";
 import {buildDerivedEvidence,describeWorldObject,measurementState} from "./evidence.mjs";
 import {parseReceiptView} from "./receipt-view.mjs";
+import {traceGather,compareGatherStrides,TRACE_PHASES,phaseExplanation} from "./instruction-microscope.mjs";
 
 // Industrial material visual language: ceramic substrate, milled copper, satin metal,
 // glass passivation and address-bearing silicon cells. Not a literal GPU die floorplan.
@@ -209,6 +210,71 @@ function updateGeometry(){
  cellObjects.forEach((item,i)=>{item.material=i===selected.index?warmLit:active.has(i)?coolLit:offGlow;});
  updateLinks();
 }
+let microPhase="address",microRegion=null;
+function renderMicroscope(){
+ const t=traceGather(state.stride,state.selectedLane),e=phaseExplanation(microPhase,t);
+ const controls=$("micro-phases");
+ if(controls.childElementCount!==TRACE_PHASES.length){
+  for(const p of TRACE_PHASES){
+   const b=document.createElement("button");
+   b.type="button";b.dataset.microPhase=p.id;b.textContent=p.name.split(" / ")[0];
+   b.title=p.question;b.addEventListener("click",()=>{
+    microPhase=p.id;renderMicroscope();
+   });controls.append(b);
+  }
+ }
+ controls.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.microPhase===microPhase)));
+ $("micro-value").textContent=e.label;
+ $("micro-detail").textContent=e.detail;
+ $("micro-code").textContent=TRACE_PHASES.find(p=>p.id===microPhase).code+
+  "\n\nLANE "+t.lane+"  /  stride "+t.stride+
+  "\nsrcIndex="+t.operands.index+
+  "  srcRelativeOffset="+t.operands.srcOffset+"B"+
+  "\ndstIndex="+t.lane+"  dstRelativeOffset="+t.operands.dstOffset+"B";
+ const board=$("micro-regions");
+ if(board.childElementCount!==32){
+  for(let i=0;i<32;i++){
+   const b=document.createElement("button");b.type="button";b.dataset.region=String(i);
+   b.textContent=String(i).padStart(2,"0");
+   b.title="32B region "+i;b.addEventListener("click",()=>{
+    microRegion=i;microPhase="load";
+    const group=traceGather(state.stride,state.selectedLane).loads.groups.find(g=>g.region===i);
+    if(group?.lanes.length)apply({type:"SELECT_LANE",value:group.lanes[0]});
+    else renderMicroscope();
+   });board.append(b);
+  }
+ }
+ if(microRegion===null)microRegion=t.operands.srcRegion;
+ const active=new Set(t.loads.regionNumbers);
+ board.querySelectorAll("button").forEach(b=>{
+  const n=Number(b.dataset.region);
+  b.classList.toggle("active",active.has(n));
+  b.classList.toggle("selected",n===microRegion);
+  b.setAttribute("aria-label","Region "+n+(active.has(n)?" active":" inactive"));
+ });
+ const group=t.loads.groups.find(g=>g.region===microRegion);
+ $("micro-region-detail").textContent=group?
+  "区域 "+group.region+"（相对 "+group.startByte+"–"+group.endByte+"B）"+
+  " / Lanes ["+group.lanes.join(", ")+"]"+
+  " / Input indices ["+group.indices.join(", ")+"]"+
+  " / 有效读入 "+group.bytesRequested+"B / 32B":
+  "区域 "+microRegion+" 当前没有被任何 Lane 读取。";
+ const body=$("micro-matrix").querySelector("tbody");body.replaceChildren();
+ for(const x of compareGatherStrides()){
+  const tr=document.createElement("tr");tr.classList.toggle("active",x.stride===state.stride);
+  for(const value of [x.stride,x.sourceRegions,x.sourceCoveredBytes+"B",
+   Math.round(x.sourceRegionUtilization*100)+"%",x.destinationRegions]){
+   const td=document.createElement("td");td.textContent=String(value);tr.append(td);
+  }
+  tr.title="Switch to stride "+x.stride;
+  tr.addEventListener("click",()=>apply({type:"STRIDE",value:x.stride}));
+  body.append(tr);
+ }
+ $("micro-proof").textContent="DERIVED | 32B 对齐假设 | 有效载荷 128B | "+
+  "编译指令是否变化：UNKNOWN（等待真实 SASS）；缓存命中 / DRAM 请求：UNKNOWN（等待 NCU）。"+
+  "源端覆盖 "+t.loads.uniqueRegions+" 区域；目的端覆盖 "+t.stores.uniqueRegions+" 区域。"+
+  "所有数据只用相对偏移计算，绝不是实际 GPU 物理地址。";
+}
 function updatePanel(){
  document.querySelectorAll("[data-stride]").forEach(b=>b.setAttribute("aria-pressed",String(Number(b.dataset.stride)===state.stride)));
  document.querySelectorAll("[data-step]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.step===state.step)));
@@ -253,12 +319,13 @@ function updatePanel(){
  document.documentElement.dataset.materialEvidenceKind=evidence.kind;
  document.documentElement.dataset.materialPathClaim=linkEvidence.kind;
  document.documentElement.dataset.materialGpuMeasured="false";
+ renderMicroscope();
  document.documentElement.dataset.materialStep=state.step;
  document.documentElement.dataset.materialSectors=String(model.sectorCount);
  document.documentElement.dataset.materialSelectedAddress=String(lane.index);
 }
 function apply(action){
- state=transition(state,action);updateGeometry();updatePanel();
+ state=transition(state,action);if(action.type==="STRIDE")microRegion=null;updateGeometry();updatePanel();
  setView(state.step,true);
 }
 // Read-only receipt transcript viewer. Import cannot grant MEASURED identity.

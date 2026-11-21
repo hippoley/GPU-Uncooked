@@ -31,7 +31,7 @@ jobs:
         run: |
           mkdir -p public
           cp -a playground/. public/
-          cp playground/chapters/index.html public/index.html
+          printf '%s\n' '<!doctype html><html lang="en"><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=./chapters/index.html"><title>GPU UNCOOKED — SILICON CITY</title><a href="./chapters/index.html">Enter Silicon City</a></html>' > public/index.html
           touch public/.nojekyll
       - uses: actions/upload-pages-artifact@v3
         with:

@@ -90,6 +90,7 @@ def summarize(directory):
         if not re.fullmatch(r"[0-9a-f]{64}", str(claimed)) or digest(folder / name) != claimed:
             raise ValueError("File checksum mismatch: " + name)
     rows = []
+    selected_binary = None
     for stride in STRIDES:
         filename = f"ncu-stride{stride}.json"
         if manifest.get("commands", {}).get(str(stride)) != filename:
@@ -98,12 +99,17 @@ def summarize(directory):
         argv = data.get("argv", [])
         if data.get("exit_code") != 0 or not isinstance(argv, list) or not argv or argv[-1] != str(stride):
             raise ValueError("Profiler command failed or incorrect stride argument")
-        if manifest["device_uuid"] != manifest.get("device_uuid"):
-            raise ValueError("Device mismatched")
         if "--metrics" not in argv or ",".join(REQUIRED) not in argv:
             raise ValueError("Profiler metrics not pinned")
         if not any(str(arg).endswith("/gather") for arg in argv):
             raise ValueError("Profiler binary target missing")
+        if not all(flag in argv for flag in ("--csv","--page","raw","--kernel-name","regex:gather","--launch-count","1")):
+            raise ValueError("Profiler must select a single gather launch and raw CSV")
+        binary_arg = next(str(arg) for arg in argv if str(arg).endswith("/gather"))
+        if selected_binary is None:
+            selected_binary = binary_arg
+        elif selected_binary != binary_arg:
+            raise ValueError("Different binary paths across three stride profiles")
         if f"PASS stride={stride}" not in str(data.get("stdout", ""))+str(data.get("stderr", "")):
             raise ValueError("No correctness PASS")
         parsed = parse_raw_csv(data["stdout"])

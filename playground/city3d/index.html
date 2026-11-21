@@ -32,8 +32,14 @@ button:focus-visible,a:focus-visible{outline:3px solid #8dfff0;outline-offset:3p
 <div class="layer top"><div class="logo">GPU <em>UNCOOKED</em><small>SILICON CITY 3D · VERTICAL SLICE</small></div><div class="stat">NIGHT SHIFT <strong>20:45 · CITY CENTER</strong><span id="discovered">DISCOVERED 0 / 6</span></div></div>
 <div class="layer bottom"><div class="objective"><small>DISTRICT MISSION</small><strong id="mission">夜游 Silicon City</strong><p id="hint">WASD 移动 · 鼠标拖动镜头 · E 互动</p></div><div class="prompt" id="prompt">EXPLORE THE CITY</div></div>
 <div id="perf">GPU CITY · WebGL 3D</div>
+<div id="quality-tools" style="position:absolute;z-index:4;top:104px;right:15px;background:#081326cf;border:1px solid #6c9cad88;border-radius:8px;padding:8px 10px;font-size:11px;display:flex;gap:7px;align-items:center">
+<span style="color:#a2dbdf">CITY DETAIL</span>
+<a style="color:#f7d2a5" href="?quality=low">LOW</a>
+<a style="color:#f7d2a5" href="?quality=medium">MED</a>
+<a style="color:#f7d2a5" href="?quality=high">HIGH</a>
+</div>
 <div class="controls"><button class="alt" data-key="left" aria-label="左移">◀</button><button class="alt" data-key="up" aria-label="前进">▲</button><button class="alt" data-key="down" aria-label="后退">▼</button><button class="alt" data-key="right" aria-label="右移">▶</button><button id="interact">E · 任务</button><button id="camera" class="alt" aria-label="旋转视角">↻</button><button id="viewmode" class="alt" aria-label="切换第一人称或第三人称">V · 第三人称</button></div>
 <div id="loading">GPU UNCOOKED · INITIALIZING 3D CITY <div id="error">正在加载 WebGL 场景</div></div>
 <div id="dialog" class="panel" hidden><div class="card"><div class="kicker" id="dialog-kicker">MISSION DOSSIER</div><h1 id="dialog-title">CITY MISSION</h1><p id="dialog-description"></p><footer id="dialog-actions"></footer></div></div>
-<div id="intro" class="panel"><div class="card"><div class="kicker">WELCOME TO SILICON CITY / 3D PREMIERE</div><h1>你的城市。<br>你的计算世界。</h1><p>这里是一座真正的 WebGL 三维城市，而不是 Canvas 平面地图。第三人称角色、透视镜头、夜间路面、立体建筑、车辆、路灯和六个任务入口。<br>先走到任务光柱，再按 E 进入游戏或 CUDA 实验。仍是第一版 3D 竖切片，不是完整开放世界。</p><footer><button id="start">进入 3D 城市 ▶</button><a class="link alt" href="../chapters/index.html">查看全部游戏</a></footer></div></div>
+<div id="intro" class="panel"><div class="card"><div class="kicker">WELCOME TO SILICON CITY / 3D PREMIERE</div><h1>你的城市。<br>你的计算世界。</h1><p>这里是一座真正的 WebGL 三维城市，而不是 Canvas 平面地图。第三人称角色、透视镜头、夜间路面、立体建筑、车辆、路灯和六个任务入口。<br>先走到任务光柱，再按 E 进入游戏或 CUDA 实验。街景采用确定性程序化细节与不同画质档位，目标为 1.4 MB 级分发；完整资源体积和真实设备性能仍待独立验收。</p><footer><button id="start">进入 3D 城市 ▶</button><a class="link alt" href="../chapters/index.html">查看全部游戏</a></footer></div></div>
 </div><script type="module" src="./main.mjs"></script></body></html>

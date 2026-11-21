@@ -47,6 +47,10 @@ h2{font-size:26px;line-height:1.12;letter-spacing:-.04em;margin:11px 0 7px;font-
 #loading[hidden]{display:none}
 #status{font:10px ui-monospace,monospace;color:#7997a0}
 #footer{font-size:10px;color:#71858e;line-height:1.7}
+#receipt-file{display:block;width:100%;font:11px ui-monospace,monospace;color:#c5d9dd;margin:10px 0}
+#receipt-info{color:#c6d4d9;font:11px/1.6 ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere}
+#receipt-text{font:10px/1.5 ui-monospace,monospace;max-height:160px;overflow:auto;white-space:pre-wrap;background:#070e16;border:1px solid #2b3f4a;padding:9px}
+#receipt-mode{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
 @media(max-width:840px){#app{display:block;overflow:auto}#viewport{height:62dvh}#inspector{height:auto;overflow:visible}#top{padding:15px}#scene-label{left:15px;bottom:10px;padding:8px 10px;font-size:9px}#scene-ui{top:66px;left:15px}}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"}}</script>
@@ -67,7 +71,15 @@ h2{font-size:26px;line-height:1.12;letter-spacing:-.04em;margin:11px 0 7px;font-
 <div id="address-detail" aria-live="polite"></div></div>
 <div class="panel"><div class="heading">D / 可重复计算的扇区覆盖模型</div><div id="metrics"><div class="metric"><strong id="sectors">16</strong><small>独立 32B 扇区</small></div><div class="metric"><strong id="bytes">512B</strong><small>扇区覆盖量 / 有效载荷 128B</small></div></div>
 <p id="interpretation"></p></div>
-<div class="panel"><div class="heading">E / 真实原理与边界</div>
+<div class="panel"><div class="heading">E / 导入真实编译产物（未经独立认证）</div>
+<p class="copy">先在 GPU 主机上采集，再用离线校验器生成 receipt-view.json。导入后可检查 PTX / SASS 文本，但不会认证 GPU 执行或推导物理路径。</p>
+<label for="receipt-file" class="heading">导入 receipt-view.json</label>
+<input type="file" id="receipt-file" accept=".json,application/json" aria-label="Import unattested CUDA receipt-view JSON">
+<p id="receipt-info" role="status" aria-live="polite">NOT IMPORTED · NO GPU EXECUTION RECEIPT</p>
+<div id="receipt-mode"><button type="button" data-receipt-tab="source">CUDA C++</button><button type="button" data-receipt-tab="ptx">PTX</button><button type="button" data-receipt-tab="sass">SASS</button></div>
+<pre id="receipt-text">无实际编译产物可显示。</pre>
+</div>
+<div class="panel"><div class="heading">F / 真实原理与边界</div>
 <p class="copy">真实 CUDA Kernel 写在 <code>gather.cu</code>。三维模型使用与 Kernel 一致的地址映射，并非真实芯片的逐晶体管重建，也没有凭空编造 GPU 耗时。</p>
 <a href="https://docs.nvidia.com/cuda/cuda-c-best-practices-guide/" target="_blank" rel="noopener">NVIDIA 官方 CUDA Best Practices</a>
 </div><div id="footer">32 active threads · one warp · aligned float32 base · 32B sector model. Cache behavior, memory instructions and measured timings require real hardware. The geometry is an original, explanatory physical visualization.</div><p id="status">INITIALIZING</p>

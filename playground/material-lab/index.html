@@ -133,6 +133,16 @@ h2{font-size:26px;line-height:1.12;letter-spacing:-.04em;margin:11px 0 7px;font-
 <p id="receipt-info" role="status" aria-live="polite">NOT IMPORTED · NO GPU EXECUTION RECEIPT</p>
 <div id="receipt-mode"><button type="button" data-receipt-tab="source">CUDA C++</button><button type="button" data-receipt-tab="ptx">PTX</button><button type="button" data-receipt-tab="sass">SASS</button></div>
 <pre id="receipt-text">无实际编译产物可显示。</pre>
+<div class="heading">NCU · 三种 stride 的独立采集对照（未经独立认证）</div>
+<p class="copy">选择同一二进制的三组 Nsight 原始记录经离线解析生成的 comparison.json。DERIVED 是源码预测区域；PROFILE 是操作者报告的计数器值，两者绝不是同一种单位。</p>
+<input id="ncu-comparison-file" type="file" accept=".json,application/json" aria-label="Import unverified Nsight three-stride comparison JSON">
+<p id="ncu-comparison-status" role="status" aria-live="polite">UNKNOWN / NO IMPORTED NCU COMPARISON</p>
+<table id="ncu-comparison-table" style="width:100%;border-collapse:collapse;font:10px/1.8 ui-monospace,monospace">
+<thead><tr><th>Stride</th><th>DERIVED 32B<br>src regions</th><th>NCU L1<br>load sectors</th><th>NCU DRAM<br>read bytes</th><th>NCU DRAM<br>write bytes</th></tr></thead>
+<tbody><tr><td>1</td><td>4</td><td>UNKNOWN</td><td>UNKNOWN</td><td>UNKNOWN</td></tr>
+<tr><td>4</td><td>16</td><td>UNKNOWN</td><td>UNKNOWN</td><td>UNKNOWN</td></tr>
+<tr><td>8</td><td>32</td><td>UNKNOWN</td><td>UNKNOWN</td><td>UNKNOWN</td></tr></tbody></table>
+<p class="copy">导入后仍为 REPORTED_UNVERIFIED。真实 GPU 身份、计数器归属、缓存状态及设备独立见证尚未认证。请勿将 L1 Sector 直接视作 HBM 读取次数。</p>
 <div class="heading">SASS 静态指令账 · 不等于实际执行次数</div>
 <div id="sass-static-summary" role="status" aria-live="polite">UNKNOWN · 尚未导入可解析的 gather SASS</div>
 <pre id="sass-static-breakdown" style="white-space:pre-wrap;max-height:150px;overflow:auto;font:11px/1.5 ui-monospace,monospace;color:#b0c7c9"></pre>

@@ -124,8 +124,8 @@ def summarize(directory, *, raw_folder=None):
             raise ValueError("Profiler metrics not pinned")
         if not any(str(arg).endswith("/gather") for arg in argv):
             raise ValueError("Profiler binary target missing")
-        if not all(flag in argv for flag in ("--csv","--page","raw","--kernel-name","regex:gather","--launch-count","1")):
-            raise ValueError("Profiler must select a single gather launch and raw CSV")
+        if not all(flag in argv for flag in ("--csv","--page","details","--print-units","base","--cache-control","all","--kernel-name","regex:gather","--launch-count","1")):
+            raise ValueError("Profiler must select single gather launch, base-unit details CSV and cache flushing")
         binary_arg = next(str(arg) for arg in argv if str(arg).endswith("/gather"))
         if raw_folder is not None and Path(binary_arg).resolve() != (origin / "gather").resolve():
             raise ValueError("Nsight command not bound to verified original binary path")

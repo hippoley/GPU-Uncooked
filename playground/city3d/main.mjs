@@ -1,5 +1,5 @@
 import {START,DISTRICTS,advance,nearestMission,missionLink} from "./logic.mjs";
-import {INITIAL_WORLD,worldEvidence,applyWorldAction,nextActionSlot,canOperateFreight,stateReceipt} from "./gpu-world-state.mjs";
+import {INITIAL_WORLD,worldEvidence,applyWorldAction,nextActionSlot,canOperateFreight,stateReceipt,replayWorld} from "./gpu-world-state.mjs";
 const $=id=>document.getElementById(id),canvas=$("viewport"),wrap=$("game");
 const requestedQuality=new URLSearchParams(location.search).get("quality");
 const sceneQuality=["low","medium","high"].includes(requestedQuality)?requestedQuality:"medium";
@@ -7,8 +7,16 @@ document.documentElement.dataset.sceneQuality=sceneQuality;
 let running=false,overlay="intro",orbit=0,viewMode="third",pressed=new Set(),last=0,elapsed=0,discovered=new Set();
 let pos={...START},third=null,world=null,renderer=null,camera=null;
 let gpuWorld=INITIAL_WORLD(),xrayOpen=false;
+try{
+ const saved=JSON.parse(localStorage.getItem("gpu-uncooked.city-freight.v1")||"null");
+ if(saved?.version===1&&Array.isArray(saved.actions)&&saved.actions.length<=128){
+  gpuWorld=replayWorld(saved.actions);
+  if(worldEvidence(gpuWorld).sectors!==saved.sectors)gpuWorld=INITIAL_WORLD();
+ }
+}catch{gpuWorld=INITIAL_WORLD()}
 const fixedCornerShot=new URLSearchParams(location.search).get("shot")==="corner";
 if(fixedCornerShot){pos={x:-23,z:-17};orbit=.38;}
+if(new URLSearchParams(location.search).get("spawn")==="freight"){pos={x:-34,z:-24.3};orbit=.24;}
 document.documentElement.dataset.cornerShot=String(fixedCornerShot);
 if(new URLSearchParams(location.search).get("photo")==="1")document.body.classList.add("photo-mode");
 document.addEventListener("keydown",e=>{
@@ -56,6 +64,9 @@ function refreshGPUHUD(){
   near?"按 R 选定一组仍然分散的货物并编组；数值必须真实下降。":
   "靠近线程工厂（-34,-26）的货物终端，才可以操作。";
  $("xray-location").textContent="GPU World State · "+gpuWorld.actions.length+" 次玩家动作 · "+(near?"已连接实物终端":"尚未接近终端");
+ $("xray-history").textContent=gpuWorld.actions.length?
+  gpuWorld.actions.slice(-4).map(e=>"#"+e.seq+" cargo "+e.sector+" · "+e.beforeSectors+"→"+e.afterSectors+" sectors").join(" | "):
+  "尚无操作；任务需要玩家亲自改变装载顺序。";
  const msg=$("world-feedback");msg.dataset.status=gpuWorld.equipment;
  msg.textContent=data.withinBudget?
   "港口恢复：扇区 "+data.sectors+" / "+data.budget+"。设备已经切换为正常运行；按 X 检查可重放记录。":
@@ -78,6 +89,11 @@ function toggleXray(){
 }
 $("xray-toggle").addEventListener("click",toggleXray);
 $("freight-operate").addEventListener("click",operateWorld);
+$("freight-reset").addEventListener("click",()=>{
+ if(overlay!=="roam")return;
+ gpuWorld=INITIAL_WORLD();refreshGPUHUD();
+ try{localStorage.removeItem("gpu-uncooked.city-freight.v1")}catch{}
+});
 document.addEventListener("keydown",e=>{
  if(e.repeat||e.ctrlKey||e.metaKey)return;
  if(e.key.toLowerCase()==="x")toggleXray();

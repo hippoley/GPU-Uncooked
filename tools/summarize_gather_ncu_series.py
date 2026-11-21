@@ -13,6 +13,8 @@ from pathlib import Path
 import re
 import sys
 
+from verify_gather_receipt import verify as verify_raw_receipt
+
 STRIDES = (1, 4, 8)
 REQUIRED = (
     "l1tex__t_sectors_pipe_lsu_mem_global_op_ld.sum",
@@ -66,7 +68,7 @@ def parse_raw_csv(text, *, metric_names=REQUIRED):
     return dict(kernel=next(iter(kernels)), metrics=metrics,
                 launch_id=next(iter(launch_ids)) if launch_ids else None)
 
-def summarize(directory):
+def summarize(directory, *, raw_folder=None):
     folder = Path(directory).resolve()
     manifest_path = folder / "manifest.json"
     manifest = json.loads(manifest_path.read_text())
@@ -89,6 +91,25 @@ def summarize(directory):
     for name, claimed in checksums.items():
         if not re.fullmatch(r"[0-9a-f]{64}", str(claimed)) or digest(folder / name) != claimed:
             raise ValueError("File checksum mismatch: " + name)
+    if raw_folder is not None:
+        # Re-open the original source, and recompute the binary identity from
+        # bytes. A self-consistent Nsight series manifest is insufficient.
+        origin = Path(raw_folder).resolve()
+        origin_verification = verify_raw_receipt(origin)
+        origin_manifest_path = origin / "manifest.json"
+        origin_manifest = json.loads(origin_manifest_path.read_text())
+        if digest(origin_manifest_path) != manifest["source_manifest_sha256"]:
+            raise ValueError("Original receipt manifest hash does not match NCU series")
+        if origin_verification.get("device_uuid") != manifest.get("device_uuid"):
+            raise ValueError("Original GPU UUID differs from NCU series")
+        if origin_manifest.get("compiler_arch") != manifest.get("compiler_arch"):
+            raise ValueError("Compiler architecture differs from original capture")
+        if origin_manifest.get("git_commit") != manifest.get("git_commit"):
+            raise ValueError("Git commit differs from original capture")
+        if origin_manifest.get("file_sha256", {}).get("gather") != manifest["binary_sha256"]:
+            raise ValueError("Original binary digest differs from NCU series")
+        if digest(origin / "gather") != manifest["binary_sha256"]:
+            raise ValueError("Original binary bytes differ from NCU series")
     rows = []
     selected_binary = None
     for stride in STRIDES:
@@ -106,6 +127,8 @@ def summarize(directory):
         if not all(flag in argv for flag in ("--csv","--page","raw","--kernel-name","regex:gather","--launch-count","1")):
             raise ValueError("Profiler must select a single gather launch and raw CSV")
         binary_arg = next(str(arg) for arg in argv if str(arg).endswith("/gather"))
+        if raw_folder is not None and Path(binary_arg).resolve() != (origin / "gather").resolve():
+            raise ValueError("Nsight command not bound to verified original binary path")
         if selected_binary is None:
             selected_binary = binary_arg
         elif selected_binary != binary_arg:
@@ -131,6 +154,7 @@ def summarize(directory):
         "source_manifest_sha256":manifest["source_manifest_sha256"],
         "series_manifest_sha256":digest(manifest_path),
         "device_uuid_claim":manifest["device_uuid"],
+        "origin_bytes_rechecked":raw_folder is not None,
         "rows":rows,
         "claim_limitations":[
             "Three independent profiled process launches; not a single synchronized timed run",
@@ -143,13 +167,14 @@ def summarize(directory):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--series", required=True)
+    parser.add_argument("--raw", required=True, help="Original verified capture directory; required for origin binding")
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
     path = Path(args.output).resolve()
     if path.exists():
         parser.error("Refusing to overwrite output")
     try:
-        comparison = summarize(args.series)
+        comparison = summarize(args.series, raw_folder=args.raw)
     except (ValueError, KeyError, TypeError, OSError, json.JSONDecodeError) as error:
         print("REJECTED: " + str(error), file=sys.stderr)
         return 1

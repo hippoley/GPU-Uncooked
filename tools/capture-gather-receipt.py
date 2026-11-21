@@ -88,6 +88,7 @@ def main(argv=None):
             versions[label] = result["stdout"] + result["stderr"]
     try:
         source_sha = sha256(KERNEL)
+        shutil.copyfile(KERNEL, out/"source-gather.cu")
         build = run(["nvcc","-O2","-lineinfo","-gencode",
                      "arch=compute_"+cap.replace(".","")+",code=["+arch+",compute_"+cap.replace(".","")+"]",
                      str(KERNEL),"-o","gather"],cwd=out,env=env)
@@ -131,7 +132,7 @@ def main(argv=None):
         "trust":"UNVERIFIED_CAPTURE_NOT_ATTESTATION",
         "recorded_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
         "source_path":"playground/material-lab/gather.cu",
-        "source_sha256":sha256(KERNEL),
+        "source_sha256":sha256(out/"source-gather.cu") if (out/"source-gather.cu").exists() else sha256(KERNEL),
         "device":selected,
         "compiler_arch":arch,
         "environment":{"CUDA_VISIBLE_DEVICES":selected["uuid"]},

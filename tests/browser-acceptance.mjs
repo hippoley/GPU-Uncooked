@@ -122,6 +122,12 @@ for(const device of [{name:"desktop",width:1440,height:900},{name:"mobile",width
  assert.equal(receipt.completed,true);
  assert.ok(receipt.credits>0);
  await page.screenshot({path:"browser-artifacts/"+device.name+"-freight-finished.png",fullPage:true});
+ await page.goto("http://127.0.0.1:8765/playground/city3d/index.html",{waitUntil:"domcontentloaded"});
+ await page.waitForFunction(()=>document.documentElement.dataset.city3dReady==="true"||document.documentElement.dataset.city3dReady==="false");
+ assert.equal(await page.locator("html").getAttribute("data-city3d-ready"),"true");
+ assert.equal(await page.locator("html").getAttribute("data-freight-cleared"),"true","Completed action must be visibly reflected back in city world");
+ assert.match(await page.locator("#discovered").innerText(),/FREIGHT CLEARED/);
+ await page.screenshot({path:"browser-artifacts/"+device.name+"-freight-city-return.png",fullPage:true});
  await page.close();
 }
 await browser.close();

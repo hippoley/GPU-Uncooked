@@ -63,6 +63,7 @@ const fixture={
 await page.locator("#receipt-file").setInputFiles({
  name:"receipt-view.json",mimeType:"application/json",buffer:Buffer.from(JSON.stringify(fixture))
 });
+await page.waitForFunction(()=>document.querySelector("#receipt-info")?.textContent?.includes("UNATTESTED (NOT MEASURED)"),null,{timeout:10000});
 assert.match(await page.locator("#receipt-info").innerText(),/UNATTESTED \(NOT MEASURED\)/);
 assert.match(await page.locator("#sass-static-summary").innerText(),/4 SASS instruction rows/);
 assert.match(await page.locator("#sass-static-breakdown").innerText(),/Runtime instruction executions: UNKNOWN/);

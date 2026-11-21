@@ -7,6 +7,7 @@ document.documentElement.dataset.sceneQuality=sceneQuality;
 let running=false,overlay="intro",orbit=0,viewMode="third",pressed=new Set(),last=0,elapsed=0,discovered=new Set();
 let pos={...START},third=null,world=null,renderer=null,camera=null;
 let gpuWorld=INITIAL_WORLD(),xrayOpen=false;
+let selectedWave=0;
 try{
  const saved=JSON.parse(localStorage.getItem("gpu-uncooked.city-freight.v1")||"null");
  if(saved?.version===1&&Array.isArray(saved.actions)&&saved.actions.length<=128){
@@ -57,6 +58,21 @@ function refreshGPUHUD(){
  $("xray-toggle").setAttribute("aria-pressed",String(xrayOpen));
  $("cuda-xray").hidden=!xrayOpen;
  $("xray-sectors").textContent=String(data.sectors);
+ const memory=$("xray-memory-map");memory.replaceChildren();
+ for(let lane=0;lane<32;lane++){
+  const address=gpuWorld.manifest[selectedWave*32+lane];
+  const sector=Math.floor(address/8);
+  const cell=document.createElement("div");
+  cell.style.borderColor="hsl("+((sector*47)%360)+" 65% 52%)";
+  const laneSpan=document.createElement("span");laneSpan.textContent="L"+String(lane).padStart(2,"0");
+  cell.append(laneSpan,document.createTextNode(String(address).padStart(3,"0")));
+  cell.title="lane "+lane+" → float index "+address+" → 32B sector "+sector;
+  memory.append(cell);
+ }
+ document.querySelectorAll("[data-wave]").forEach(btn=>{
+  btn.setAttribute("aria-pressed",String(Number(btn.dataset.wave)===selectedWave));
+  btn.style.background=Number(btn.dataset.wave)===selectedWave?"#65ddd1":"#17233be8";
+ });
  $("xray-cost").textContent="32B 扇区覆盖量："+data.coveredBytes+"B / 请求数据："+data.requiredBytes+"B";
  for(let i=0;i<4;i++)$("wave-"+i).textContent=String(data.waveSectors[i]);
  $("xray-action").textContent=data.withinBudget?
@@ -88,6 +104,9 @@ function toggleXray(){
  xrayOpen=!xrayOpen;refreshGPUHUD();
 }
 $("xray-toggle").addEventListener("click",toggleXray);
+document.querySelectorAll("[data-wave]").forEach(btn=>btn.addEventListener("click",()=>{
+ selectedWave=Number(btn.dataset.wave);refreshGPUHUD();
+}));
 $("freight-operate").addEventListener("click",operateWorld);
 $("freight-reset").addEventListener("click",()=>{
  if(overlay!=="roam")return;

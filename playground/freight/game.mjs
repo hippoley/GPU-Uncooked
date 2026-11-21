@@ -1,4 +1,4 @@
-import {stripedManifest,seededManifest,contiguousManifest,manifestFootprint,swapRequests,regroupManifest,evaluateDispatch,STARTING_BUDGET,sectorOf} from "./physics.mjs";
+import {stripedManifest,seededManifest,contiguousManifest,manifestFootprint,swapRequests,consolidateSector,regroupManifest,evaluateDispatch,STARTING_BUDGET,sectorOf} from "./physics.mjs";
 const $=id=>document.getElementById(id);
 let level=0,selection=null,manifest=stripedManifest(),sortActions=0,totalCredits=0,busy=false,completed=false;
 const initial=i=>i===0?stripedManifest():seededManifest(i===1?241:892);
@@ -14,7 +14,7 @@ function render(){
  "预计占用 "+footprint.sectors+" 个扇区，可以发车。四支车队全部完成时获得佣金。":
  "预计占用 "+footprint.sectors+" 个扇区，超出 "+STARTING_BUDGET+" 扇区的运输预算。尝试重新组织货箱。";
  $("selection").textContent=selection===null?"点击两个货箱进行交换":"已选中 "+Math.floor(selection/32+1)+" 号车队 · 第 "+(selection%32+1)+" 位";
- $("dispatch").disabled=busy||completed;$("regroup").disabled=busy||completed;$("reset").disabled=busy||completed;
+ $("dispatch").disabled=busy||completed;$("regroup").disabled=busy||completed;$("reset").disabled=busy||completed;$("consolidate").disabled=busy||completed||selection===null;
  const root=$("fleets");root.replaceChildren();
  for(let i=0;i<4;i++){
   const fleet=document.createElement("div");fleet.className="fleet";
@@ -42,6 +42,15 @@ function select(slot){
  if(selection!==slot)manifest=swapRequests(manifest,selection,slot);
  selection=null;$("result").hidden=true;render();
 }
+$("consolidate").addEventListener("click",()=>{
+ if(busy||completed||selection===null)return;
+ const action=consolidateSector(manifest,selection);
+ manifest=action.manifest;selection=null;
+ const current=manifestFootprint(manifest);
+ const box=$("result");box.hidden=false;
+ box.textContent="你把扇区 "+action.sector+" 的货物集中到 "+(action.wave+1)+" 号车队，实际交换 "+action.moves+" 箱；现在总计 "+current.sectors+" 个扇区。再试其他颜色，直到满足预算。";
+ render();
+});
 $("regroup").addEventListener("click",()=>{
  if(busy||completed)return;
  manifest=regroupManifest(manifest);sortActions++;selection=null;$("result").hidden=true;render();

@@ -57,6 +57,14 @@ def verify(folder):
         cmd=json.loads((folder/name).read_text())
         if cmd.get("exit_code")!=0 or not isinstance(cmd.get("argv"),list):
             raise ValueError("Failed or incomplete command: "+key)
+    build=json.loads((folder/"compile.json").read_text())["argv"]
+    # The compiler must consume the source bytes that the receipt actually hashes.
+    if not any(str(arg).endswith("/source-gather.cu") or str(arg)=="source-gather.cu" for arg in build):
+        raise ValueError("Compile did not use captured CUDA source")
+    if not any(str(arg).startswith("arch=compute_") and str(m["compiler_arch"]) in str(arg) for arg in build):
+        raise ValueError("Compiler target not tied to selected architecture")
+    if not str(m.get("git_commit","")) or not re.fullmatch(r"[0-9a-f]{40}",str(m.get("git_commit",""))):
+        raise ValueError("Missing pinned Git commit")
     for s in (1,4,8):
         obj=json.loads((folder/f"run-stride{s}.json").read_text())
         if re.search(r"PASS stride="+str(s)+r"\b",str(obj.get("stdout",""))) is None:

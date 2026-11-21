@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import {LANE_COUNT,INPUT_COUNT,STEPS,initialSnapshot,kernelGather,sourceForStride,transition} from "./physics.mjs";
+import {buildDerivedEvidence,describeWorldObject,measurementState} from "./evidence.mjs";
 
 // Industrial material visual language: ceramic substrate, milled copper, satin metal,
 // glass passivation and address-bearing silicon cells. Not a literal GPU die floorplan.
@@ -245,7 +246,12 @@ function updatePanel(){
  $("interpretation").textContent="32 条线程共请求 "+model.requestedBytes+"B，触及 "+model.sectorCount+" 个不同的 32B 对齐扇区（覆盖 "+model.coveredBytes+"B）。"+
  (state.stride===1?" 连续访存只触及 4 个扇区。":state.stride===4?" 步长 4 导致覆盖 16 个扇区。":" 步长 8 使每条线程触及不同扇区。")+
  " 这不是实际运行时间，也不是 DRAM 必然传输的字节数。";
- $("status").textContent="MODEL REV 1  /  "+state.interactions+" USER ACTIONS  /  NO GPU BENCHMARK";
+ const evidence=buildDerivedEvidence(state.stride,state.selectedLane);
+ const linkEvidence=describeWorldObject("address-edge",evidence);
+ $("status").textContent="DERIVED ADDRESSES / ILLUSTRATIVE PHYSICAL LAYOUT / "+measurementState().status+" / "+state.interactions+" ACTIONS";
+ document.documentElement.dataset.materialEvidenceKind=evidence.kind;
+ document.documentElement.dataset.materialPathClaim=linkEvidence.kind;
+ document.documentElement.dataset.materialGpuMeasured="false";
  document.documentElement.dataset.materialStep=state.step;
  document.documentElement.dataset.materialSectors=String(model.sectorCount);
  document.documentElement.dataset.materialSelectedAddress=String(lane.index);
@@ -294,7 +300,7 @@ updateGeometry();updatePanel();resize();
 setView("source",true);
 renderer.render(scene,camera);
 $("loading").hidden=true;document.documentElement.dataset.materialReady="true";
-window.__MATERIAL_LAB={getSnapshot:()=>({...state}),getModel:()=>({stride:model.stride,sectors:model.sectorCount,addresses:model.lanes.map(l=>l.byteAddress),output:model.result.slice()}),
+window.__MATERIAL_LAB={getSnapshot:()=>({...state}),getEvidence:()=>buildDerivedEvidence(state.stride,state.selectedLane),getMeasurement:()=>measurementState(),getObjectEvidence:id=>describeWorldObject(id,buildDerivedEvidence(state.stride,state.selectedLane)),getModel:()=>({stride:model.stride,sectors:model.sectorCount,addresses:model.lanes.map(l=>l.byteAddress),output:model.result.slice()}),
   getRenderer:()=>({drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles}),getCamera:()=>({focusX:cameraFocus.x,focusY:cameraFocus.y,focusZ:cameraFocus.z})};
 function frame(t){
  const dt=Math.min(.07,(t-(frame.last||t))/1000);frame.last=t;nowClock+=dt;frames++;

@@ -6,6 +6,7 @@ import sys
 import tempfile
 import unittest
 from unittest.mock import patch
+from capture_gather_ncu_series import capture
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]/"tools"))
 from summarize_gather_ncu_series import parse_raw_csv, summarize, REQUIRED
@@ -43,7 +44,8 @@ class NcuComparisonTests(unittest.TestCase):
         self.save("ncu-version.json",{"argv":["ncu","--version"],"exit_code":0,"stdout":"Fixture ncu","stderr":""})
         for stride in (1,4,8):
             name=f"ncu-stride{stride}.json"
-            argv=["ncu","--csv","--page","raw","--kernel-name","regex:gather",
+            argv=["ncu","--csv","--page","details","--print-units","base",
+                  "--cache-control","all","--kernel-name","regex:gather",
                   "--kernel-name-base","function","--launch-count","1",
                   "--metrics",",".join(REQUIRED),"--",str(self.binary),str(stride)]
             self.save(name,{"argv":argv,"exit_code":0,"stdout":csv_text(stride),"stderr":""})
@@ -119,6 +121,58 @@ class NcuComparisonTests(unittest.TestCase):
                    return_value={"device_uuid":self.manifest["device_uuid"]}):
             with self.assertRaisesRegex(ValueError,"manifest hash"):
                 summarize(self.folder,raw_folder=raw)
+
+    def test_full_collection_pipeline_via_fake_profiler(self):
+        raw = self.bind_origin_fixture()
+        comparison_dir = self.root/"new-capture"
+        uuid = self.manifest["device_uuid"]
+        def fake_run(argv,*,env,timeout=300):
+            self.assertEqual(env["CUDA_VISIBLE_DEVICES"],uuid)
+            if "--version" in argv:
+                return {"argv":argv,"exit_code":0,"stdout":"ncu 2026 fixture","stderr":""}
+            self.assertIn("--page",argv)
+            self.assertEqual(argv[argv.index("--page")+1],"details")
+            self.assertIn("--cache-control",argv)
+            self.assertEqual(argv[argv.index("--cache-control")+1],"all")
+            self.assertIn("--metrics",argv)
+            self.assertEqual(argv[-2],str(self.binary))
+            stride=int(argv[-1])
+            return {"argv":argv,"exit_code":0,"stdout":csv_text(stride),"stderr":""}
+        with patch("capture_gather_ncu_series.verify",return_value={"device_uuid":uuid}),\
+             patch("capture_gather_ncu_series.shutil.which",return_value="/usr/bin/ncu"),\
+             patch("capture_gather_ncu_series.run",side_effect=fake_run):
+            receipt=capture(raw,comparison_dir,uuid,execute=True)
+        self.assertEqual(receipt["status"],"COLLECTED_UNVERIFIED")
+        self.assertFalse(receipt["hardware_attested"])
+        with patch("summarize_gather_ncu_series.verify_raw_receipt",
+                   return_value={"device_uuid":uuid}):
+            summary=summarize(comparison_dir,raw_folder=raw)
+        self.assertTrue(summary["origin_bytes_rechecked"])
+        self.assertEqual(len(summary["rows"]),3)
+
+    def test_full_collection_pipeline_rejects_wrong_metric_rows(self):
+        raw=self.bind_origin_fixture()
+        folder=self.root/"invalid-capture"
+        uuid=self.manifest["device_uuid"]
+        def fake_run(argv,*,env,timeout=300):
+            if "--version" in argv:
+                return {"argv":argv,"exit_code":0,"stdout":"ncu fixture","stderr":""}
+            stride=int(argv[-1])
+            stdout=csv_text(stride).replace(REQUIRED[1],"wrong_metric")
+            return {"argv":argv,"exit_code":0,"stdout":stdout,"stderr":""}
+        with patch("capture_gather_ncu_series.verify",return_value={"device_uuid":uuid}),\
+             patch("capture_gather_ncu_series.shutil.which",return_value="/usr/bin/ncu"),\
+             patch("capture_gather_ncu_series.run",side_effect=fake_run):
+            receipt=capture(raw,folder,uuid,execute=True)
+        self.assertEqual(receipt["status"],"INCOMPLETE")
+        self.assertTrue(any("lacks attributable" in e for e in receipt["error_messages"]))
+        with self.assertRaisesRegex(ValueError,"not complete"):
+            summarize(folder)
+
+    def test_collection_never_runs_without_explicit_execute(self):
+        with self.assertRaisesRegex(ValueError,"--execute"):
+            capture(self.binary.parent,self.root/"not-created","GPU-fixture",execute=False)
+        self.assertFalse((self.root/"not-created").exists())
 
     def test_reject_missing_metric(self):
         self.edit_command(8,lambda d:d.update(stdout=d["stdout"].replace(REQUIRED[1],"not_a_counter")))

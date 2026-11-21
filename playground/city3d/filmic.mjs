@@ -18,6 +18,27 @@ export function createFilmicCity(THREE,parent,scene,{seed=79,quality="medium"}={
  const recipe=filmicRecipe(seed,quality),group=new THREE.Group();
  group.name="NIGHT_RAIN_FILMIC_LAYER";parent.add(group);
  const mat=(color,metalness=.2,roughness=.7,emissive=0x000000,emissiveIntensity=0)=>new THREE.MeshStandardMaterial({color,metalness,roughness,emissive,emissiveIntensity});
+ // One compact procedural dusk dome gives the street an atmospheric horizon
+ // without downloading a sky texture or enabling a costly post-processing chain.
+ const skyMaterial=new THREE.ShaderMaterial({
+  side:THREE.BackSide,depthWrite:false,fog:false,
+  vertexShader:`varying vec3 vSkyDirection;
+   void main(){vSkyDirection=normalize(position);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+  fragmentShader:`varying vec3 vSkyDirection;
+   float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+   void main(){
+    float elevation=clamp(vSkyDirection.y*.5+.5,0.,1.);
+    vec3 night=vec3(.023,.038,.087),mid=vec3(.12,.087,.17),horizon=vec3(.34,.14,.19);
+    vec3 color=mix(horizon,mid,smoothstep(.31,.57,elevation));
+    color=mix(color,night,smoothstep(.53,.94,elevation));
+    float cloud=sin(vSkyDirection.x*22.+vSkyDirection.z*9.)*sin(vSkyDirection.z*17.-vSkyDirection.x*5.);
+    color+=vec3(.035,.021,.035)*cloud*(1.-smoothstep(.38,.85,elevation));
+    float star=step(.9989,hash(floor(vSkyDirection.xz*260.)));
+    color+=vec3(.35,.43,.56)*star*smoothstep(.58,.87,elevation);
+    gl_FragColor=vec4(color,1.);
+   }`
+ });
+ const sky=new THREE.Mesh(new THREE.SphereGeometry(218,28,16),skyMaterial);sky.name="PROCEDURAL_DUSK";group.add(sky);
  const skylineMat=[new THREE.MeshBasicMaterial({color:0x171c31}),new THREE.MeshBasicMaterial({color:0x24263d}),new THREE.MeshBasicMaterial({color:0x2c3048})];
  const metal=mat(0x424e5c,.69,.42),shadow=mat(0x111827,.48,.68);
  const lamp=mat(0xffcd91,.1,.36,0xffb66d,2.1),aqua=mat(0x6fdae4,.2,.36,0x31cfe4,1.7);

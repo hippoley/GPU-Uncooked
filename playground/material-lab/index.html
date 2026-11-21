@@ -51,6 +51,14 @@ h2{font-size:26px;line-height:1.12;letter-spacing:-.04em;margin:11px 0 7px;font-
 #receipt-info{color:#c6d4d9;font:11px/1.6 ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere}
 #receipt-text{font:10px/1.5 ui-monospace,monospace;max-height:160px;overflow:auto;white-space:pre-wrap;background:#070e16;border:1px solid #2b3f4a;padding:9px}
 #receipt-mode{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+#accounting{margin:12px 0;padding:14px;border:1px solid #51616c;background:linear-gradient(140deg,#13212e,#0b111a)}
+#accounting h3{font-size:17px;margin:0 0 6px}
+#account-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:10px 0}
+.account-item{background:#080f19;border:1px solid #253745;padding:10px}
+.account-item strong{display:block;font:700 17px ui-monospace,monospace;color:#edcda4}
+.account-item small{display:block;margin-top:5px;color:#9baeb7;font:10px/1.4 ui-monospace,monospace}
+#account-tally{white-space:pre-wrap;font:11px/1.65 ui-monospace,monospace;color:#bdd5d9;padding:11px;background:#071019}
+#account-missing{font:11px/1.6 ui-monospace,monospace;color:#e0ac91;background:#261e1d;padding:11px;margin-top:7px}
 #microscope{border:1px solid #536a6e;background:linear-gradient(150deg,#172a33,#0b161f);padding:14px;margin:12px 0}
 #microscope h3{margin:0 0 7px;font-size:16px;letter-spacing:-.02em}
 #micro-phases{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin:10px 0}
@@ -82,6 +90,19 @@ h2{font-size:26px;line-height:1.12;letter-spacing:-.04em;margin:11px 0 7px;font-
 <div class="eyebrow">CODE ⇄ DATA ⇄ PHYSICAL MODEL</div><h2>一行 CUDA，进入芯片内部。</h2>
 <p class="copy">点击一条线程，观察它究竟取走哪一个数字。换一种地址排列，再看实际访问了多少个 32B 扇区。</p>
 <div class="panel"><div class="heading">A / 改变 CUDA 的 stride 参数</div><div class="grid"><button data-stride="1">1 · 连续</button><button data-stride="4">4 · 跨步</button><button data-stride="8">8 · 稀疏</button></div></div>
+<section id="accounting" aria-label="GPU execution accounting ledger">
+<div class="eyebrow">DEEP DIVE 002 / EXECUTION ACCOUNTING · NO FAKE COUNTERS</div>
+<h3>GPU 执行核算账本</h3>
+<p class="copy">同一段 CUDA 代码：哪些字节与线程操作能精确推导？哪些执行周期与 SASS 数量现在还没有证据？</p>
+<div id="account-grid">
+<div class="account-item"><strong id="account-load">—</strong><small>源端有效加载 / DERIVED</small></div>
+<div class="account-item"><strong id="account-coverage">—</strong><small>32B 区域覆盖 / DERIVED</small></div>
+<div class="account-item"><strong id="account-store">—</strong><small>目的端有效写回 / DERIVED</small></div>
+<div class="account-item"><strong id="account-warp">—</strong><small>本 Kernel 启动 Warp / DERIVED</small></div>
+</div>
+<div id="account-tally"></div>
+<div id="account-missing"></div>
+</section>
 <div id="microscope" aria-label="CUDA execution semantic microscope">
 <div class="eyebrow">DEEP DIVE 001 / INSTRUCTION MICROSCOPE · DERIVED</div>
 <h3>进入这一条线程：从寄存器值到地址请求</h3>

@@ -64,12 +64,30 @@ function building(root,seed,x,z,w,d,height,theme){
  cylinder(root,.09,.14,4,x-w*.2,height+2.8,z,concrete);
  sphere(root,.32,x-w*.2,height+4.9,z,trim);
 }
+let frondGeometry=null;
+const frondMaterial=new THREE.MeshStandardMaterial({color:0x2b6261,roughness:.93,metalness:0,side:THREE.DoubleSide});
+function palmFrond(){
+ if(frondGeometry)return frondGeometry;
+ const rings=[[0,0,.05],[.6,.23,.36],[1.5,.16,.66],[2.7,-.25,.44],[3.9,-.88,.08]];
+ const positions=[],indices=[];
+ for(const [z,y,width] of rings)positions.push(-width,y,z,width,y,z);
+ for(let i=0;i<rings.length-1;i++){
+  const n=i*2;indices.push(n,n+1,n+2,n+1,n+3,n+2);
+ }
+ const geometry=new THREE.BufferGeometry();
+ geometry.setAttribute("position",new THREE.Float32BufferAttribute(positions,3));
+ geometry.setIndex(indices);geometry.computeVertexNormals();
+ frondGeometry=geometry;return geometry;
+}
 function palm(root,x,z,size=1){
- const wood=mat(0x5d3e43),leaf=mat(0x216969);
- cylinder(root,.3,.48,7*size,x,3.5*size,z,wood);
- for(let i=0;i<8;i++){
-  const angle=i*Math.PI/4,leafMesh=box(root,.65,.2,5.4*size,x+Math.sin(angle)*2.2*size,7.1*size,z+Math.cos(angle)*2.2*size,leaf);
-  leafMesh.rotation.y=angle;leafMesh.rotation.x=.25;
+ const wood=mat(0x5d3e43);
+ cylinder(root,.21,.43,7*size,x,3.5*size,z,wood);
+ for(let i=0;i<9;i++){
+  const frond=new THREE.Mesh(palmFrond(),frondMaterial);
+  frond.position.set(x,7.0*size,z);
+  frond.rotation.y=i*(Math.PI*2/9);
+  frond.scale.setScalar(size*(.88+rand(i*7+x)*.2));
+  root.add(frond);
  }
 }
 function car(root,color,x,z,rotation=0){

@@ -6,12 +6,14 @@ on:
       - "playground/material-lab/**"
       - "tools/build-material-lab.mjs"
       - "tests/material-lab*.mjs"
+      - "tests/browser/material-lab-browser.mjs"
       - ".github/workflows/material-lab.yml"
   pull_request:
     paths:
       - "playground/material-lab/**"
       - "tools/build-material-lab.mjs"
       - "tests/material-lab*.mjs"
+      - "tests/browser/material-lab-browser.mjs"
       - ".github/workflows/material-lab.yml"
   workflow_dispatch:
 jobs:
@@ -34,7 +36,7 @@ jobs:
       - name: Run 3D Chromium interaction, gather formula and screenshot tests
         run: |
           python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/material-lab-http.log 2>&1 &
-          node tests/material-lab-browser.test.mjs
+          node tests/browser/material-lab-browser.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:

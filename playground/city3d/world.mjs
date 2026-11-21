@@ -92,28 +92,57 @@ function palm(root,x,z,size=1){
   root.add(frond);
  }
 }
+const tyreMaterial=new THREE.MeshStandardMaterial({color:0x10151a,roughness:.93,metalness:.02});
+const tyreGeometry=new THREE.CylinderGeometry(.43,.43,.24,16);
 function car(root,color,x,z,rotation=0){
  const parent=new THREE.Group();parent.position.set(x,0,z);parent.rotation.y=rotation;root.add(parent);
- const body=mat(color);
- box(parent,4.6,1,2.05,0,1,0,body);box(parent,2.7,.8,1.8,-.25,1.84,0,glass);
- for(const i of [-1.3,1.3])for(const k of [-.95,.95]){
-  const wheel=new THREE.Mesh(new THREE.CylinderGeometry(.43,.43,.24,12),mat(0x0b1017));wheel.rotation.x=Math.PI/2;wheel.position.set(i,.48,k);parent.add(wheel);
+ const paint=new THREE.MeshPhysicalMaterial({color,metalness:.62,roughness:.24,clearcoat:.92,clearcoatRoughness:.14});
+ const trim=mat(0x1e2630),lighting=mat(0xffedc5,0xffd99b,.85),brakes=mat(0xff5267,0xea274f,.7);
+ const window=new THREE.MeshPhysicalMaterial({color:0x233c51,metalness:.16,roughness:.18,transparent:true,opacity:.82});
+ // Layered body and wheel arches avoid the former two-box toy silhouette.
+ box(parent,4.5,.65,1.95,0,1.01,0,paint);
+ box(parent,1.35,.24,1.95,-1.46,1.32,0,paint); // shaped hood
+ box(parent,1.12,.37,1.96,1.52,1.26,0,paint); // trunk
+ const cabin=box(parent,2.38,.72,1.66,.15,1.66,0,window);
+ cabin.rotation.z=.05;
+ box(parent,2.35,.09,1.7,.16,2.05,0,paint);
+ for(const s of [-1,1]){
+  box(parent,2.28,.12,.12,.1,1.63,s*.88,trim);
+  box(parent,.65,.12,.15,-1.85,1.04,s*.76,lighting);
+  box(parent,.68,.14,.13,2.14,1.08,s*.74,brakes);
+  box(parent,.12,.19,.21,-.48,1.55,s*1.05,trim); // side mirrors
+  for(const ax of [-1.26,1.32]){
+   const wheel=new THREE.Mesh(tyreGeometry,tyreMaterial);wheel.rotation.x=Math.PI/2;wheel.position.set(ax,.49,s*.95);parent.add(wheel);
+   const hub=new THREE.Mesh(new THREE.CylinderGeometry(.23,.23,.251,12),trim);
+   hub.rotation.x=Math.PI/2;hub.position.set(ax,.49,s*.95);parent.add(hub);
+  }
  }
- for(const k of [-.7,.7])box(parent,.08,.25,.38,-2.36,1.1,k,yellow);
+ box(parent,4.36,.07,1.82,0,.75,0,trim);
+ parent.userData={role:"street-traffic",physicallyLayered:true};
  return parent;
 }
+const actorBody=new THREE.SphereGeometry(1,12,10);
 function actor(root,shirt=0xeea170){
  const p=new THREE.Group();root.add(p);
- const jacket=mat(shirt),skin=mat(0xe8b192),pants=mat(0x17233f),hair=mat(0x1a1b2c);
- box(p,.95,1.3,.56,0,1.9,0,jacket);
- sphere(p,.48,0,3.02,0,skin);box(p,1.0,.24,.65,0,3.38,-.1,hair);
+ const fabric=new THREE.MeshStandardMaterial({color:shirt,roughness:.9,metalness:.04});
+ const skin=mat(0xd3a38b),pants=mat(0x1d2e42),hair=mat(0x1c1c28);
+ const jacket=new THREE.Mesh(actorBody,fabric);jacket.scale.set(.47,.65,.31);jacket.position.y=1.65;p.add(jacket);
+ const head=new THREE.Mesh(actorBody,skin);head.scale.set(.29,.36,.30);head.position.y=2.46;p.add(head);
+ const top=new THREE.Mesh(actorBody,hair);top.scale.set(.30,.18,.31);top.position.y=2.72;p.add(top);
+ const collar=box(p,.55,.12,.40,0,2.12,0,hair);
  const arms=[],legs=[];
  for(const s of [-1,1]){
-  const arm=box(p,.27,1,.31,s*.69,1.92,0,jacket);arms.push(arm);
-  const leg=box(p,.32,1.15,.37,s*.24,.62,0,pants);legs.push(leg);
+  const arm=new THREE.Group();arm.position.set(s*.52,2.05,0);p.add(arm);
+  const sleeve=new THREE.Mesh(actorBody,fabric);sleeve.scale.set(.19,.49,.21);sleeve.position.y=-.42;arm.add(sleeve);arms.push(arm);
+  const leg=new THREE.Group();leg.position.set(s*.20,1.10,0);p.add(leg);
+  const pant=new THREE.Mesh(actorBody,pants);pant.scale.set(.19,.63,.2);pant.position.y=-.52;leg.add(pant);
+  box(leg,.36,.13,.62,0,-1.04,-.13,hair);legs.push(leg);
  }
- box(p,.75,.8,.32,0,1.8,.45,mat(0x233e4d)); // backpack
- return {root:p,arms,legs};
+ const pack=box(p,.62,.8,.24,0,1.72,.32,mat(0x2f5258));
+ box(p,.05,.7,.06,-.3,1.75,.33,mat(0xc6a27a));
+ box(p,.05,.7,.06,.3,1.75,.33,mat(0xc6a27a));
+ // Model units are metres: 2.8m prototype is scaled to human-readable 1.9m.
+ p.scale.setScalar(.69);return {root:p,arms,legs};
 }
 export function createWorld({quality="medium"}={}){
  const scene=new THREE.Scene();scene.background=new THREE.Color(0x21172f);scene.fog=new THREE.FogExp2(0x27243a,.018);

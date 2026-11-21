@@ -45,7 +45,7 @@ button:focus-visible,a:focus-visible{outline:3px solid #8dfff0;outline-offset:3p
 <canvas id="viewport" tabindex="0" aria-label="GPU Uncooked 三维城市，WASD 移动，靠近任务地点按 E 互动"></canvas>
 <div class="layer top"><div class="logo">GPU <em>UNCOOKED</em><small>SILICON CITY 3D · VERTICAL SLICE</small></div><div class="stat">NIGHT SHIFT <strong>20:45 · CITY CENTER</strong><span id="discovered">DISCOVERED 0 / 6</span></div></div>
 <div class="layer bottom"><div class="objective"><small>DISTRICT MISSION</small><strong id="mission">夜游 Silicon City</strong><p id="hint">WASD 移动 · 鼠标拖动镜头 · E 互动</p></div><div class="prompt" id="prompt">EXPLORE THE CITY</div></div>
-<div id="perf">GPU CITY · WebGL 3D</div><div id="cuda-world-actions"><button class="alt" id="xray-toggle" aria-pressed="false">X · 计算透视</button><button class="alt" id="freight-operate" disabled>R · 整理货物</button><div id="world-feedback" aria-live="polite">走近线程工厂的货物终端，按 R 操作；X 查看计算透视。</div></div>
+<div id="perf">GPU CITY · WebGL 3D</div><div id="cuda-world-actions"><button class="alt" id="xray-toggle" aria-pressed="false">X · 计算透视</button><button class="alt" id="freight-operate" disabled>R · 整理货物</button><button class="alt" id="freight-reset">重置港口</button><div id="world-feedback" aria-live="polite">走近线程工厂的货物终端，按 R 操作；X 查看计算透视。</div></div>
 <section id="cuda-xray" hidden aria-label="GPU 世界计算透视">
 <h2>CUDA X-RAY · 计算透视</h2>
 <p id="xray-location">港口编组状态 · 教学模型</p>
@@ -53,7 +53,7 @@ button:focus-visible,a:focus-visible{outline:3px solid #8dfff0;outline-offset:3p
 <p>触及扇区：<strong id="xray-sectors">64</strong> / 预算 40 · 请求数据 512B</p>
 <p id="xray-cost">当前扇区覆盖量：2048B</p>
 <p>地址示意：<code>sector = floor((index × 4) / 32)</code></p>
-<p id="xray-action">操作必须在街道货物终端附近进行。</p>
+<p id="xray-action">操作必须在街道货物终端附近进行。</p><p id="xray-history">尚无玩家操作。</p>
 <p style="font-size:10px">这里是确定性 32B 扇区模型，不是 Nsight Compute 的真实 GPU 测量。</p>
 </section>
 <div id="quality-tools" style="position:absolute;z-index:4;top:104px;right:15px;background:#081326cf;border:1px solid #6c9cad88;border-radius:8px;padding:8px 10px;font-size:11px;display:flex;gap:7px;align-items:center">

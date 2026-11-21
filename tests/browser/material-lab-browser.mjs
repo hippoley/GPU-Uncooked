@@ -77,6 +77,33 @@ await page.locator("#receipt-file").setInputFiles({
 await page.waitForFunction(()=>document.querySelector("#receipt-info")?.textContent?.startsWith("REJECTED"),null,{timeout:10000});
 assert.match(await page.locator("#receipt-info").innerText(),/REJECTED/);
 assert.equal(await page.locator("html").getAttribute("data-material-gpu-measured"),"false");
+// Imported profiler comparison must remain unauthenticated, even with plausible data.
+const ncuMetrics=["l1tex__t_sectors_pipe_lsu_mem_global_op_ld.sum",
+ "dram__bytes_read.sum","dram__bytes_write.sum"];
+const ncuComparison={schema:"gpu-uncooked.ncu-comparison.v1",
+ classification:"REPORTED_UNVERIFIED",hardware_attested:false,
+ binary_sha256:"a".repeat(64),source_manifest_sha256:"b".repeat(64),
+ series_manifest_sha256:"c".repeat(64),device_uuid_claim:"GPU-TEST-FIXTURE",
+ rows:[1,4,8].map((stride,i)=>({
+  stride,expected_source_32b_regions:[4,16,32][i],
+  source_region_bytes_span:[128,512,1024][i],kernel:"gather",
+  profile_transcript_sha256:"d".repeat(64),
+  claimed_profiler_metrics:Object.fromEntries(ncuMetrics.map((m,j)=>[m,100*(i+1)+j]))
+ }))};
+await page.locator("#ncu-comparison-file").setInputFiles({
+ name:"comparison-fixture.json",mimeType:"application/json",
+ buffer:Buffer.from(JSON.stringify(ncuComparison))
+});
+await page.waitForFunction(()=>document.querySelector("#ncu-comparison-status")?.textContent?.startsWith("REPORTED_UNVERIFIED"));
+assert.match(await page.locator("#ncu-comparison-table tbody").innerText(),/1024|32/);
+assert.equal(await page.locator("html").getAttribute("data-material-gpu-measured"),"false");
+ncuComparison.hardware_attested=true;
+await page.locator("#ncu-comparison-file").setInputFiles({
+ name:"comparison-forged.json",mimeType:"application/json",
+ buffer:Buffer.from(JSON.stringify(ncuComparison))
+});
+await page.waitForFunction(()=>document.querySelector("#ncu-comparison-status")?.textContent?.startsWith("REJECTED"));
+assert.equal(await page.locator("html").getAttribute("data-material-gpu-measured"),"false");
 assert.deepEqual(errors,[],"No uncaught browser failures");
 assert.deepEqual(external,[],"No external runtime requests");
 console.log(JSON.stringify({status:"PASS",threeJsInline:true,drawCalls:render.drawCalls,

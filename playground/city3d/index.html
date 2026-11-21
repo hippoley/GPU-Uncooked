@@ -27,6 +27,7 @@ button:focus-visible,a:focus-visible{outline:3px solid #8dfff0;outline-offset:3p
 .photo-mode .top,.photo-mode .bottom,.photo-mode .controls,.photo-mode #quality-tools,.photo-mode #perf{display:none!important}
 
 #cuda-xray{position:absolute;top:155px;left:18px;z-index:5;width:min(355px,calc(100vw - 36px));background:#0a1527e8;border:1px solid #6cd8d0a6;border-radius:12px;padding:14px 16px;box-shadow:0 12px 40px #060814bb;backdrop-filter:blur(12px);pointer-events:auto;font-size:12px}
+#cuda-xray{max-height:calc(100dvh - 330px);overflow-y:auto;overscroll-behavior:contain}
 #cuda-xray[hidden]{display:none}#cuda-xray h2{font-size:15px;margin:0 0 8px;color:#aef8ed}
 #cuda-xray .wave-bars{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:12px 0}
 #cuda-xray .wave-bars div{background:#172c40;border:1px solid #567c83;border-radius:5px;padding:7px;text-align:center}
@@ -43,7 +44,7 @@ button:focus-visible,a:focus-visible{outline:3px solid #8dfff0;outline-offset:3p
 #cuda-world-actions button{padding:9px 11px;font-size:12px}
 #world-feedback{background:#091b29e0;border:1px solid #83c4ba99;border-radius:7px;color:#e2f7ed;max-width:280px;padding:10px;font-size:12px;line-height:1.45}
 #world-feedback[data-status="operational"]{border-color:#67e2ad}
-@media(max-width:640px){#cuda-world-actions{left:8px;bottom:205px}#cuda-xray{left:8px;top:90px;max-height:48vh;overflow:auto}#world-feedback{max-width:170px;font-size:10px}}
+@media(max-width:640px){#cuda-world-actions{left:8px;bottom:205px}#cuda-xray{left:8px;top:90px;max-height:calc(100dvh - 340px);overflow:auto}#world-feedback{max-width:170px;font-size:10px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
 </style>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"}}</script>

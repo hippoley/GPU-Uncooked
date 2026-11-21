@@ -93,6 +93,11 @@ for(const device of [{name:"desktop",width:1440,height:900},{name:"mobile",width
  await page.waitForTimeout(250);
  await page.keyboard.up("ArrowLeft");
  await page.screenshot({path:"browser-artifacts/"+device.name+"-city3d.png",fullPage:true});
+ await page.locator("#viewmode").click();
+ assert.match(await page.locator("#viewmode").innerText(),/第一人称/);
+ await page.screenshot({path:"browser-artifacts/"+device.name+"-city3d-first-person.png",fullPage:true});
+ await page.locator("#viewmode").click();
+ assert.match(await page.locator("#viewmode").innerText(),/第三人称/);
  await page.close();
 }
 await browser.close();

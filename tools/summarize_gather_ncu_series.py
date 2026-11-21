@@ -36,7 +36,9 @@ def parse_raw_csv(text, *, metric_names=REQUIRED):
         raise ValueError("No unique Nsight raw CSV header containing Kernel Name, Metric Name, Metric Value")
     start, header = headers[0]
     indices = {name: header.index(name) for name in fields}
-    launch_col = header.index("ID") if "ID" in header else None
+    if "ID" not in header:
+        raise ValueError("Nsight CSV lacks per-launch ID; cannot attribute counters")
+    launch_col = header.index("ID")
     metrics = {}
     launch_ids = set()
     kernels = set()
@@ -50,8 +52,10 @@ def parse_raw_csv(text, *, metric_names=REQUIRED):
         if "gather" not in kernel:
             raise ValueError("Unexpected kernel in requested metric row")
         kernels.add(kernel)
-        if launch_col is not None:
-            launch_ids.add(row[launch_col].strip())
+        launch_id = row[launch_col].strip()
+        if not launch_id or not re.fullmatch(r"\\d+", launch_id):
+            raise ValueError("Missing or malformed Nsight launch ID")
+        launch_ids.add(launch_id)
         unit = row[indices["Metric Unit"]].strip().lower()
         expected_unit = "sector" if name.startswith("l1tex__") else "byte"
         if unit not in (expected_unit, expected_unit+"s"):
@@ -62,15 +66,15 @@ def parse_raw_csv(text, *, metric_names=REQUIRED):
         if not re.fullmatch(r"(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?", value):
             raise ValueError("Metric is missing, non-numeric, or unit-scaled: " + name)
         number = float(value)
-        if not math.isfinite(number) or number < 0:
+        if not math.isfinite(number) or number < 0 or not number.is_integer():
             raise ValueError("Metric is not a finite nonnegative value: " + name)
         metrics[name] = number
     if set(metrics) != set(metric_names):
         raise ValueError("Missing requested per-kernel metrics: " + str(sorted(set(metric_names)-set(metrics))))
-    if len(kernels) != 1 or (launch_col is not None and len(launch_ids) != 1):
+    if len(kernels) != 1 or len(launch_ids) != 1:
         raise ValueError("Metrics cannot be attributed to exactly one gather kernel launch")
     return dict(kernel=next(iter(kernels)), metrics=metrics,
-                launch_id=next(iter(launch_ids)) if launch_ids else None)
+                launch_id=next(iter(launch_ids)))
 
 def summarize(directory, *, raw_folder=None):
     folder = Path(directory).resolve()

@@ -9,9 +9,6 @@ on:
       - "tests/material-evidence.test.mjs"
       - "tests/test_gather_receipt.py"
       - "tools/*gather*receipt.py"
-      - "tests/material-evidence.test.mjs"
-      - "tests/test_gather_receipt.py"
-      - "tools/*gather*receipt.py"
       - "tests/browser/material-lab-browser.mjs"
       - ".github/workflows/material-lab.yml"
   pull_request:
@@ -19,6 +16,9 @@ on:
       - "playground/material-lab/**"
       - "tools/build-material-lab.mjs"
       - "tests/material-lab*.mjs"
+      - "tests/material-evidence.test.mjs"
+      - "tests/test_gather_receipt.py"
+      - "tools/*gather*receipt.py"
       - "tests/browser/material-lab-browser.mjs"
       - ".github/workflows/material-lab.yml"
   workflow_dispatch:

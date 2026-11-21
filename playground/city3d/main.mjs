@@ -1,6 +1,6 @@
 import {START,DISTRICTS,advance,nearestMission,missionLink} from "./logic.mjs";
 const $=id=>document.getElementById(id),canvas=$("viewport"),wrap=$("game");
-let running=false,overlay="intro",orbit=0,pressed=new Set(),last=0,elapsed=0,discovered=new Set();
+let running=false,overlay="intro",orbit=0,viewMode="third",pressed=new Set(),last=0,elapsed=0,discovered=new Set();
 let pos={...START},third=null,world=null,renderer=null,camera=null;
 const directions={forward:["w","arrowup","up"],backward:["s","arrowdown","down"],left:["a","arrowleft","left"],right:["d","arrowright","right"]};
 const active=(dir)=>directions[dir].some(k=>pressed.has(k));
@@ -36,6 +36,13 @@ for(const button of document.querySelectorAll("[data-key]")){
  for(const ev of ["pointerup","pointercancel","pointerleave","lostpointercapture"])button.addEventListener(ev,()=>pressed.delete(key));
 }
 $("camera").addEventListener("click",()=>orbit+=Math.PI/3);
+function toggleView(){
+ viewMode=viewMode==="third"?"first":"third";
+ $("viewmode").textContent=viewMode==="first"?"V · 第一人称":"V · 第三人称";
+ if(world)world.player.root.visible=viewMode==="third";
+}
+$("viewmode").addEventListener("click",toggleView);
+document.addEventListener("keydown",e=>{if(e.key.toLowerCase()==="v"&&!e.repeat)toggleView()});
 let drag=null;canvas.addEventListener("pointerdown",e=>{if(e.pointerType==="mouse"){drag=e.clientX;canvas.setPointerCapture?.(e.pointerId)}});
 canvas.addEventListener("pointermove",e=>{if(drag!==null){orbit-=(e.clientX-drag)*.006;drag=e.clientX}});
 for(const ev of ["pointerup","pointercancel","pointerleave"])canvas.addEventListener(ev,()=>{drag=null});
@@ -70,7 +77,13 @@ try{
   if(overlay==="roam"){
    const dx=Number(active("right"))-Number(active("left"));
    const forward=Number(active("forward"))-Number(active("backward"));
-   const old=pos;pos=advance(pos,{forward,right:dx},dt,11);
+   const old=pos;
+   const heading=orbit+.6;
+   const axes=viewMode==="first"?
+    {forward:forward*Math.cos(heading)+dx*Math.sin(heading),
+     right:dx*Math.cos(heading)-forward*Math.sin(heading)}:
+    {forward,right:dx};
+   pos=advance(pos,axes,dt,11);
    const mx=pos.x-old.x,mz=pos.z-old.z,v=Math.hypot(mx,mz)/Math.max(dt,.0001);
    if(v>.01)world.player.root.rotation.y=Math.atan2(mx,-mz);
    world.walk(elapsed,v);
@@ -83,10 +96,16 @@ try{
   const look=new THREE.Vector3(pos.x,2.6,pos.z);
   const portrait=wrap.clientHeight>wrap.clientWidth;
   const radius=portrait?17:13,altitude=portrait?10.8:7.9;
-  const desired=new THREE.Vector3(pos.x+Math.sin(orbit+.6)*radius,altitude,pos.z+Math.cos(orbit+.6)*radius);
   const alpha=1-Math.exp(-dt*4.7);
-  camera.position.lerp(desired,alpha);
-  camera.lookAt(look);
+  if(viewMode==="first"){
+   const desired=new THREE.Vector3(pos.x,2.85,pos.z);
+   camera.position.lerp(desired,alpha);
+   camera.lookAt(new THREE.Vector3(pos.x-Math.sin(orbit+.6)*17,2.9,pos.z-Math.cos(orbit+.6)*17));
+  }else{
+   const desired=new THREE.Vector3(pos.x+Math.sin(orbit+.6)*radius,altitude,pos.z+Math.cos(orbit+.6)*radius);
+   camera.position.lerp(desired,alpha);
+   camera.lookAt(look);
+  }
   renderer.render(scene,camera);frames++;
   if(now-lastPerf>1500){$("perf").textContent="SILICON CITY · 3D WEBGL · "+Math.round(frames*1000/(now-lastPerf||1))+" FPS (browser)";frames=0;lastPerf=now}
   requestAnimationFrame(frame);

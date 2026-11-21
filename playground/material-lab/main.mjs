@@ -5,6 +5,7 @@ import {parseReceiptView} from "./receipt-view.mjs";
 import {traceGather,compareGatherStrides,TRACE_PHASES,phaseExplanation} from "./instruction-microscope.mjs";
 import {gatherAccounting,reconcileGather} from "./execution-accounting.mjs";
 import {inspectSassListing} from "./sass-inspector.mjs";
+import {parseNcuComparison} from "./ncu-comparison-view.mjs";
 
 // Industrial material visual language: ceramic substrate, milled copper, satin metal,
 // glass passivation and address-bearing silicon cells. Not a literal GPU die floorplan.
@@ -415,6 +416,42 @@ document.querySelectorAll("[data-receipt-tab]").forEach(btn=>btn.addEventListene
 }));
 showReceipt();
 
+$("ncu-comparison-file").addEventListener("change",async()=>{
+ const file=$("ncu-comparison-file").files?.[0];
+ if(!file)return;
+ const status=$("ncu-comparison-status");
+ status.textContent="VALIDATING / NOT MEASURED";
+ try{
+  if(file.size>160000)throw new Error("Comparison file too large");
+  const comparison=parseNcuComparison(JSON.parse(await file.text()));
+  const tbody=$("ncu-comparison-table").querySelector("tbody");
+  tbody.replaceChildren();
+  for(const item of comparison.rows){
+   const tr=document.createElement("tr");
+   for(const value of [item.stride,item.sourceRegions,item.l1LoadSectors,
+     item.dramReadBytes,item.dramWriteBytes]){
+    const td=document.createElement("td");td.textContent=String(value);td.style.padding="5px";tr.append(td);
+   }
+   tr.addEventListener("click",()=>apply({type:"STRIDE",value:item.stride}));
+   tbody.append(tr);
+  }
+  status.textContent="REPORTED_UNVERIFIED / "+comparison.deviceClaim+
+   " / BINARY SHA256 "+comparison.binarySha256+
+   " / THREE SEPARATE PROFILED LAUNCHES / NOT ATTESTED";
+ }catch(err){
+  status.textContent="REJECTED / "+String(err.message).slice(0,180);
+  const tbody=$("ncu-comparison-table").querySelector("tbody");
+  tbody.replaceChildren();
+  for(const stride of [1,4,8]){
+   const tr=document.createElement("tr");
+   for(const value of [stride,{1:4,4:16,8:32}[stride],"UNKNOWN","UNKNOWN","UNKNOWN"]){
+    const td=document.createElement("td");td.textContent=String(value);tr.append(td);
+   }
+   tbody.append(tr);
+  }
+ }
+ document.documentElement.dataset.materialGpuMeasured="false";
+});
 document.querySelectorAll("[data-stride]").forEach(b=>b.addEventListener("click",()=>apply({type:"STRIDE",value:Number(b.dataset.stride)})));
 document.querySelectorAll("[data-step]").forEach(b=>b.addEventListener("click",()=>apply({type:"STEP",value:b.dataset.step})));
 for(const [id,point] of [["focus-threads","dispatch"],["focus-memory","memory"],["focus-overview","source"]]){

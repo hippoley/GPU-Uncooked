@@ -11,11 +11,11 @@ from capture_gather_ncu_series import capture
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]/"tools"))
 from summarize_gather_ncu_series import parse_raw_csv, summarize, REQUIRED
 
-HEADER = "ID,Kernel Name,Metric Name,Metric Value\n"
+HEADER = "ID,Kernel Name,Metric Name,Metric Unit,Metric Value\n"
 
 def csv_text(stride):
     return "==PROF== Connected\n"+HEADER+ "".join(
-        f'1,gather,"{metric}",{stride*100+i}\n'
+        f'1,gather,"{metric}",{"sector" if i==0 else "byte"},{stride*100+i}\n'
         for i,metric in enumerate(REQUIRED)) + f"PASS stride={stride} lanes=32 input=256 verified=32\n"
 
 def sha(path):
@@ -201,10 +201,15 @@ class NcuComparisonTests(unittest.TestCase):
         self.refresh()
         with self.assertRaisesRegex(ValueError,"not complete"): summarize(self.folder)
 
+    def test_reject_wrong_profiler_units(self):
+        raw=csv_text(1).replace(f'"{REQUIRED[1]}",byte',f'"{REQUIRED[1]}",%')
+        with self.assertRaisesRegex(ValueError,"unit is incompatible"):
+            parse_raw_csv(raw)
+
     def test_reject_non_numeric_and_duplicate_rows(self):
         text=csv_text(1).replace("100\n","nan\n")
         with self.assertRaisesRegex(ValueError,"non-numeric"): parse_raw_csv(text)
-        duplicated=csv_text(1)+f'1,gather,"{REQUIRED[0]}",222\n'
+        duplicated=csv_text(1)+f'1,gather,"{REQUIRED[0]}",sector,222\n'
         with self.assertRaisesRegex(ValueError,"Duplicate metric"): parse_raw_csv(duplicated)
 
 if __name__=="__main__":

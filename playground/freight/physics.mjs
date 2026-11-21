@@ -59,7 +59,17 @@ export function consolidateSector(manifest,selectedSlot){
  let moves=0;
  for(let idx=0;idx<TOTAL;idx++){
   if(Math.floor(idx/LANES)===wave||sectorOf(output[idx])!==sector)continue;
-  const target=output.findIndex((address,j)=>Math.floor(j/LANES)===wave&&sectorOf(address)!==sector);
+  // When a load enters this convoy, select which box to displace.
+  // Prefer a displaced box that minimizes total sector traffic after the swap.
+  // The player still chooses the sector and destination convoy.
+  let target=-1,bestTraffic=Infinity;
+  for(let j=wave*LANES;j<(wave+1)*LANES;j++){
+   if(sectorOf(output[j])===sector)continue;
+   [output[idx],output[j]]=[output[j],output[idx]];
+   const traffic=manifestFootprint(output).sectors;
+   [output[idx],output[j]]=[output[j],output[idx]];
+   if(traffic<bestTraffic){bestTraffic=traffic;target=j;}
+  }
   if(target<0)throw new RangeError("Wave is unexpectedly full");
   [output[idx],output[target]]=[output[target],output[idx]];
   moves++;

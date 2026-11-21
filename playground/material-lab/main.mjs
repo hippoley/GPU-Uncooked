@@ -10,7 +10,7 @@ const renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:"h
 renderer.outputColorSpace=THREE.SRGBColorSpace;
 renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));
 renderer.toneMapping=THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure=1.22;
+renderer.toneMappingExposure=1.58;
 const camera=new THREE.PerspectiveCamera(44,1,.1,160);
 const center=new THREE.Vector3(0,.65,0),focus=new THREE.Vector3(0,.65,0);
 let radius=33,theta=.2,phi=1.08,held=false,lastPointer=null,elapsed=0;
@@ -33,12 +33,12 @@ function surfaceTexture(){
  tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.repeat.set(5,3);
  return tex;
 }
-const pcb=new THREE.MeshStandardMaterial({color:0x303d40,map:surfaceTexture(),metalness:.32,roughness:.71});
+const pcb=new THREE.MeshStandardMaterial({color:0x617076,map:surfaceTexture(),metalness:.28,roughness:.66});
 const copper=new THREE.MeshStandardMaterial({color:0xac7752,metalness:.91,roughness:.24});
 const brushed=new THREE.MeshStandardMaterial({color:0x667781,metalness:.85,roughness:.39});
-const titanium=new THREE.MeshStandardMaterial({color:0x253139,metalness:.77,roughness:.37});
+const titanium=new THREE.MeshStandardMaterial({color:0x495a63,metalness:.76,roughness:.4});
 const ceramic=new THREE.MeshStandardMaterial({color:0x6d7681,metalness:.27,roughness:.72});
-const wafer=new THREE.MeshPhysicalMaterial({color:0x1c3539,metalness:.51,roughness:.19,clearcoat:1,clearcoatRoughness:.12});
+const wafer=new THREE.MeshPhysicalMaterial({color:0x40616a,metalness:.46,roughness:.27,clearcoat:1,clearcoatRoughness:.12});
 const glass=new THREE.MeshPhysicalMaterial({color:0x6995a1,metalness:.12,roughness:.16,transparent:true,opacity:.19,depthWrite:false});
 const orangeGlow=new THREE.MeshBasicMaterial({color:0xffb677});
 const cyanGlow=new THREE.MeshBasicMaterial({color:0x59d9d2});
@@ -81,11 +81,11 @@ const ledGeo=new THREE.CylinderGeometry(.08,.08,.06,8);
 for(let i=0;i<22;i++){
  mesh(ledGeo,i%3===0?orangeGlow:offGlow,-14.5+i*1.35,.28,-8.88);
 }
-scene.add(new THREE.HemisphereLight(0x8bb5b9,0x0a1119,1.45));
-const key=new THREE.DirectionalLight(0xf3e4cf,3);key.position.set(-12,20,16);scene.add(key);
-const edge=new THREE.DirectionalLight(0x6bc1e4,1.75);edge.position.set(12,9,-13);scene.add(edge);
-const spot=new THREE.SpotLight(0xe8a875,120,43,.76,.64,1.3);spot.position.set(0,22,12);spot.target.position.set(0,0,0);scene.add(spot,spot.target);
-const boardLight=new THREE.PointLight(0x51afa9,4,18,2);boardLight.position.set(6,4,0);scene.add(boardLight);
+scene.add(new THREE.HemisphereLight(0xb8d4d4,0x30434d,2.1));
+const key=new THREE.DirectionalLight(0xfff0d5,4.6);key.position.set(-12,20,16);scene.add(key);
+const edge=new THREE.DirectionalLight(0x7ad4e9,2.55);edge.position.set(12,9,-13);scene.add(edge);
+const spot=new THREE.SpotLight(0xffdfb7,170,43,.76,.64,1.3);spot.position.set(0,22,12);spot.target.position.set(0,0,0);scene.add(spot,spot.target);
+const boardLight=new THREE.PointLight(0x6dbdb5,7,18,2);boardLight.position.set(6,4,0);scene.add(boardLight);
 
 // Left: register/warp launch panel. 32 independent lane sockets in one visible group.
 const laneObjects=[],lanePositions=[];
@@ -147,7 +147,7 @@ const packetGeo=new THREE.SphereGeometry(.14,12,10);
 const packetMaterials=[orangeGlow,cyanGlow];
 let selectedPath=null,selectedPacket=null;
 let state=initialSnapshot(),model=kernelGather({stride:state.stride});
-let cameraPos=new THREE.Vector3(0,23,30),angleX=0,angleY=0,drag=null,zoom=1,frames=0,nowClock=0;
+let cameraPos=new THREE.Vector3(0,17,21),angleX=0,angleY=0,drag=null,zoom=1,frames=0,nowClock=0;
 function lineForLane(lane){
  const address=model.lanes[lane];
  const start=lanePositions[lane],end=cellPositions[address.index];
@@ -215,7 +215,7 @@ function updatePanel(){
 }
 function apply(action){
  state=transition(state,action);updateGeometry();updatePanel();
- const pose={source:[0,23,30],dispatch:[-12,16,19],memory:[12,16,19],result:[0,22,30]};
+ const pose={source:[0,17,21],dispatch:[-11,11,13],memory:[11,11,13],result:[0,17,21]};
  cameraPos.set(...pose[state.step]);
 }
 document.querySelectorAll("[data-stride]").forEach(b=>b.addEventListener("click",()=>apply({type:"STRIDE",value:Number(b.dataset.stride)})));
@@ -255,7 +255,7 @@ function resize(){const rect=$("viewport").getBoundingClientRect();
 }
 window.addEventListener("resize",resize);
 updateGeometry();updatePanel();resize();
-camera.position.set(0,23,30);camera.lookAt(0,0,0);
+camera.position.set(0,17,21);camera.lookAt(0,0,0);
 renderer.render(scene,camera);
 $("loading").hidden=true;document.documentElement.dataset.materialReady="true";
 window.__MATERIAL_LAB={getSnapshot:()=>({...state}),getModel:()=>({stride:model.stride,sectors:model.sectorCount,addresses:model.lanes.map(l=>l.byteAddress),output:model.result.slice()}),

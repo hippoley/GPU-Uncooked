@@ -5,6 +5,9 @@ const sceneQuality=["low","medium","high"].includes(requestedQuality)?requestedQ
 document.documentElement.dataset.sceneQuality=sceneQuality;
 let running=false,overlay="intro",orbit=0,viewMode="third",pressed=new Set(),last=0,elapsed=0,discovered=new Set();
 let pos={...START},third=null,world=null,renderer=null,camera=null;
+const fixedCornerShot=new URLSearchParams(location.search).get("shot")==="corner";
+if(fixedCornerShot){pos={x:-23,z:-17};orbit=.38;}
+document.documentElement.dataset.cornerShot=String(fixedCornerShot);
 const directions={forward:["w","arrowup","up"],backward:["s","arrowdown","down"],left:["a","arrowleft","left"],right:["d","arrowright","right"]};
 const active=(dir)=>directions[dir].some(k=>pressed.has(k));
 function error(message){$("loading").hidden=false;$("error").textContent=message;$("loading").style.background="#191326"}

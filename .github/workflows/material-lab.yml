@@ -12,6 +12,9 @@ on:
       - "tests/material-execution-accounting.test.mjs"
       - "tests/material-sass-inspector.test.mjs"
       - "tests/test_gather_receipt.py"
+      - "tests/test_gather_ncu_comparison.py"
+      - "tools/capture_gather_ncu_series.py"
+      - "tools/summarize_gather_ncu_series.py"
       - "tools/*gather*receipt.py"
       - "tools/export_gather_receipt_view.py"
       - "tests/browser/material-lab-browser.mjs"
@@ -27,6 +30,9 @@ on:
       - "tests/material-execution-accounting.test.mjs"
       - "tests/material-sass-inspector.test.mjs"
       - "tests/test_gather_receipt.py"
+      - "tests/test_gather_ncu_comparison.py"
+      - "tools/capture_gather_ncu_series.py"
+      - "tools/summarize_gather_ncu_series.py"
       - "tools/*gather*receipt.py"
       - "tools/export_gather_receipt_view.py"
       - "tests/browser/material-lab-browser.mjs"
@@ -47,6 +53,8 @@ jobs:
         run: node --test tests/material-lab.test.mjs tests/material-evidence.test.mjs tests/material-receipt-view.test.mjs tests/material-microscope.test.mjs tests/material-execution-accounting.test.mjs tests/material-sass-inspector.test.mjs
       - name: Verify offline receipt integrity tests (no GPU required)
         run: python3 -m unittest discover -s tests -p test_gather_receipt.py -v
+      - name: Validate three-stride Nsight profile identity and attribution (fixtures only)
+        run: python3 -m unittest discover -s tests -p test_gather_ncu_comparison.py -v
       - name: Install pinned runtime and bundler
         run: npm install --no-save --no-audit --no-fund three@0.170.0 esbuild@0.25.12 playwright@1.56.1
       - name: Build actual standalone HTML and measure size

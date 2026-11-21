@@ -1,5 +1,8 @@
 import {START,DISTRICTS,advance,nearestMission,missionLink} from "./logic.mjs";
 const $=id=>document.getElementById(id),canvas=$("viewport"),wrap=$("game");
+const requestedQuality=new URLSearchParams(location.search).get("quality");
+const sceneQuality=["low","medium","high"].includes(requestedQuality)?requestedQuality:"medium";
+document.documentElement.dataset.sceneQuality=sceneQuality;
 let running=false,overlay="intro",orbit=0,viewMode="third",pressed=new Set(),last=0,elapsed=0,discovered=new Set();
 let pos={...START},third=null,world=null,renderer=null,camera=null;
 const directions={forward:["w","arrowup","up"],backward:["s","arrowdown","down"],left:["a","arrowleft","left"],right:["d","arrowright","right"]};
@@ -60,7 +63,7 @@ function resize(){if(!renderer||!camera)return;const w=Math.max(1,wrap.clientWid
  renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=h>w?84:68;camera.updateProjectionMatrix()}
 try{
  // Load Three.js as an ESM package pinned in the HTML import map.
- const {THREE,scene,root,player,...rest}=await import("./world.mjs").then(m=>{const w=m.createWorld();return {...w,THREE:w.THREE}});
+ const {THREE,scene,root,player,...rest}=await import("./world.mjs").then(m=>{const w=m.createWorld({quality:sceneQuality});return {...w,THREE:w.THREE}});
  world={scene,root,player,...rest,THREE};
  // Successful calculation changes the district's physical marker when the player returns.
  try{
@@ -91,7 +94,11 @@ try{
   triangles:renderer.info.render.triangles,
   geometries:renderer.info.memory.geometries,
   textures:renderer.info.memory.textures,
-  proceduralMaterials:true
+  proceduralMaterials:true,
+  quality:sceneQuality,
+  cornerProps:world.closeup?.metrics.authoredProps??0,
+  cornerBatchCalls:world.closeup?.metrics.instancedDrawCalls??0,
+  disclaimer:"WebGL calls and software-renderer FPS are not proof of GTA VI-level fidelity or real GPU performance."
  };
  running=true;clearTimeout(fallbackTimeout);$("loading").hidden=true;document.documentElement.dataset.city3dReady="true";
  let frames=0,lastPerf=0;

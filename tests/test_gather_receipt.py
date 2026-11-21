@@ -10,7 +10,7 @@ class ReceiptTests(unittest.TestCase):
  def make(self,root):
   files={}
   for name in ("inventory.json","compile.json","sass-command.json","ptx-command.json",
-               "gather","gather.ptx.txt","gather.sass.txt",
+               "gather","source-gather.cu","gather.ptx.txt","gather.sass.txt",
                "run-stride1.json","run-stride4.json","run-stride8.json"):
    if name.startswith("run-stride"):
     s=int(name.split("stride")[1].split(".")[0])
@@ -23,7 +23,7 @@ class ReceiptTests(unittest.TestCase):
   manifest={"schema_version":"gpu-uncooked.raw-gpu-receipt.v1",
    "status":"COLLECTED_UNVERIFIED","trust":"UNVERIFIED_CAPTURE_NOT_ATTESTATION",
    "device":{"uuid":"GPU-test"},"environment":{"CUDA_VISIBLE_DEVICES":"GPU-test"},
-   "compiler_arch":"sm_80","strides":[1,4,8],"source_sha256":"a"*64,
+   "compiler_arch":"sm_80","strides":[1,4,8],"source_sha256":files["source-gather.cu"],
    "command_files":{"compile":"compile.json","sass":"sass-command.json",
       "ptx":"ptx-command.json",**{"run_"+str(i):f"run-stride{i}.json" for i in (1,4,8)}},
    "profile_requested":False,"file_sha256":files}

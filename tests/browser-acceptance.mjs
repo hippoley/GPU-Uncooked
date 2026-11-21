@@ -60,9 +60,27 @@ for(const device of [{name:"desktop",width:1440,height:900},{name:"mobile",width
  assert.equal(await page.locator("#mission-card").isVisible(),true);
  assert.equal(await page.locator("#mission-kicker").isVisible(),true);
  await page.screenshot({path:"browser-artifacts/"+device.name+"-arcade.png",fullPage:true});
+ await page.goto("http://127.0.0.1:8765/playground/city/index.html",{waitUntil:"networkidle"});
+ assert.match(await page.locator("#modal-title").innerText(),/今晚，城市属于你/);
+ await page.locator("#start").click();
+ assert.equal(await page.locator("#modal").isHidden(),true);
+ // Starting at (469,394), approach the Thread Factory mission point (185,353).
+ await page.keyboard.down("ArrowLeft");
+ await page.waitForTimeout(1320);
+ await page.keyboard.up("ArrowLeft");
+ await page.keyboard.down("ArrowUp");
+ await page.waitForTimeout(220);
+ await page.keyboard.up("ArrowUp");
+ await page.locator("#interact").click();
+ assert.equal(await page.locator("#modal").isVisible(),true);
+ assert.equal(await page.locator("#modal-title").innerText(),"线程工厂");
+ assert.equal(await page.locator('#modal-actions a[href="../chapters/01-thread-mapping/index.html"]').count(),1);
+ await page.locator("#modal-actions button").click();
+ assert.equal(await page.locator("#modal").isHidden(),true);
+ await page.screenshot({path:"browser-artifacts/"+device.name+"-silicon-city.png",fullPage:true});
  await page.close();
 }
 await browser.close();
-writeFileSync("browser-artifacts/report.json",JSON.stringify({status:failures.length?"failed":"passed",failures,devices:["desktop","mobile"],chapters:3,arcade:true},null,2));
+writeFileSync("browser-artifacts/report.json",JSON.stringify({status:failures.length?"failed":"passed",failures,devices:["desktop","mobile"],chapters:3,arcade:true,city:true},null,2));
 assert.deepEqual(failures,[]);
 console.log("PASS: three chapters, challenge, explorer, navigation, screenshots in desktop and mobile");

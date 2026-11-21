@@ -86,12 +86,13 @@ def main(argv=None):
             result = run(cmd)
             commands["version_"+label] = save_command(out,"version-"+label+".json",result)
             versions[label] = result["stdout"] + result["stderr"]
+    source_sha = None
     try:
-        source_sha = sha256(KERNEL)
         shutil.copyfile(KERNEL, out/"source-gather.cu")
+        source_sha = sha256(out/"source-gather.cu")
         build = run(["nvcc","-O2","-lineinfo","-gencode",
                      "arch=compute_"+cap.replace(".","")+",code=["+arch+",compute_"+cap.replace(".","")+"]",
-                     str(KERNEL),"-o","gather"],cwd=out,env=env)
+                     str(out/"source-gather.cu"),"-o","gather"],cwd=out,env=env)
         commands["compile"] = save_command(out,"compile.json",build)
         if build["exit_code"]:
             raise RuntimeError("CUDA compilation failed")
@@ -132,7 +133,7 @@ def main(argv=None):
         "trust":"UNVERIFIED_CAPTURE_NOT_ATTESTATION",
         "recorded_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
         "source_path":"playground/material-lab/gather.cu",
-        "source_sha256":sha256(out/"source-gather.cu") if (out/"source-gather.cu").exists() else sha256(KERNEL),
+        "source_sha256":source_sha if (out/"source-gather.cu").exists() else None,
         "device":selected,
         "compiler_arch":arch,
         "environment":{"CUDA_VISIBLE_DEVICES":selected["uuid"]},

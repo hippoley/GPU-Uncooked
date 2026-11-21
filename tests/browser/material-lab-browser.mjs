@@ -27,6 +27,9 @@ await page.locator("[data-lane='31']").click();
 assert.match(await page.locator("#address-detail").innerText(),/src\[248\]/);
 assert.equal(await page.locator("html").getAttribute("data-material-selected-address"),"248");
 await page.locator("[data-step='memory']").click();
+const inspection=await page.evaluate(()=>window.__MATERIAL_LAB.getCamera());
+assert.equal(inspection.focusX,8,"Memory mode must actually move the 3D camera focus onto real cells");
+
 assert.equal(await page.locator("html").getAttribute("data-material-step"),"memory");
 await page.screenshot({path:"dist/material-lab/industrial-memory.png"});
 const data=await page.evaluate(()=>window.__MATERIAL_LAB.getModel());

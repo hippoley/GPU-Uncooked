@@ -177,7 +177,7 @@ function redraw(){
  window.__MICROVERSE_DIAGNOSTICS={renderedStations:stageObjects.length,progress:state.seen.length,current:st.id,
   cameraZ:camera.position.z,stageIsNear:nearStation(camera.position.z,state.index,5.7),
   independentHardware:false,model:"Educational software/hardware spatial analogy, not literal floorplan"};
- if(state.complete){$("done").hidden=false;guide=false}
+ if(state.complete){$("done").hidden=false;$("start").hidden=true;guide=false}
 }
 function spawnFlow(stage){
  const start=stage.z+.5;

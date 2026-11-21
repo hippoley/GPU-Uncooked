@@ -1,10 +1,8 @@
 /**
- * Reproducible self-contained Silicon City 3D entry build.
- * Requires: npm install --no-save esbuild@0.25.12 three@0.170.0
- * Output: dist/city3d/index.html (all 3D JavaScript including Three.js is inline).
- *
- * This bundles only the CITY ENTRY. Freight and CUDA game links remain separate pages.
- * No external runtime assets are permitted in this generated city entry.
+ * Produce a real self-contained Silicon City HTML.
+ * npm install --no-save esbuild@0.25.12 three@0.170.0
+ * node tools/build-city3d.mjs
+ * Three.js and the complete city ENTRY are inline; linked game pages are separate.
  */
 import {build} from "esbuild";
 import {readFileSync,mkdirSync,writeFileSync} from "node:fs";
@@ -14,64 +12,40 @@ import {gzipSync,brotliCompressSync,constants} from "node:zlib";
 const root=resolve(dirname(fileURLToPath(import.meta.url)),"..");
 const src=resolve(root,"playground/city3d");
 const dist=resolve(root,"dist/city3d");
-const buildResult=await build({
- entryPoints:[resolve(src,"main.mjs")],bundle:true,write:false,format:"esm",
- platform:"browser",target:"es2022",minify:true,treeShaking:true,
- legalComments:"none",splitting:false,logLevel:"warning"
+const bundle=await build({
+ entryPoints:[resolve(src,"main.mjs")],
+ bundle:true,write:false,format:"esm",platform:"browser",target:"es2022",
+ minify:true,treeShaking:true,legalComments:"none",splitting:false,logLevel:"warning"
 });
-if(buildResult.outputFiles?.length!==1)throw Error("Expected exactly one bundled JS file");
-const js=Buffer.from(buildResult.outputFiles[0].contents).toString("utf8").replaceAll("</script","<\\/script");
+if(bundle.outputFiles?.length!==1)throw Error("Expected one bundled JS output");
+const js=Buffer.from(bundle.outputFiles[0].contents).toString("utf8").replaceAll("</script","<\\/script");
 const original=readFileSync(resolve(src,"index.html"),"utf8");
-let html=original.replace(/<script type="importmap">[\s\S]*?<\/script>/,"");
-const script='<script type="module" src="./main.mjs"></script>';
-if(!html.includes(script))throw Error("Entry script anchor absent");
-const remainingTemplate=html.replace(script,"");
-if(/<script\b[^>]*\bsrc\s*=/i.test(remainingTemplate)||/<script\b[^>]*type\s*=\s*["']importmap/i.test(remainingTemplate))
+const entry='<script type="module" src="./main.mjs"></script>';
+if(!original.includes(entry))throw Error("Entry script anchor absent");
+const template=original.replace(/<script type="importmap">[\s\S]*?<\/script>/,"");
+const other=template.replace(entry,"");
+if(/<script\b[^>]*\bsrc\s*=/i.test(other)||/<script\b[^>]*type\s*=\s*["']importmap/i.test(other))
  throw Error("Unexpected external script or import map in HTML template");
-// String.replace(string) interprets html=html.replace(script,'<script type="module">'+js+'</script>');
-// Inline JS can legitimately contain literal HTML strings. Do not regex-scan
-// script source as if it were HTML tags. The browser smoke test enforces zero network requests., 
-if(/https?:\/\/cdn\.jsdelivr\.net/.test(remainingTemplate))throw Error("CDN reference survived in HTML template");
-const bytes=Buffer.from(html);
-const gzip=gzipSync(bytes,{level:9});
+// Function replacement is essential: esbuild minified code contains dollar sequences
+// that must be inserted verbatim, never interpreted as String.replace substitution tokens.
+const html=template.replace(entry,()=>'<script type="module">'+js+'</script>');
+if([...html.matchAll(/<script\b/gi)].length!==1||[...html.matchAll(/<\/script\s*>/gi)].length!==1)
+ throw Error("Generated HTML must contain exactly one inlined script");
+if(/<script\b[^>]*\bsrc\s*=/i.test(html))throw Error("External script survived bundling");
+if(/https?:\/\/cdn\.jsdelivr\.net/.test(other))throw Error("CDN reference in HTML template");
+const bytes=Buffer.from(html),gzip=gzipSync(bytes,{level:9});
 const brotli=brotliCompressSync(bytes,{params:{[constants.BROTLI_PARAM_QUALITY]:9}});
-const max=1_400_000;
 mkdirSync(dist,{recursive:true});
 writeFileSync(resolve(dist,"index.html"),bytes);
 const report={
- target:"single-file 3D city entry (other game chapters are separate)",path:"dist/city3d/index.html",
- includesThreeJs:true,externalRuntimeAssets:0,rawBytes:bytes.length,
- gzipBytes:gzip.length,brotliBytes:brotli.length,
- limitBytes:max,underLimit:brotli.length<=max,
+ target:"single-file 3D city entry (other game chapters are separate)",
+ path:"dist/city3d/index.html",
+ includesThreeJs:true,externalRuntimeAssets:0,
+ rawBytes:bytes.length,gzipBytes:gzip.length,brotliBytes:brotli.length,
+ limitBytes:1400000,underLimit:brotli.length<=1400000,
  linkedChapterPagesNotBundled:true,
  visualParityWithGta6:"NOT_TESTED",realGpuFps:"NOT_TESTED"
 };
 writeFileSync(resolve(dist,"build-report.json"),JSON.stringify(report,null,2)+"\n");
 console.log(JSON.stringify(report,null,2));
-if(!report.underLimit){console.error("Single-file city entry exceeds compressed target");process.exitCode=1}
- and $\` in minified vendor code.
-// Use a FUNCTION replacer so esbuild output is inserted byte-for-byte.
-html=html.replace(script,()=>'<script type="module">'+js+'</script>');
-const inlineOpenings=[...html.matchAll(/<script\\b/gi)].length;
-const inlineClosings=[...html.matchAll(/<\\/script\\s*>/gi)].length;
-if(inlineOpenings!==1||inlineClosings!==1)throw Error("Generated HTML must contain exactly one inline module script");
-if(/<script\\b[^>]*\\bsrc\\s*=/i.test(html))throw Error("Bundled HTML must not contain external script tags");
-// Inline JS can legitimately contain HTML-like strings. The browser test verifies zero network requests.
-if(/https?:\/\/cdn\.jsdelivr\.net/.test(remainingTemplate))throw Error("CDN reference survived in HTML template");
-const bytes=Buffer.from(html);
-const gzip=gzipSync(bytes,{level:9});
-const brotli=brotliCompressSync(bytes,{params:{[constants.BROTLI_PARAM_QUALITY]:9}});
-const max=1_400_000;
-mkdirSync(dist,{recursive:true});
-writeFileSync(resolve(dist,"index.html"),bytes);
-const report={
- target:"single-file 3D city entry (other game chapters are separate)",path:"dist/city3d/index.html",
- includesThreeJs:true,externalRuntimeAssets:0,rawBytes:bytes.length,
- gzipBytes:gzip.length,brotliBytes:brotli.length,
- limitBytes:max,underLimit:brotli.length<=max,
- linkedChapterPagesNotBundled:true,
- visualParityWithGta6:"NOT_TESTED",realGpuFps:"NOT_TESTED"
-};
-writeFileSync(resolve(dist,"build-report.json"),JSON.stringify(report,null,2)+"\n");
-console.log(JSON.stringify(report,null,2));
-if(!report.underLimit){console.error("Single-file city entry exceeds compressed target");process.exitCode=1}
+if(!report.underLimit){console.error("Single-file city entry exceeds 1.4MB Brotli target");process.exitCode=1}

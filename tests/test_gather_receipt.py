@@ -15,15 +15,17 @@ class ReceiptTests(unittest.TestCase):
    if name.startswith("run-stride"):
     s=int(name.split("stride")[1].split(".")[0])
     val=json.dumps({"argv":["./gather",str(s)],"exit_code":0,"stdout":f"PASS stride={s} lanes=32 input=256 verified=32","stderr":""})
-   elif name in ("compile.json","sass-command.json","ptx-command.json"):
-    val=json.dumps({"argv":["tool"],"exit_code":0,"stdout":"ok","stderr":""})
+   elif name=="compile.json":
+    val=json.dumps({"argv":["nvcc","-gencode","arch=compute_80,code=[sm_80,compute_80]",str(root/"source-gather.cu"),"-o","gather"],"exit_code":0,"stdout":"ok","stderr":""})
+   elif name in ("sass-command.json","ptx-command.json"):
+    val=json.dumps({"argv":["cuobjdump"],"exit_code":0,"stdout":"ok","stderr":""})
    else: val="test binary or disassembly"
    (root/name).write_text(val)
    files[name]=h(val.encode())
   manifest={"schema_version":"gpu-uncooked.raw-gpu-receipt.v1",
    "status":"COLLECTED_UNVERIFIED","trust":"UNVERIFIED_CAPTURE_NOT_ATTESTATION",
    "device":{"uuid":"GPU-test"},"environment":{"CUDA_VISIBLE_DEVICES":"GPU-test"},
-   "compiler_arch":"sm_80","strides":[1,4,8],"source_sha256":files["source-gather.cu"],
+   "compiler_arch":"sm_80","git_commit":"a"*40,"strides":[1,4,8],"source_sha256":files["source-gather.cu"],
    "command_files":{"compile":"compile.json","sass":"sass-command.json",
       "ptx":"ptx-command.json",**{"run_"+str(i):f"run-stride{i}.json" for i in (1,4,8)}},
    "profile_requested":False,"file_sha256":files}
@@ -49,6 +51,20 @@ class ReceiptTests(unittest.TestCase):
   with tempfile.TemporaryDirectory() as d:
    root=Path(d);self.make(root);(root/"secret.txt").write_text("unlisted")
    with self.assertRaisesRegex(ValueError,"Unhashed"): verify(root)
+ def test_wrong_compiled_source_fails(self):
+  with tempfile.TemporaryDirectory() as d:
+   root=Path(d);m=self.make(root)
+   p=root/"compile.json";cmd=json.loads(p.read_text());cmd["argv"][-3]="/tmp/other.cu"
+   p.write_text(json.dumps(cmd));m["file_sha256"]["compile.json"]=h(p.read_bytes())
+   (root/"manifest.json").write_text(json.dumps(m))
+   with self.assertRaisesRegex(ValueError,"Compile did not use captured"): verify(root)
+ def test_wrong_compiler_arch_fails(self):
+  with tempfile.TemporaryDirectory() as d:
+   root=Path(d);m=self.make(root)
+   p=root/"compile.json";cmd=json.loads(p.read_text());cmd["argv"][2]="arch=compute_90,code=[sm_90,compute_90]"
+   p.write_text(json.dumps(cmd));m["file_sha256"]["compile.json"]=h(p.read_bytes())
+   (root/"manifest.json").write_text(json.dumps(m))
+   with self.assertRaisesRegex(ValueError,"Compiler target"): verify(root)
  def test_missing_profiler_report_fails(self):
   with tempfile.TemporaryDirectory() as d:
    root=Path(d);m=self.make(root);m["profile_requested"]=True

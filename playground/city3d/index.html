@@ -31,6 +31,12 @@ button:focus-visible,a:focus-visible{outline:3px solid #8dfff0;outline-offset:3p
 #cuda-xray .wave-bars{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:12px 0}
 #cuda-xray .wave-bars div{background:#172c40;border:1px solid #567c83;border-radius:5px;padding:7px;text-align:center}
 #cuda-xray .wave-bars strong{display:block;color:#ffdaa6;font-size:18px}
+#xray-memory-map{display:grid;grid-template-columns:repeat(8,1fr);gap:3px;margin-top:9px}
+#xray-memory-map div{background:#183647;border:1px solid #3e727b;border-radius:4px;padding:4px 2px;text-align:center;min-width:0;font-size:10px;color:#f9dfbe}
+#xray-memory-map span{display:block;color:#a2c9d1;font-size:8px}
+#xray-wave-pick{display:flex;gap:4px;margin:10px 0}
+#xray-wave-pick button{flex:1;padding:6px;font-size:10px}
+
 #cuda-xray p{line-height:1.5;margin:8px 0;color:#c7d3df}
 #cuda-xray code{color:#f4c68b}
 #cuda-world-actions{position:absolute;left:18px;bottom:142px;z-index:5;display:flex;gap:7px;pointer-events:auto}
@@ -53,6 +59,9 @@ button:focus-visible,a:focus-visible{outline:3px solid #8dfff0;outline-offset:3p
 <p>触及扇区：<strong id="xray-sectors">64</strong> / 预算 40 · 请求数据 512B</p>
 <p id="xray-cost">当前扇区覆盖量：2048B</p>
 <p>地址示意：<code>sector = floor((index × 4) / 32)</code></p>
+<div id="xray-wave-pick"><button class="alt" data-wave="0">W0</button><button class="alt" data-wave="1">W1</button><button class="alt" data-wave="2">W2</button><button class="alt" data-wave="3">W3</button></div>
+<div id="xray-memory-map" aria-label="32个Lane的地址与扇区分布"></div>
+<p id="xray-cuda-code">CUDA: <code>float v = input[manifest[blockIdx.x * 32 + threadIdx.x]];</code></p>
 <p id="xray-action">操作必须在街道货物终端附近进行。</p><p id="xray-history">尚无玩家操作。</p>
 <p style="font-size:10px">这里是确定性 32B 扇区模型，不是 Nsight Compute 的真实 GPU 测量。</p>
 </section>

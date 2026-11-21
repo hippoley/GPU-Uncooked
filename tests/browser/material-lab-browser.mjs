@@ -57,6 +57,7 @@ fixture.hardware_attested=true;
 await page.locator("#receipt-file").setInputFiles({
  name:"forged-receipt.json",mimeType:"application/json",buffer:Buffer.from(JSON.stringify(fixture))
 });
+await page.waitForFunction(()=>document.querySelector("#receipt-info")?.textContent?.startsWith("REJECTED"),null,{timeout:10000});
 assert.match(await page.locator("#receipt-info").innerText(),/REJECTED/);
 assert.equal(await page.locator("html").getAttribute("data-material-gpu-measured"),"false");
 assert.deepEqual(errors,[],"No uncaught browser failures");

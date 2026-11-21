@@ -261,7 +261,7 @@ function frame(now){
    camera.position.z+=step;
   }
   camera.position.z=Math.max(stationZ(STAGES.length-1)-2,Math.min(15,camera.position.z));
-  if(frames%8===0)redraw();
+  if(frames%2===0)redraw();
  }
  // Hallway is a schematic, not a physical floorplan. Every exhibit can run locally.
  for(const [i,s] of stageObjects.entries()){

@@ -35,7 +35,7 @@ export function createStreetCorner(THREE,parent,{seed=23,quality="medium"}={}){
   new THREE.MeshStandardMaterial({color,metalness,roughness,emissive,emissiveIntensity:intensity});
  const stone=material(0x455063,.06,.94),trim=material(0x485464,.66,.35),dark=material(0x131c2d,.45,.55);
  const hot=material(0xfbbf81,.1,.6,0xe69460,.65),cool=material(0x5cdbd9,.1,.58,0x2abdbb,.8);
- const glass=material(0x203d58,.05,.17,0x134963,.18);
+ const glass=recipe.glass?new THREE.MeshPhysicalMaterial({color:0x72b9c3,metalness:.12,roughness:.18,transparent:true,opacity:.34,depthWrite:false,side:THREE.DoubleSide}):material(0x203d58,.05,.45,0x134963,.12);
  const boxGeometry=new Map();
  function mesh(w,h,d,mat,x,y,z,root=group){
   const key=[w,h,d].join("|");
@@ -61,12 +61,14 @@ export function createStreetCorner(THREE,parent,{seed=23,quality="medium"}={}){
   const label=mesh(12,1.45,.1,makeSignMaterial(THREE,sign,side<0?"#ffa779":"#71f2e6"),centerX,5.66,front+1.5);
   signs++;
   // Recessed shopfront and lit interior volume create meaningful depth near camera.
-  mesh(17,3.6,.25,glass,centerX,2.25,front+.28);
+  mesh(17,3.6,.10,glass,centerX,2.25,front+2.00);
+  mesh(.18,3.6,2.0,trim,centerX-8.7,2.25,front+1.02);
+  mesh(.18,3.6,2.0,trim,centerX+8.7,2.25,front+1.02);
   mesh(16,2.85,.10,dark,centerX,2.4,front-.55);
   const mullions=[];for(let k=-4;k<=4;k++)mullions.push({x:centerX+k*1.8,y:2.22,z:front+1.2,sy:3.6});
   instances+=batch(new THREE.BoxGeometry(.11,1,.15),trim,mullions);
   // Interior shelves remain visible through the storefront at street level.
-  for(const depth of [-.15,-1.15]){
+  for(const depth of [.35,1.2]){
    const shelf=mesh(13,.13,.9,stone,centerX,1.35,front+depth);
    mesh(13,.13,.9,stone,centerX,2.5,front+depth);
    for(let j=0;j<5;j++){

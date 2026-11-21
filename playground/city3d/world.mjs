@@ -1,13 +1,13 @@
 import * as THREE from "three";
 import {DISTRICTS} from "./logic.mjs";
-import {createRoadMaterial,createFacadeMaterial,makeWeather,makePuddleGlints} from "./procedural.mjs";
+import {createRoadMaterial,createPavementMaterial,createFacadeMaterial,makeWeather,makePuddleGlints} from "./procedural.mjs";
 import {createUrbanDetails} from "./streets.mjs";
 import {createStreetCorner} from "./corner.mjs";
 import {createCoherentFacades} from "./coherence.mjs";
 import {createFilmicCity} from "./filmic.mjs";
 const rand=(i)=>{const n=Math.sin(i*93.17+19.6)*52793.23;return n-Math.floor(n)};
 const mat=(color,emissive=0x000000,intensity=0)=>new THREE.MeshStandardMaterial({color,metalness:.3,roughness:.58,emissive,emissiveIntensity:intensity});
-const asphalt=createRoadMaterial(THREE),concrete=mat(0x303048),cream=mat(0xe2b08e),glass=mat(0x133c64,0x2d91b5,.38);
+const asphalt=createRoadMaterial(THREE),concrete=createPavementMaterial(THREE),cream=mat(0xbcb1a4),glass=mat(0x133c64,0x2d91b5,.38);
 const pink=mat(0xf265a4,0xe54789,.65),cyan=mat(0x4de2d8,0x2ce8e4,.8),yellow=mat(0xffcc85,0xffba6c,.55);
 const boxGeometries=new Map();
 const boxGeometry=(w,h,d)=>{
@@ -157,8 +157,8 @@ export function createWorld({quality="medium"}={}){
  const coherentArchitecture=createCoherentFacades(THREE,root,{seed:4627,quality});
  const filmic=createFilmicCity(THREE,root,scene,{seed:79,quality});
  // two streets cross at the player spawn, continuous driveable world
- for(let z of [-14,14])box(root,120,.13,1.1,0,.08,z,mat(0xb7a4b0));
- for(let x of [-15,15])box(root,1.1,.13,120,x,.08,0,mat(0xb7a4b0));
+ for(let z of [-14,14])box(root,120,.025,.15,0,.175,z,mat(0x8d969c));
+ for(let x of [-15,15])box(root,.15,.025,120,x,.175,0,mat(0x8d969c));
  for(let i=-5;i<=5;i++){
   box(root,4,.12,.24,i*10,.12,0,cream);
   box(root,.24,.12,4,0,.12,i*10,cream);

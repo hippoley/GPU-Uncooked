@@ -57,7 +57,7 @@ const fixture={
  git_commit:"a".repeat(40),source_sha256:"b".repeat(64),
  source:{text:"__global__ void gather() {}",sha256:"c".repeat(64),truncated:false},
  ptx:{text:".entry gather()",sha256:"d".repeat(64),truncated:false},
- sass:{text:"Function : _Z6gatherPKfPfi\\n /*0000*/ MOV R1, c[0x0][0x28] ;\\n /*0010*/ LDG.E R4, [R2] ;\\n /*0020*/ STG.E [R6], R4 ;\\n /*0030*/ EXIT ;",sha256:"e".repeat(64),truncated:false},
+ sass:{text:"Function : _Z6gatherPKfPfi\n /*0000*/ MOV R1, c[0x0][0x28] ;\n /*0010*/ LDG.E R4, [R2] ;\n /*0020*/ STG.E [R6], R4 ;\n /*0030*/ EXIT ;",sha256:"e".repeat(64),truncated:false},
  runs:[1,4,8].map(stride=>({stride,exit_code:0,stdout:"PASS fixture"}))
 };
 await page.locator("#receipt-file").setInputFiles({

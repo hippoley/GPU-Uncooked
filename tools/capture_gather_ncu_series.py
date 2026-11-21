@@ -16,6 +16,7 @@ import subprocess
 import sys
 
 from verify_gather_receipt import verify
+from summarize_gather_ncu_series import parse_raw_csv
 
 STRIDES = (1, 4, 8)
 METRICS = (
@@ -65,10 +66,11 @@ def capture(raw_folder, output_folder, selected_uuid, *, execute=False, profiler
         errors.append("Profiler version command failed")
     else:
         for stride in STRIDES:
-            # Do not use --export here: CSV and CLI diagnostics must be retained
-            # exactly; the raw text alone is NOT a verified numerical dataset.
+            # Details CSV yields long-form metric rows expected by the parser.
+            # Raw-page CSV is different and must not be silently mixed in.
             args = [
-                profiler, "--csv", "--page", "raw",
+                profiler, "--csv", "--page", "details",
+                "--print-units", "base", "--cache-control", "all",
                 "--kernel-name", "regex:gather",
                 "--kernel-name-base", "function",
                 "--launch-count", "1",
@@ -83,11 +85,12 @@ def capture(raw_folder, output_folder, selected_uuid, *, execute=False, profiler
             commands[str(stride)] = f"ncu-stride{stride}.json"
             if result["exit_code"] != 0:
                 errors.append(f"Nsight Compute stride {stride} failed")
-            if "gather" not in result["stdout"]:
-                errors.append(f"Nsight Compute stride {stride} produced no identifiable kernel row")
-            for metric in METRICS:
-                if metric not in result["stdout"]:
-                    errors.append(f"Nsight Compute stride {stride} missing metric {metric}")
+            try:
+                parsed = parse_raw_csv(result["stdout"])
+                if set(parsed["metrics"]) != set(METRICS):
+                    raise ValueError("Unexpected metric keys")
+            except (ValueError, KeyError, TypeError) as exc:
+                errors.append(f"Nsight Compute stride {stride} lacks attributable metric rows: {exc}")
             if f"PASS stride={stride}" not in (result["stdout"] + result["stderr"]):
                 errors.append(f"Nsight Compute stride {stride} has no correctness PASS")
     status = "COLLECTED_UNVERIFIED" if not errors else "INCOMPLETE"
@@ -113,6 +116,7 @@ def capture(raw_folder, output_folder, selected_uuid, *, execute=False, profiler
         "hardware_attested": False,
         "notes": [
             "One microkernel warp per launch; does not benchmark H100 throughput",
+            "Cache-control all flushes caches before each kernel replay; these are cold/replay-conditioned metrics",
             "Nsight profiling can replay kernels and perturb timing/cache state",
             "Raw CSV can contain diagnostic lines; parse and attribute launches separately",
             "SHA-256 self-consistency is not independent GPU hardware attestation"

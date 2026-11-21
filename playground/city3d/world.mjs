@@ -3,6 +3,7 @@ import {DISTRICTS} from "./logic.mjs";
 import {createRoadMaterial,createFacadeMaterial,makeWeather,makePuddleGlints} from "./procedural.mjs";
 import {createUrbanDetails} from "./streets.mjs";
 import {createStreetCorner} from "./corner.mjs";
+import {createCoherentFacades} from "./coherence.mjs";
 const rand=(i)=>{const n=Math.sin(i*93.17+19.6)*52793.23;return n-Math.floor(n)};
 const mat=(color,emissive=0x000000,intensity=0)=>new THREE.MeshStandardMaterial({color,metalness:.3,roughness:.58,emissive,emissiveIntensity:intensity});
 const asphalt=createRoadMaterial(THREE),concrete=mat(0x303048),cream=mat(0xe2b08e),glass=mat(0x133c64,0x2d91b5,.38);
@@ -123,6 +124,7 @@ export function createWorld({quality="medium"}={}){
  makePuddleGlints(THREE,root,57);
  const urbanDressing=createUrbanDetails(THREE,root);
  const closeup=createStreetCorner(THREE,root,{seed:2309,quality});
+ const coherentArchitecture=createCoherentFacades(THREE,root,{seed:4627,quality});
  // two streets cross at the player spawn, continuous driveable world
  for(let z of [-14,14])box(root,120,.13,1.1,0,.08,z,mat(0xb7a4b0));
  for(let x of [-15,15])box(root,1.1,.13,120,x,.08,0,mat(0xb7a4b0));
@@ -166,7 +168,7 @@ export function createWorld({quality="medium"}={}){
  const walkers=[];
  for(let i=0;i<10;i++){const a=actor(root,[0x85c6b6,0x9376aa,0xe18eb0,0xedb477][i%4]);a.root.position.set(i%2?18:-18,0,-47+i*9.1);walkers.push({a,i})}
  const player=actor(root,0xec9a6b);player.root.position.set(0,0,6);
- return {THREE,scene,root,player,cars,walkers,markers,closeup,update(t,dt){
+ return {THREE,scene,root,player,cars,walkers,markers,closeup,coherentArchitecture,update(t,dt){
   weather.update(dt);
   for(const item of markers){item.gem.rotation.y+=dt;item.gem.position.y=4.1+Math.sin(t*2+item.d.x)*.35;item.ring.rotation.z=t*.18}
   for(const entry of cars){if(entry.axis==="x"){entry.mesh.position.x+=dt*entry.speed;if(entry.mesh.position.x>52)entry.mesh.position.x=-52}else{entry.mesh.position.z+=dt*entry.speed;if(entry.mesh.position.z>51)entry.mesh.position.z=-50}}

@@ -11,10 +11,19 @@ function showMission(d){
  overlay="mission";pressed.clear();
  $("dialog-kicker").textContent=d.kind==="game"?"PLAYABLE 3D CITY MISSION":d.kind==="lab"?"CUDA INTERACTIVE LAB":"COMING SOON · CONCEPT DISTRICT";
  $("dialog-title").textContent=d.name;
- $("dialog-description").textContent=d.kind==="planned"?"这个区域正在建设。它将是原创、独立玩法的 CUDA 游戏，而不是重复的选关面板。":
+ let freight=null;
+ try{freight=JSON.parse(localStorage.getItem("gpu-uncooked.freight.v1")||"null")}catch{}
+ $("dialog-description").textContent=d.id==="factory"?
+  (freight?.completed?"你已经完成港口 3 份物流委托，获得 "+freight.credits+" credits。整座城市保留了你完成过的行动证据。可再次挑战，或进入 CUDA 实验室。":
+  "真正可玩的港口物流任务现已开放：亲自交换 128 个货箱的装载位置，影响 32 线程访问的内存扇区数量，完成三份委托后回到 CUDA Lab 验证。"):
+ d.kind==="planned"?"这个区域正在建设。它将是原创、独立玩法的 CUDA 游戏，而不是重复的选关面板。":
  d.kind==="game"?"进入已存在的 Memory Abyss 深海冒险。这是城市与独立 CUDA 游戏的真实跳转，深海关卡本身仍是 2D 游戏。":
  "打开现有 CUDA 实验室。独立游戏版本还在开发中，这里只标注已可操作的学习内容。";
  const actions=$("dialog-actions");actions.replaceChildren();
+ if(d.id==="factory"){
+  const play=document.createElement("a");play.className="link";play.href="../freight/index.html";
+  play.textContent="▶ 开始港口物流任务";actions.append(play);
+ }
  if(missionLink(d)){const a=document.createElement("a");a.className="link";a.href=missionLink(d);a.textContent=d.kind==="game"?"开始游戏 →":"进入实验室 →";actions.append(a)}
  const b=document.createElement("button");b.className="alt";b.textContent="返回城市";b.onclick=closeMission;actions.append(b);
  $("dialog").hidden=false;

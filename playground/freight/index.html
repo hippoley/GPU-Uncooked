@@ -1,0 +1,55 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FREIGHT DISTRICT — GPU UNCOOKED</title>
+<meta name="description" content="An original interactive GPU memory coalescing port logistics game. Repack 128 requests into four waves and watch how addresses change traffic.">
+<style>
+:root{color-scheme:dark;font-family:system-ui,"Microsoft YaHei",sans-serif;background:#08101b;color:#fff2e4;--sea:#142943;--teal:#72f6d6;--pink:#ff88b2;--gold:#ffd49b}*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 85% -5%,#713e61 0,transparent 48%),linear-gradient(150deg,#08111d,#142036 70%,#16112d);min-height:100vh}
+main{max-width:1320px;margin:auto;padding:24px}
+a{color:#95e9e5}nav{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}nav b{font-size:20px;letter-spacing:-.04em}nav small{color:#90bdd1;letter-spacing:.12em;font-size:11px}
+h1{font-size:clamp(38px,6vw,85px);line-height:.95;font-weight:1000;letter-spacing:-.07em;font-style:italic;margin:8px 0 10px;text-shadow:3px 5px #391e42}
+h1 em{color:#ffa982;font-style:normal}.dek{font-size:14px;max-width:730px;line-height:1.8;color:#c1cbda}
+.banner{border:1px solid #8498b16b;border-radius:16px;overflow:hidden;background:#141e33;box-shadow:0 19px 55px #01041387;margin:22px 0}
+.port{position:relative;min-height:245px;background:linear-gradient(180deg,#7a496f 0%,#c86f80 27%,#ffae8e 50%,#2a314b 51%,#0b2234 100%);isolation:isolate;overflow:hidden}
+.sun{position:absolute;width:148px;height:148px;border-radius:50%;background:linear-gradient(#ffdfaf,#ff8f88);top:7px;right:17%;filter:blur(2px);box-shadow:0 0 95px #ffa4a78c}
+.skyline{position:absolute;left:0;right:0;bottom:85px;height:90px;background:repeating-linear-gradient(90deg,#26233e 0 34px,#403253 34px 65px,#25233c 65px 75px,#4e344f 75px 110px);clip-path:polygon(0 50%,6% 50%,6% 10%,15% 10%,15% 45%,25% 45%,25% 25%,34% 25%,34% 0,39% 0,39% 45%,51% 45%,51% 12%,58% 12%,58% 54%,68% 54%,68% 0,73% 0,73% 45%,85% 45%,85% 15%,93% 15%,93% 50%,100% 50%,100% 100%,0 100%)}
+.crane{position:absolute;left:20%;top:10px;width:5px;height:135px;background:#1b2239;box-shadow:4px 2px #edb07d}.crane:before{content:"";position:absolute;left:-85px;top:15px;width:170px;height:7px;background:#273047;transform:rotate(-5deg)}.crane:after{content:"";position:absolute;left:65px;top:15px;height:100px;border-left:2px dashed #1b2838}
+.quay{position:absolute;bottom:0;left:0;right:0;height:92px;background:linear-gradient(180deg,#25384b,#121a2d);box-shadow:0 -10px 50px #25233e}
+.quay:after{content:"";position:absolute;left:0;right:0;bottom:27px;border-top:3px dashed #ffe2ac71}
+.containers{position:absolute;bottom:78px;left:2%;display:flex;align-items:end;gap:7px}.container{height:39px;width:95px;background:repeating-linear-gradient(90deg,#b35371 0 5px,#9a405e 5px 7px);border:2px solid #df8493;box-shadow:0 8px #19233a;transform:skewY(-3deg)}.container:nth-child(2){background:repeating-linear-gradient(90deg,#306b7b 0 5px,#225364 5px 7px);height:67px}.container:nth-child(3){background:repeating-linear-gradient(90deg,#b18667 0 5px,#8f634e 5px 7px);height:52px}
+.truck{position:absolute;bottom:26px;left:19%;width:134px;height:30px;background:linear-gradient(90deg,#f5b06f 0 74%,#74cbd0 74%);border-radius:5px 7px 3px 3px;box-shadow:0 -7px 0 #151c31 inset;transition:transform 1.7s ease-in}.truck:before,.truck:after{content:"";position:absolute;bottom:-7px;width:19px;height:19px;border-radius:50%;background:#121625;border:4px solid #6e8a9e}.truck:before{left:20px}.truck:after{right:18px}.port.depart .truck{transform:translateX(1100px)}
+.scene-title{position:absolute;right:22px;bottom:112px;z-index:2;font-size:clamp(14px,3vw,31px);font-weight:1000;font-style:italic;text-shadow:3px 3px #18223b;letter-spacing:-.04em}
+.scene-title span{display:block;font-size:10px;font-style:normal;letter-spacing:.21em;color:#dbffef}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;padding:14px;background:#10192c}
+.stat{padding:13px;border:1px solid #385267;border-radius:7px;background:#18243a}.stat small{display:block;color:#89b0c3;font-size:10px;letter-spacing:.11em;font-weight:900}.stat strong{font-size:clamp(19px,3vw,30px);font-weight:1000;color:#ffe6b5}
+.controlgrid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px}
+.card{background:#121d30;border:1px solid #4d5e78;border-radius:13px;padding:20px;box-shadow:0 8px 28px #02071650}
+.panel-top{display:flex;justify-content:space-between;align-items:start;gap:12px}h2{margin:0 0 9px;letter-spacing:-.05em;font-size:24px}.hint{color:#a9bbca;font-size:12px;line-height:1.7;margin:0 0 13px}
+.fleets{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.fleet{border:1px solid #41607b;background:#0b1628;border-radius:8px;padding:7px}.fleet header{display:flex;justify-content:space-between;gap:5px;font-size:9px;font-weight:900;letter-spacing:.02em;color:#cee7e9;margin:1px 0 8px}.fleet b{color:#ffca92}
+.pallets{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3px}
+.pallet{height:25px;padding:0 1px;border:1px solid #ffffff33;border-radius:3px;background:hsl(var(--hue) 58% 31%);color:#fff6dd;font-size:9px;font-weight:850;cursor:pointer;transition:filter .1s,transform .1s}.pallet:hover{filter:brightness(1.4);transform:scale(1.06)}.pallet.selected{outline:3px solid #ffe79b;outline-offset:1px;background:#a85b76}
+.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:17px}button.action{border:1px solid #ffe3bc;background:#ffcf92;color:#26213d;border-radius:8px;padding:12px 15px;font-size:13px;font-weight:900;cursor:pointer}.action.secondary{background:#203751;color:#c5ecf0;border-color:#64a3b1}.action.danger{background:#5e304c;color:#ffe0e0;border-color:#a66a90}button:disabled{opacity:.45;cursor:not-allowed}
+.callout{border-left:4px solid #f3b682;background:#172b3e;padding:12px 14px;color:#c9dce6;font-size:12px;line-height:1.7;margin-top:12px}
+#result{padding:13px;border:1px solid #72dccd88;border-radius:9px;margin-top:15px;background:#0a332f;color:#ddfff3;line-height:1.7;font-size:13px}#result[hidden]{display:none}
+.meter{height:14px;border-radius:10px;background:#3e233e;overflow:hidden;margin:13px 0 5px}.fill{height:100%;background:linear-gradient(90deg,#70e5ba,#f7c58a);width:0;transition:width .4s}
+code{font-size:11px;color:#fbd5af}.steps{margin:0;padding-left:19px;color:#ccd0df;font-size:13px;line-height:2}.steps strong{color:#fff2c6}.footnote{font-size:12px;line-height:1.8;color:#9aafc2;margin:24px 0}
+:focus-visible{outline:3px solid #9efbea;outline-offset:2px}
+@media(max-width:920px){.controlgrid{grid-template-columns:1fr}}@media(max-width:620px){main{padding:10px}.port{min-height:185px}.stats{grid-template-columns:repeat(2,1fr)}.fleets{grid-template-columns:repeat(2,1fr)}.card{padding:12px}.pallet{height:28px}.scene-title{bottom:102px}.containers{transform:scale(.72);transform-origin:bottom left}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+</style></head><body><main><nav><b>GPU UNCOOKED / SILICON CITY</b><a href="../city3d/index.html">← 返回 3D 城市</a></nav>
+<div style="font-size:11px;letter-spacing:.2em;color:#79e0dd;font-weight:900">FREIGHT DISTRICT · PLAYABLE MISSION / 01</div><h1>MEMORY <em>HEIST</em></h1>
+<p class="dek">港口有 128 箱需要搬运的数据，四支车队各拥有 32 个取货位置。你可以交换仓库里的货箱，也可以花费整备成本重新编组。<strong>行动的结果不是剧情奖励，而是运输网络真实要承担的访问扇区数。</strong></p>
+<div class="banner"><section class="port" id="port"><div class="sun"></div><div class="skyline"></div><div class="crane"></div><div class="containers"><div class="container"></div><div class="container"></div><div class="container"></div></div><div class="quay"></div><div class="truck" id="truck"></div><div class="scene-title">SILICON PORT <span>DISPATCH TERMINAL / 32 LANES × 4 WAVES</span></div></section>
+<div class="stats"><div class="stat"><small>ACTIVE CONTRACT</small><strong id="job">01 / 03</strong></div><div class="stat"><small>SECTORS REQUIRED</small><strong id="sectors">64</strong></div><div class="stat"><small>TRANSPORT BUDGET</small><strong id="budget">40</strong></div><div class="stat"><small>CONTRACT CREDITS</small><strong id="credits">000</strong></div></div></div>
+<div class="controlgrid">
+<section class="card"><div class="panel-top"><div><h2>装箱调度台</h2><p class="hint">颜色表示地址所属的 32B 扇区。每一批车队对应 32 个工作位。点击两个货箱交换所在位置，或选择“按地址重新编组”观察车队路网如何改变。</p></div><div id="selection" style="font-size:11px;color:#c4d6e8;text-align:right">尚未选中货箱</div></div>
+<div class="fleets" id="fleets" aria-label="四支车队的地址布局"></div>
+<div class="meter"><div id="budget-fill" class="fill"></div></div><p class="hint" id="prediction" aria-live="polite">预计占用 64 个扇区，超出预算。</p>
+<div class="actions"><button class="action secondary" id="regroup">按地址重新编组 · 整备成本</button><button class="action secondary" id="reset">恢复原始装箱</button><button class="action" id="dispatch">▶ 派遣四支车队</button></div>
+<div id="result" hidden role="status" aria-live="polite"></div></section>
+<aside class="card"><h2>今晚的委托</h2><ol class="steps"><li>先观察街区混装，猜测运输会遇到什么。</li><li>亲手<strong>交换两个货箱</strong>，让同一车队处理地址更集中的货物。</li><li>也可以<strong>重组装箱</strong>，但整理仓库需要额外费用。</li><li>发车结算：预算内成功，超出预算则必须改变方案。</li></ol>
+<div class="callout"><strong>故事发生在城市，规律来自计算。</strong> 每个货箱映射一个 4B 数据地址；8 个相邻地址共享一个 32B 对齐扇区。每支车队的访问按一个假想 Warp 分组统计。改变编组就会改变各组访问的扇区数量。</div>
+<h2 style="margin-top:22px">任务结束后</h2><p class="hint">打开 CUDA 实验室，把这次的装箱选择换成 32 个线程的地址表达式，验证哪些直觉可迁移、哪些只是游戏近似。</p>
+<a href="../chapters/03-memory-coalescing/index.html">进入 Memory Coalescing Lab ↗</a>
+</aside></div>
+<p class="footnote">准确性边界：扇区数量来自地址集合与对齐的教学模型，不等于实测的 DRAM transactions、Kernel 耗时或真实硬件加速比；车队预算与整备 credits 是游戏规则。此玩法不会向玩家展示伪造的 GPU 基准测试。</p>
+</main><script type="module" src="./game.mjs"></script></body></html>

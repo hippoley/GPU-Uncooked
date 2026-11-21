@@ -39,7 +39,7 @@ export function drawCity(g,s){
  // Architectural blocks, differentiated storefronts, extruded side walls
  const buildings=[
   [45,169,250,125,'castle'],[343,148,255,137,'forge'],[657,160,268,131,'marina'],
-  [46,388,252,127,'factory'],[658,384,267,135,'rush']
+  [46,430,252,106,'factory'],[658,430,267,106,'rush']
  ];
  const drawBuilding=(b,index)=>{
   const [x,y,w,h,id]=b,[wall,accent,sign]=P[id];

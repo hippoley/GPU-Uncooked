@@ -5,6 +5,7 @@ import {createUrbanDetails} from "./streets.mjs";
 import {createStreetCorner} from "./corner.mjs";
 import {createCoherentFacades} from "./coherence.mjs";
 import {createFilmicCity} from "./filmic.mjs";
+import {createFreightStage} from "./freight-stage.mjs";
 const rand=(i)=>{const n=Math.sin(i*93.17+19.6)*52793.23;return n-Math.floor(n)};
 const mat=(color,emissive=0x000000,intensity=0)=>new THREE.MeshStandardMaterial({color,metalness:.3,roughness:.58,emissive,emissiveIntensity:intensity});
 const asphalt=createRoadMaterial(THREE),concrete=createPavementMaterial(THREE),cream=mat(0xbcb1a4),glass=mat(0x133c64,0x2d91b5,.38);
@@ -156,6 +157,7 @@ export function createWorld({quality="medium"}={}){
  const closeup=createStreetCorner(THREE,root,{seed:2309,quality});
  const coherentArchitecture=createCoherentFacades(THREE,root,{seed:4627,quality});
  const filmic=createFilmicCity(THREE,root,scene,{seed:79,quality});
+ const freightStage=createFreightStage(THREE,root);
  // two streets cross at the player spawn, continuous driveable world
  for(let z of [-14,14])box(root,120,.025,.15,0,.175,z,mat(0x8d969c));
  for(let x of [-15,15])box(root,.15,.025,120,x,.175,0,mat(0x8d969c));
@@ -204,7 +206,7 @@ export function createWorld({quality="medium"}={}){
  const walkers=[];
  for(let i=0;i<10;i++){const a=actor(root,[0x85c6b6,0x9376aa,0xe18eb0,0xedb477][i%4]);a.root.position.set(i%2?18:-18,0,-47+i*9.1);walkers.push({a,i})}
  const player=actor(root,0xec9a6b);player.root.position.set(0,0,6);
- return {THREE,scene,root,player,cars,walkers,markers,closeup,coherentArchitecture,filmic,update(t,dt){
+ return {THREE,scene,root,player,cars,walkers,markers,closeup,coherentArchitecture,filmic,freightStage,update(t,dt){
   filmic.update(t);
   weather.update(dt);
   for(const item of markers){item.gem.rotation.y+=dt;item.gem.position.y=2.14+Math.sin(t*2+item.d.x)*.08;item.ring.rotation.z=t*.18}

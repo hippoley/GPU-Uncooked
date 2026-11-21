@@ -8,8 +8,8 @@ test("six original districts, only existing activities link",()=>{
  assert.equal(DISTRICTS.find(d=>d.id==="marina").kind,"game");
 });
 test("diagonal movement is normalized",()=>{
- const p=stepPlayer({x:450,y:260},{up:true,right:true},.5,100);
- assert.ok(Math.abs(Math.hypot(p.x-450,p.y-260)-50)<.001);
+ const p=stepPlayer({x:450,y:350},{up:true,right:true},.5,100);
+ assert.ok(Math.abs(Math.hypot(p.x-450,p.y-350)-50)<.001);
 });
 test("clamp to streets and reject invalid positions",()=>{
  assert.deepEqual(clampPlayer({x:-1,y:900}),{x:BOUNDS.minX,y:BOUNDS.maxY});

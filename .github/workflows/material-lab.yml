@@ -7,8 +7,10 @@ on:
       - "tools/build-material-lab.mjs"
       - "tests/material-lab*.mjs"
       - "tests/material-evidence.test.mjs"
+      - "tests/material-receipt-view.test.mjs"
       - "tests/test_gather_receipt.py"
       - "tools/*gather*receipt.py"
+      - "tools/export_gather_receipt_view.py"
       - "tests/browser/material-lab-browser.mjs"
       - ".github/workflows/material-lab.yml"
   pull_request:
@@ -17,8 +19,10 @@ on:
       - "tools/build-material-lab.mjs"
       - "tests/material-lab*.mjs"
       - "tests/material-evidence.test.mjs"
+      - "tests/material-receipt-view.test.mjs"
       - "tests/test_gather_receipt.py"
       - "tools/*gather*receipt.py"
+      - "tools/export_gather_receipt_view.py"
       - "tests/browser/material-lab-browser.mjs"
       - ".github/workflows/material-lab.yml"
   workflow_dispatch:
@@ -34,7 +38,7 @@ jobs:
         with:
           node-version: "22"
       - name: Validate address, sector and code relationships
-        run: node --test tests/material-lab.test.mjs tests/material-evidence.test.mjs
+        run: node --test tests/material-lab.test.mjs tests/material-evidence.test.mjs tests/material-receipt-view.test.mjs
       - name: Verify offline receipt integrity tests (no GPU required)
         run: python3 -m unittest discover -s tests -p test_gather_receipt.py -v
       - name: Install pinned runtime and bundler

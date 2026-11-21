@@ -53,7 +53,7 @@ def parse_raw_csv(text, *, metric_names=REQUIRED):
             raise ValueError("Unexpected kernel in requested metric row")
         kernels.add(kernel)
         launch_id = row[launch_col].strip()
-        if not launch_id or not re.fullmatch(r"\\d+", launch_id):
+        if not launch_id or not re.fullmatch(r"\d+", launch_id):
             raise ValueError("Missing or malformed Nsight launch ID")
         launch_ids.add(launch_id)
         unit = row[indices["Metric Unit"]].strip().lower()

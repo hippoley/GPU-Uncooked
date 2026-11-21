@@ -186,9 +186,14 @@ export function createWorld({quality="medium"}={}){
  for(const d of DISTRICTS){
   const group=new THREE.Group();group.position.set(d.x,0,d.z);root.add(group);
   const active=d.kind!=="planned",m=active?cyan:pink;
-  const pole=cylinder(group,.5,.5,.08,0,.12,0,m);
-  const ring=new THREE.Mesh(new THREE.TorusGeometry(2.9,.12,6,32),new THREE.MeshBasicMaterial({color:active?0x65f9e1:0xff99dd}));ring.rotation.x=-Math.PI/2;ring.position.y=.25;group.add(ring);
-  const gem=new THREE.Mesh(new THREE.OctahedronGeometry(.9),m);gem.position.y=4.1;group.add(gem);
+  // Grounded interactive hardware, not a floating fantasy collectible.
+  box(group,1.18,.24,.85,0,.18,0,concrete);
+  box(group,.74,1.42,.5,0,1.01,0,mat(0x1d2937));
+  box(group,.64,.74,.07,0,1.35,.29,active?cyan:pink);
+  box(group,.45,.06,.12,0,.72,.34,yellow);
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(1.38,.055,6,28),new THREE.MeshBasicMaterial({color:active?0x65f9e1:0xff99dd,transparent:true,opacity:.38,depthWrite:false}));
+  ring.rotation.x=-Math.PI/2;ring.position.y=.045;group.add(ring);
+  const gem=new THREE.Mesh(new THREE.OctahedronGeometry(.22),m);gem.position.set(0,2.14,0);group.add(gem);
   markers.push({d,group,gem,ring});
  }
  const cars=[
@@ -202,7 +207,7 @@ export function createWorld({quality="medium"}={}){
  return {THREE,scene,root,player,cars,walkers,markers,closeup,coherentArchitecture,filmic,update(t,dt){
   filmic.update(t);
   weather.update(dt);
-  for(const item of markers){item.gem.rotation.y+=dt;item.gem.position.y=4.1+Math.sin(t*2+item.d.x)*.35;item.ring.rotation.z=t*.18}
+  for(const item of markers){item.gem.rotation.y+=dt;item.gem.position.y=2.14+Math.sin(t*2+item.d.x)*.08;item.ring.rotation.z=t*.18}
   for(const entry of cars){if(entry.axis==="x"){entry.mesh.position.x+=dt*entry.speed;if(entry.mesh.position.x>52)entry.mesh.position.x=-52}else{entry.mesh.position.z+=dt*entry.speed;if(entry.mesh.position.z>51)entry.mesh.position.z=-50}}
   for(const w of walkers){w.a.root.position.z+=dt*(w.i%2?1:-1)*1.2;if(w.a.root.position.z>49)w.a.root.position.z=-48;if(w.a.root.position.z< -49)w.a.root.position.z=48;
    for(const [j,leg] of w.a.legs.entries())leg.rotation.x=Math.sin(t*5+w.i+j*Math.PI)*.3}

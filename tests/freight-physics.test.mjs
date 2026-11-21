@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {LANES,TOTAL,stripedManifest,contiguousManifest,seededManifest,manifestFootprint,swapRequests,regroupManifest,evaluateDispatch,validateManifest,sectorOf} from "../playground/freight/physics.mjs";
+import {LANES,TOTAL,stripedManifest,contiguousManifest,seededManifest,manifestFootprint,swapRequests,consolidateSector,regroupManifest,evaluateDispatch,validateManifest,sectorOf} from "../playground/freight/physics.mjs";
 test("32 lane groups faithfully count unique 32-byte sectors",()=>{
  const striped=manifestFootprint(stripedManifest());
  const packed=manifestFootprint(contiguousManifest());
@@ -17,6 +17,28 @@ test("cargo swaps cannot create or destroy requests",()=>{
  assert.equal(m[0],0);assert.equal(other[0],m[39]);
  assert.equal(new Set(other).size,TOTAL);
  assert.deepEqual(regroupManifest(other),contiguousManifest());
+});
+test("single player sector-consolidation action reduces actual traffic",()=>{
+ let manifest=stripedManifest();
+ const before=manifestFootprint(manifest);
+ const packed=consolidateSector(manifest,0);
+ assert.equal(packed.moves,6);
+ assert.equal(packed.sector,0);
+ assert.equal(packed.wave,0);
+ assert.equal(manifestFootprint(packed.manifest).sectors,61);
+ assert.equal(before.sectors,64);
+ assert.equal(new Set(packed.manifest).size,TOTAL);
+ assert.deepEqual(manifest,stripedManifest(),"Original manifest must remain immutable");
+});
+test("multiple deliberate consolidations can finish contract without one-click sorting",()=>{
+ let manifest=stripedManifest(),steps=0;
+ // Each wave can consolidate disjoint sectors. Repeatedly pick a sector still scattered.
+ for(let sector=0;sector<12;sector++){
+  const loc=manifest.findIndex((address,i)=>Math.floor(i/LANES)===Math.floor(sector/4)&&Math.floor(address/8)===sector);
+  if(loc>=0){const action=consolidateSector(manifest,loc);manifest=action.manifest;steps++;}
+ }
+ assert.ok(steps>=8);
+ assert.ok(manifestFootprint(manifest).sectors<64);
 });
 test("repacking allows meaningful winning choices and scoring",()=>{
  const bad=evaluateDispatch(stripedManifest());

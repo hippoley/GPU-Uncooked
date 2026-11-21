@@ -1,10 +1,12 @@
 import {START,DISTRICTS,advance,nearestMission,missionLink} from "./logic.mjs";
+import {INITIAL_WORLD,worldEvidence,applyWorldAction,nextActionSlot,canOperateFreight,stateReceipt} from "./gpu-world-state.mjs";
 const $=id=>document.getElementById(id),canvas=$("viewport"),wrap=$("game");
 const requestedQuality=new URLSearchParams(location.search).get("quality");
 const sceneQuality=["low","medium","high"].includes(requestedQuality)?requestedQuality:"medium";
 document.documentElement.dataset.sceneQuality=sceneQuality;
 let running=false,overlay="intro",orbit=0,viewMode="third",pressed=new Set(),last=0,elapsed=0,discovered=new Set();
 let pos={...START},third=null,world=null,renderer=null,camera=null;
+let gpuWorld=INITIAL_WORLD(),xrayOpen=false;
 const fixedCornerShot=new URLSearchParams(location.search).get("shot")==="corner";
 if(fixedCornerShot){pos={x:-23,z:-17};orbit=.38;}
 document.documentElement.dataset.cornerShot=String(fixedCornerShot);
@@ -18,9 +20,9 @@ const directions={forward:["w","arrowup","up"],backward:["s","arrowdown","down"]
 const active=(dir)=>directions[dir].some(k=>pressed.has(k));
 function error(message){$("loading").hidden=false;$("error").textContent=message;$("loading").style.background="#191326"}
 function setObjective(title,desc){$("mission").textContent=title;$("hint").textContent=desc}
-function closeMission(){$("dialog").hidden=true;overlay="roam";pressed.clear()}
+function closeMission(){$("dialog").hidden=true;overlay="roam";pressed.clear();refreshGPUHUD()}
 function showMission(d){
- overlay="mission";pressed.clear();
+ overlay="mission";pressed.clear();refreshGPUHUD();
  $("dialog-kicker").textContent=d.kind==="game"?"PLAYABLE 3D CITY MISSION":d.kind==="lab"?"CUDA INTERACTIVE LAB":"COMING SOON · CONCEPT DISTRICT";
  $("dialog-title").textContent=d.name;
  let freight=null;
@@ -41,9 +43,49 @@ function showMission(d){
  $("dialog").hidden=false;
  discovered.add(d.id);$("discovered").textContent="DISCOVERED "+discovered.size+" / 6";
 }
+function refreshGPUHUD(){
+ const data=worldEvidence(gpuWorld),near=canOperateFreight(pos);
+ $("freight-operate").disabled=!near||gpuWorld.completed||overlay!=="roam";
+ $("xray-toggle").setAttribute("aria-pressed",String(xrayOpen));
+ $("cuda-xray").hidden=!xrayOpen;
+ $("xray-sectors").textContent=String(data.sectors);
+ $("xray-cost").textContent="32B 扇区覆盖量："+data.coveredBytes+"B / 请求数据："+data.requiredBytes+"B";
+ for(let i=0;i<4;i++)$("wave-"+i).textContent=String(data.waveSectors[i]);
+ $("xray-action").textContent=data.withinBudget?
+  "港口已经恢复。尝试在独立 Memory Heist 中处理更多随机订单。":
+  near?"按 R 选定一组仍然分散的货物并编组；数值必须真实下降。":
+  "靠近线程工厂（-34,-26）的货物终端，才可以操作。";
+ $("xray-location").textContent="GPU World State · "+gpuWorld.actions.length+" 次玩家动作 · "+(near?"已连接实物终端":"尚未接近终端");
+ const msg=$("world-feedback");msg.dataset.status=gpuWorld.equipment;
+ msg.textContent=data.withinBudget?
+  "港口恢复：扇区 "+data.sectors+" / "+data.budget+"。设备已经切换为正常运行；按 X 检查可重放记录。":
+  "GPU PORT · "+data.sectors+" / "+data.budget+" SECTORS · "+(near?"按 R 整理货物":"走近线程工厂终端");
+ if(world?.freightStage)world.freightStage.update(gpuWorld);
+ document.documentElement.dataset.freightModelSectors=String(data.sectors);
+ document.documentElement.dataset.freightModelCompleted=String(gpuWorld.completed);
+}
+function operateWorld(){
+ if(overlay!=="roam"||!canOperateFreight(pos)||gpuWorld.completed)return false;
+ const slot=nextActionSlot(gpuWorld);
+ if(slot===null)return false;
+ gpuWorld=applyWorldAction(gpuWorld,{type:"CONSOLIDATE_SECTOR",slot});
+ refreshGPUHUD();
+ try{localStorage.setItem("gpu-uncooked.city-freight.v1",JSON.stringify(stateReceipt(gpuWorld)))}catch{}
+ return true;
+}
+function toggleXray(){
+ xrayOpen=!xrayOpen;refreshGPUHUD();
+}
+$("xray-toggle").addEventListener("click",toggleXray);
+$("freight-operate").addEventListener("click",operateWorld);
+document.addEventListener("keydown",e=>{
+ if(e.repeat||e.ctrlKey||e.metaKey)return;
+ if(e.key.toLowerCase()==="x")toggleXray();
+ if(e.key.toLowerCase()==="r")operateWorld();
+});
 function interact(){if(overlay!=="roam")return;const d=nearestMission(pos);if(d)showMission(d)}
 $("interact").addEventListener("click",interact);
-$("start").addEventListener("click",()=>{overlay="roam";$("intro").hidden=true;canvas.focus()});
+$("start").addEventListener("click",()=>{overlay="roam";$("intro").hidden=true;refreshGPUHUD();canvas.focus()});
 document.addEventListener("keydown",e=>{
  const k=e.key.toLowerCase();if(k.startsWith("arrow")||k===" ")e.preventDefault();
  if(k==="escape"&&overlay==="mission")closeMission();
@@ -74,6 +116,7 @@ try{
  // Load Three.js as an ESM package pinned in the HTML import map.
  const {THREE,scene,root,player,...rest}=await import("./world.mjs").then(m=>{const w=m.createWorld({quality:sceneQuality});return {...w,THREE:w.THREE}});
  world={scene,root,player,...rest,THREE};
+ refreshGPUHUD();
  // Successful calculation changes the district's physical marker when the player returns.
  try{
   const receipt=JSON.parse(localStorage.getItem("gpu-uncooked.freight.v1")||"null");
@@ -130,6 +173,7 @@ try{
      right:dx*Math.cos(heading)-forward*Math.sin(heading)}:
     {forward,right:dx};
    pos=advance(pos,axes,dt,11);
+   if(canOperateFreight(pos)!==canOperateFreight(old))refreshGPUHUD();
    const mx=pos.x-old.x,mz=pos.z-old.z,v=Math.hypot(mx,mz)/Math.max(dt,.0001);
    if(v>.01)world.player.root.rotation.y=Math.atan2(mx,-mz);
    world.walk(elapsed,v);

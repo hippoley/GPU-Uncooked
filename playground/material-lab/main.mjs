@@ -283,6 +283,8 @@ $("receipt-file").addEventListener("change",async ()=>{
  const file=$("receipt-file").files?.[0];
  if(!file)return;
  importedReceipt=null;
+ $("receipt-info").textContent="VERIFYING / NOT MEASURED";
+ $("receipt-text").textContent="正在核对导入结构，不代表硬件已认证。";
  try{
   if(file.size>600000)throw new Error("Receipt view too large");
   const parsed=JSON.parse(await file.text());

@@ -35,6 +35,30 @@ await page.screenshot({path:"dist/material-lab/industrial-memory.png"});
 const data=await page.evaluate(()=>window.__MATERIAL_LAB.getModel());
 assert.equal(data.output[31],248.25);
 assert.equal(data.addresses[31],992);
+// Browser receipt import: fixture transcripts must never upgrade to measured GPU data.
+const fixture={
+ schema:"gpu-uncooked.receipt-view.v1",classification:"UNATTESTED_RAW_CAPTURE",
+ integrity_checked_locally:true,hardware_attested:false,measured_gpu_metrics:null,
+ device:{uuid:"GPU-fixture-0001",name:"TEST FIXTURE ONLY"},
+ git_commit:"a".repeat(40),source_sha256:"b".repeat(64),
+ source:{text:"__global__ void gather() {}",sha256:"c".repeat(64),truncated:false},
+ ptx:{text:".entry gather()",sha256:"d".repeat(64),truncated:false},
+ sass:{text:"FAKE FIXTURE SASS",sha256:"e".repeat(64),truncated:false},
+ runs:[1,4,8].map(stride=>({stride,exit_code:0,stdout:"PASS fixture"}))
+};
+await page.locator("#receipt-file").setInputFiles({
+ name:"receipt-view.json",mimeType:"application/json",buffer:Buffer.from(JSON.stringify(fixture))
+});
+assert.match(await page.locator("#receipt-info").innerText(),/UNATTESTED \(NOT MEASURED\)/);
+await page.locator('[data-receipt-tab="ptx"]').click();
+assert.match(await page.locator("#receipt-text").innerText(),/\.entry gather/);
+assert.equal(await page.locator("html").getAttribute("data-material-gpu-measured"),"false");
+fixture.hardware_attested=true;
+await page.locator("#receipt-file").setInputFiles({
+ name:"forged-receipt.json",mimeType:"application/json",buffer:Buffer.from(JSON.stringify(fixture))
+});
+assert.match(await page.locator("#receipt-info").innerText(),/REJECTED/);
+assert.equal(await page.locator("html").getAttribute("data-material-gpu-measured"),"false");
 assert.deepEqual(errors,[],"No uncaught browser failures");
 assert.deepEqual(external,[],"No external runtime requests");
 console.log(JSON.stringify({status:"PASS",threeJsInline:true,drawCalls:render.drawCalls,

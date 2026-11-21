@@ -3,6 +3,7 @@ import {LANE_COUNT,INPUT_COUNT,STEPS,initialSnapshot,kernelGather,sourceForStrid
 import {buildDerivedEvidence,describeWorldObject,measurementState} from "./evidence.mjs";
 import {parseReceiptView} from "./receipt-view.mjs";
 import {traceGather,compareGatherStrides,TRACE_PHASES,phaseExplanation} from "./instruction-microscope.mjs";
+import {gatherAccounting,reconcileGather} from "./execution-accounting.mjs";
 
 // Industrial material visual language: ceramic substrate, milled copper, satin metal,
 // glass passivation and address-bearing silicon cells. Not a literal GPU die floorplan.
@@ -211,6 +212,32 @@ function updateGeometry(){
  updateLinks();
 }
 let microPhase="address",microRegion=null;
+function renderAccounting(){
+ const ledger=reconcileGather(state.stride);
+ const a=ledger.derived.algorithmic;
+ $("account-load").textContent=a.usefulLoadBytes+" B";
+ $("account-coverage").textContent=a.source32ByteRegions+" × 32 B";
+ $("account-store").textContent=a.usefulStoreBytes+" B";
+ $("account-warp").textContent=String(ledger.derived.launch.warps);
+ $("account-tally").textContent=
+  "CUDA source arithmetic, per launch\\n"+
+  "  thread index products  "+a.integerIndexProducts+" per-thread expressions\\n"+
+  "  FP32 FMA              "+a.floatFma+"\\n"+
+  "  source byte range sum "+a.sourceRegionSpanBytes+" B (aligned-model coverage)\\n"+
+  "  dst byte range sum    "+a.destinationRegionSpanBytes+" B (aligned-model coverage)\\n"+
+  "  unique source regions "+a.source32ByteRegions+"\\n"+
+  "  unique store regions  "+a.destination32ByteRegions+"\\n"+
+  "  source FLOPs          0";
+ $("account-missing").textContent=
+  "SASS instruction count: UNKNOWN\\n"+
+  "registers/thread: UNKNOWN\\n"+
+  "L1/L2 sectors: UNKNOWN\\n"+
+  "DRAM bytes: UNKNOWN\\n"+
+  "kernel cycles / latency: UNKNOWN\\n"+
+  "NOTE: 32 source-level operations are NOT 32 SASS issues or 32 DRAM transactions.";
+ document.documentElement.dataset.materialAccountingKind=ledger.evidence.derived;
+ document.documentElement.dataset.materialProfilerKind=ledger.evidence.profiler;
+}
 function renderMicroscope(){
  const t=traceGather(state.stride,state.selectedLane),e=phaseExplanation(microPhase,t);
  const controls=$("micro-phases");
@@ -320,6 +347,7 @@ function updatePanel(){
  document.documentElement.dataset.materialPathClaim=linkEvidence.kind;
  document.documentElement.dataset.materialGpuMeasured="false";
  renderMicroscope();
+ renderAccounting();
  document.documentElement.dataset.materialStep=state.step;
  document.documentElement.dataset.materialSectors=String(model.sectorCount);
  document.documentElement.dataset.materialSelectedAddress=String(lane.index);

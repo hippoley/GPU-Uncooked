@@ -62,10 +62,11 @@ start without `--execute`.
 ```bash
 python3 tools/summarize_gather_ncu_series.py \
   --series /tmp/gather-ncu-001 \
+  --raw /tmp/gather-raw-001 \
   --output /tmp/gather-ncu-comparison.json
 ```
 
-This parser requires CSV rows attributable to a **single gather launch** in
+The comparison generator also re-opens the source receipt, re-runs its\nstructural verifier, checks original manifest SHA-256, device UUID,\ncompiler architecture, Git commit, original binary file hash **and the\nexact binary path** used by all profiling commands. This binds two\noperator-controlled artifacts together, not to an independently witnessed GPU.\n\nThis parser requires CSV rows attributable to a **single gather launch** in
 each stride file; it rejects malformed counts, duplicate rows, inconsistent
 binary paths, swapped stride arguments, tampered output and missing requested
 metrics. The comparison includes source-derived 32B region counts

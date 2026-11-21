@@ -53,6 +53,7 @@ $("reset").addEventListener("click",()=>{
 function nextMission(){
  if(level<2){level++;manifest=initial(level);sortActions=0;selection=null;completed=false;$("result").hidden=true;render();return;}
  completed=true;$("dispatch").disabled=true;$("regroup").disabled=true;$("reset").disabled=true;
+ try{localStorage.setItem("gpu-uncooked.freight.v1",JSON.stringify({completed:true,credits:totalCredits,chapter:"freight",version:1}))}catch{ /* private mode still supports play */ }
  const a=document.createElement("a");a.href="../chapters/03-memory-coalescing/index.html";a.textContent="进入 CUDA Lab：验证你的装载直觉 →";a.style.cssText="display:inline-block;margin-top:9px;color:#aefff1;font-weight:900";
  $("result").append(document.createElement("br"),a);
  const b=document.createElement("button");b.className="action secondary";b.textContent="重新挑战三份委托";b.style.marginTop="12px";b.onclick=()=>{level=0;manifest=initial(level);sortActions=0;totalCredits=0;completed=false;selection=null;$("result").hidden=true;render()};

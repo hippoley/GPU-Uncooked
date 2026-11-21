@@ -8,6 +8,12 @@ let pos={...START},third=null,world=null,renderer=null,camera=null;
 const fixedCornerShot=new URLSearchParams(location.search).get("shot")==="corner";
 if(fixedCornerShot){pos={x:-23,z:-17};orbit=.38;}
 document.documentElement.dataset.cornerShot=String(fixedCornerShot);
+if(new URLSearchParams(location.search).get("photo")==="1")document.body.classList.add("photo-mode");
+document.addEventListener("keydown",e=>{
+ if(e.key.toLowerCase()==="p"&&!e.repeat&&!e.ctrlKey&&!e.metaKey){
+  document.body.classList.toggle("photo-mode");
+ }
+});
 const directions={forward:["w","arrowup","up"],backward:["s","arrowdown","down"],left:["a","arrowleft","left"],right:["d","arrowright","right"]};
 const active=(dir)=>directions[dir].some(k=>pressed.has(k));
 function error(message){$("loading").hidden=false;$("error").textContent=message;$("loading").style.background="#191326"}

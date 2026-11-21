@@ -85,7 +85,7 @@ try{
  renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:"high-performance"});
  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.15));
  renderer.setSize(wrap.clientWidth,wrap.clientHeight,false);
- renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.35;renderer.shadowMap.enabled=false;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+ renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;renderer.shadowMap.enabled=false;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
  camera=new THREE.PerspectiveCamera(61,wrap.clientWidth/wrap.clientHeight,.1,260);
  const target=new THREE.Vector3(pos.x,2.5,pos.z),camPoint=new THREE.Vector3(pos.x+8,7.9,pos.z+11);
  camera.position.copy(camPoint);camera.lookAt(target);
@@ -104,6 +104,10 @@ try{
   facadeWindows:world.coherentArchitecture?.metrics.windowCount??0,
   facadeInstancedBatches:world.coherentArchitecture?.metrics.instancedBatches??0,
   facadeGeometryPieces:world.coherentArchitecture?.metrics.geometryPieces??0,
+  filmicDistantBuildings:world.filmic?.metrics.distantBuildings??0,
+  filmicInstanceBatches:world.filmic?.metrics.instancedBatches??0,
+  filmicLocalizedLights:world.filmic?.metrics.localizedLights??0,
+  filmicParticleCount:world.filmic?.metrics.particles??0,
   disclaimer:"WebGL calls and software-renderer FPS are not proof of GTA VI-level fidelity or real GPU performance."
  };
  running=true;clearTimeout(fallbackTimeout);$("loading").hidden=true;document.documentElement.dataset.city3dReady="true";

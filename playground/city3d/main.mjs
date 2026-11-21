@@ -55,6 +55,14 @@ try{
  camera.position.copy(camPoint);camera.lookAt(target);
  window.addEventListener("resize",resize);resize();
  renderer.render(scene,camera);
+ window.__CITY3D_DIAGNOSTICS={
+  webgl:true,
+  drawCalls:renderer.info.render.calls,
+  triangles:renderer.info.render.triangles,
+  geometries:renderer.info.memory.geometries,
+  textures:renderer.info.memory.textures,
+  proceduralMaterials:true
+ };
  running=true;clearTimeout(fallbackTimeout);$("loading").hidden=true;document.documentElement.dataset.city3dReady="true";
  let frames=0,lastPerf=0;
  function frame(now){

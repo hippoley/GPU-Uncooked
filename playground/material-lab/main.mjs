@@ -148,6 +148,23 @@ const packetMaterials=[orangeGlow,cyanGlow];
 let selectedPath=null,selectedPacket=null;
 let state=initialSnapshot(),model=kernelGather({stride:state.stride});
 let cameraPos=new THREE.Vector3(0,17,21),angleX=0,angleY=0,drag=null,zoom=1,frames=0,nowClock=0;
+const cameraFocus=new THREE.Vector3(0,0,0);
+const views={
+ source:{offset:[0,17,21],focus:[0,0,0]},
+ dispatch:{offset:[-1.3,8.2,11],focus:[-7.8,.8,0]},
+ memory:{offset:[1.2,8.2,10.7],focus:[8,1,0]},
+ result:{offset:[0,15,19],focus:[0,.4,0]}
+};
+function setView(step,snap=false){
+ const pose=views[step];
+ if(!pose)throw new RangeError("Unknown camera view");
+ cameraPos.set(...pose.offset);
+ cameraFocus.set(...pose.focus);
+ if(snap){
+  camera.position.copy(cameraPos).add(cameraFocus);
+  camera.lookAt(cameraFocus);
+ }
+}
 function lineForLane(lane){
  const address=model.lanes[lane];
  const start=lanePositions[lane],end=cellPositions[address.index];
@@ -215,8 +232,7 @@ function updatePanel(){
 }
 function apply(action){
  state=transition(state,action);updateGeometry();updatePanel();
- const pose={source:[0,17,21],dispatch:[-11,11,13],memory:[11,11,13],result:[0,17,21]};
- cameraPos.set(...pose[state.step]);
+ setView(state.step,true);
 }
 document.querySelectorAll("[data-stride]").forEach(b=>b.addEventListener("click",()=>apply({type:"STRIDE",value:Number(b.dataset.stride)})));
 document.querySelectorAll("[data-step]").forEach(b=>b.addEventListener("click",()=>apply({type:"STEP",value:b.dataset.step})));
@@ -255,7 +271,7 @@ function resize(){const rect=$("viewport").getBoundingClientRect();
 }
 window.addEventListener("resize",resize);
 updateGeometry();updatePanel();resize();
-camera.position.set(0,17,21);camera.lookAt(0,0,0);
+setView("source",true);
 renderer.render(scene,camera);
 $("loading").hidden=true;document.documentElement.dataset.materialReady="true";
 window.__MATERIAL_LAB={getSnapshot:()=>({...state}),getModel:()=>({stride:model.stride,sectors:model.sectorCount,addresses:model.lanes.map(l=>l.byteAddress),output:model.result.slice()}),
@@ -264,8 +280,8 @@ function frame(t){
  const dt=Math.min(.07,(t-(frame.last||t))/1000);frame.last=t;nowClock+=dt;frames++;
  const orbit=new THREE.Vector3(cameraPos.x*Math.cos(angleX)+Math.sin(angleX)*cameraPos.z,
   cameraPos.y*Math.cos(angleY),cameraPos.z*Math.cos(angleX)-Math.sin(angleX)*cameraPos.x);
- camera.position.lerp(orbit.multiplyScalar(zoom),1-Math.exp(-dt*3.2));
- camera.lookAt(0,.35,0);
+ camera.position.lerp(orbit.multiplyScalar(zoom).add(cameraFocus),1-Math.exp(-dt*3.2));
+ camera.lookAt(cameraFocus);
  if(selectedPacket){
   const p=lineForLane(state.selectedLane);
   const curve=new THREE.CatmullRomCurve3(p);

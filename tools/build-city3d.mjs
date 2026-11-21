@@ -28,9 +28,35 @@ if(!html.includes(script))throw Error("Entry script anchor absent");
 const remainingTemplate=html.replace(script,"");
 if(/<script\b[^>]*\bsrc\s*=/i.test(remainingTemplate)||/<script\b[^>]*type\s*=\s*["']importmap/i.test(remainingTemplate))
  throw Error("Unexpected external script or import map in HTML template");
-html=html.replace(script,'<script type="module">'+js+'</script>');
+// String.replace(string) interprets html=html.replace(script,'<script type="module">'+js+'</script>');
 // Inline JS can legitimately contain literal HTML strings. Do not regex-scan
-// script source as if it were HTML tags. The browser smoke test enforces zero network requests.
+// script source as if it were HTML tags. The browser smoke test enforces zero network requests., 
+if(/https?:\/\/cdn\.jsdelivr\.net/.test(remainingTemplate))throw Error("CDN reference survived in HTML template");
+const bytes=Buffer.from(html);
+const gzip=gzipSync(bytes,{level:9});
+const brotli=brotliCompressSync(bytes,{params:{[constants.BROTLI_PARAM_QUALITY]:9}});
+const max=1_400_000;
+mkdirSync(dist,{recursive:true});
+writeFileSync(resolve(dist,"index.html"),bytes);
+const report={
+ target:"single-file 3D city entry (other game chapters are separate)",path:"dist/city3d/index.html",
+ includesThreeJs:true,externalRuntimeAssets:0,rawBytes:bytes.length,
+ gzipBytes:gzip.length,brotliBytes:brotli.length,
+ limitBytes:max,underLimit:brotli.length<=max,
+ linkedChapterPagesNotBundled:true,
+ visualParityWithGta6:"NOT_TESTED",realGpuFps:"NOT_TESTED"
+};
+writeFileSync(resolve(dist,"build-report.json"),JSON.stringify(report,null,2)+"\n");
+console.log(JSON.stringify(report,null,2));
+if(!report.underLimit){console.error("Single-file city entry exceeds compressed target");process.exitCode=1}
+ and $\` in minified vendor code.
+// Use a FUNCTION replacer so esbuild output is inserted byte-for-byte.
+html=html.replace(script,()=>'<script type="module">'+js+'</script>');
+const inlineOpenings=[...html.matchAll(/<script\\b/gi)].length;
+const inlineClosings=[...html.matchAll(/<\\/script\\s*>/gi)].length;
+if(inlineOpenings!==1||inlineClosings!==1)throw Error("Generated HTML must contain exactly one inline module script");
+if(/<script\\b[^>]*\\bsrc\\s*=/i.test(html))throw Error("Bundled HTML must not contain external script tags");
+// Inline JS can legitimately contain HTML-like strings. The browser test verifies zero network requests.
 if(/https?:\/\/cdn\.jsdelivr\.net/.test(remainingTemplate))throw Error("CDN reference survived in HTML template");
 const bytes=Buffer.from(html);
 const gzip=gzipSync(bytes,{level:9});

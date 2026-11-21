@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import {LANE_COUNT,INPUT_COUNT,STEPS,initialSnapshot,kernelGather,sourceForStride,transition} from "./physics.mjs";
 import {buildDerivedEvidence,describeWorldObject,measurementState} from "./evidence.mjs";
+import {parseReceiptView} from "./receipt-view.mjs";
 
 // Industrial material visual language: ceramic substrate, milled copper, satin metal,
 // glass passivation and address-bearing silicon cells. Not a literal GPU die floorplan.
@@ -260,6 +261,44 @@ function apply(action){
  state=transition(state,action);updateGeometry();updatePanel();
  setView(state.step,true);
 }
+// Read-only receipt transcript viewer. Import cannot grant MEASURED identity.
+let importedReceipt=null,receiptTab="sass";
+function showReceipt(){
+ const target=$("receipt-text"),info=$("receipt-info");
+ if(!importedReceipt){
+  target.textContent="无实际编译产物可显示。";
+  info.textContent="NOT IMPORTED · NO GPU EXECUTION RECEIPT";
+  return;
+ }
+ const r=importedReceipt;
+ info.textContent="IMPORTED / UNATTESTED (NOT MEASURED)\\n"+r.deviceName+" / "+r.deviceUuid+
+  "\\nCOMMIT "+r.commit+"\\nSOURCE SHA256 "+r.sourceSha256+
+  "\\nFILE HASH "+r.hashes[receiptTab]+
+  "\\nCaution: integrity is NOT independent GPU attestation";
+ target.textContent=r.text[receiptTab].slice(0,6000)||
+   "该收据中对应产物为空。";
+ document.documentElement.dataset.materialGpuMeasured="false";
+}
+$("receipt-file").addEventListener("change",async ()=>{
+ const file=$("receipt-file").files?.[0];
+ if(!file)return;
+ importedReceipt=null;
+ try{
+  if(file.size>600000)throw new Error("Receipt view too large");
+  const parsed=JSON.parse(await file.text());
+  importedReceipt=parseReceiptView(parsed);
+  showReceipt();
+ }catch(err){
+  $("receipt-info").textContent="REJECTED / "+String(err.message).slice(0,180);
+  $("receipt-text").textContent="未接受该收据；硬件执行仍未验证。";
+ }
+});
+document.querySelectorAll("[data-receipt-tab]").forEach(btn=>btn.addEventListener("click",()=>{
+ receiptTab=btn.dataset.receiptTab;
+ showReceipt();
+}));
+showReceipt();
+
 document.querySelectorAll("[data-stride]").forEach(b=>b.addEventListener("click",()=>apply({type:"STRIDE",value:Number(b.dataset.stride)})));
 document.querySelectorAll("[data-step]").forEach(b=>b.addEventListener("click",()=>apply({type:"STEP",value:b.dataset.step})));
 for(const [id,point] of [["focus-threads","dispatch"],["focus-memory","memory"],["focus-overview","source"]]){

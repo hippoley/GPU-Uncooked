@@ -85,6 +85,9 @@ def capture(raw_folder, output_folder, selected_uuid, *, execute=False, profiler
                 errors.append(f"Nsight Compute stride {stride} failed")
             if "gather" not in result["stdout"]:
                 errors.append(f"Nsight Compute stride {stride} produced no identifiable kernel row")
+            for metric in METRICS:
+                if metric not in result["stdout"]:
+                    errors.append(f"Nsight Compute stride {stride} missing metric {metric}")
             if f"PASS stride={stride}" not in (result["stdout"] + result["stderr"]):
                 errors.append(f"Nsight Compute stride {stride} has no correctness PASS")
     status = "COLLECTED_UNVERIFIED" if not errors else "INCOMPLETE"

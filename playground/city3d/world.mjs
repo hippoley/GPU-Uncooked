@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import {DISTRICTS} from "./logic.mjs";
 import {createRoadMaterial,createFacadeMaterial,makeWeather,makePuddleGlints} from "./procedural.mjs";
+import {createUrbanDetails} from "./streets.mjs";
 const rand=(i)=>{const n=Math.sin(i*93.17+19.6)*52793.23;return n-Math.floor(n)};
 const mat=(color,emissive=0x000000,intensity=0)=>new THREE.MeshStandardMaterial({color,metalness:.3,roughness:.58,emissive,emissiveIntensity:intensity});
 const asphalt=createRoadMaterial(THREE),concrete=mat(0x303048),cream=mat(0xe2b08e),glass=mat(0x133c64,0x2d91b5,.38);
@@ -101,6 +102,7 @@ export function createWorld(){
  const root=new THREE.Group();scene.add(root);
  const weather=makeWeather(THREE,83,"medium");root.add(weather.rain);
  makePuddleGlints(THREE,root,57);
+ const urbanDressing=createUrbanDetails(THREE,root);
  // two streets cross at the player spawn, continuous driveable world
  for(let z of [-14,14])box(root,120,.13,1.1,0,.08,z,mat(0xb7a4b0));
  for(let x of [-15,15])box(root,1.1,.13,120,x,.08,0,mat(0xb7a4b0));

@@ -45,3 +45,12 @@ The techniques worth reimplementing in an original urban context are:
 5. Real graphics validation requires a GPU-enabled test host, not software rasterized CI.
 
 **Release verdict:** a procedural material + atmosphere **technique pass**, not Saltline-parity visual quality and not a GTA VI-level city.
+
+## Follow-up actually implemented
+
+- `playground/city3d/streets.mjs`: an original storefront / curbside / rooftop / overhead-crossing construction grammar. Repeated street posts, rails, utility blocks and vents are InstancedMesh batches; the same modular vocabulary is positioned differently for each district.
+- `playground/city3d/index.html` and `main.mjs`: third-person GTA-like overview **and** optional first-person street-level mode (V key or on-screen button), so the user can inspect whether the wet road and building scale survive proximity.
+- Browser smoke tests now assert actual WebGL draw calls, triangle counts and multiple generated GPU textures, plus switching both camera modes.
+- Original older 2D/2.5D city and existing CUDA experiments remain available; no unlicensed Saltline source was imported.
+
+**Current visual review (real Chromium screenshot):** procedural patches and local highlights make asphalt less flat, and architectural set-dressing makes the blocks denser. However the box-derived characters and shops still look like a low-poly indie prototype. This is a failed realism-quality gate, not a claim of Saltline-quality visual parity. The GitHub Actions browser is software rasterized and has shown very low frame rates, so do not infer consumer GPU FPS.

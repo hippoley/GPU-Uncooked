@@ -47,16 +47,19 @@ export function applyWorldAction(state,action){
 }
 export function nextActionSlot(state){
  assertState(state);
- // Pick a still-scattered sector in the first convoy. Player's explicit action
- // is required; no automatic completion and no click-handler auto progression.
- const fp=manifestFootprint(state.manifest);
- if(fp.sectors<=STARTING_BUDGET)return null;
- const wave=state.manifest.slice(0,32);
- for(const sector of [0,4,8,12]){
-  const slot=wave.findIndex(a=>Math.floor(a/8)===sector);
-  if(slot>=0)return slot;
+ const before=worldEvidence(state);
+ if(before.withinBudget)return null;
+ // Controller highlights the most effective remaining sector destination.
+ // A real player still has to press R to initiate and confirm every action.
+ let best=null,bestImprovement=0;
+ for(let slot=0;slot<32;slot++){
+  const sector=Math.floor(state.manifest[slot]/8);
+  if(state.manifest.findIndex((a,i)=>i<slot&&Math.floor(a/8)===sector)>=0)continue;
+  const next=consolidateSector(state.manifest,slot);
+  const improvement=before.sectors-manifestFootprint(next.manifest).sectors;
+  if(improvement>bestImprovement){bestImprovement=improvement;best=slot;}
  }
- return 0;
+ return best;
 }
 export function replayWorld(events){
  let state=INITIAL_WORLD();

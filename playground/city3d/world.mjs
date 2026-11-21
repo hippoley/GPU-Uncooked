@@ -4,7 +4,13 @@ const rand=(i)=>{const n=Math.sin(i*93.17+19.6)*52793.23;return n-Math.floor(n)}
 const mat=(color,emissive=0x000000,intensity=0)=>new THREE.MeshStandardMaterial({color,metalness:.3,roughness:.58,emissive,emissiveIntensity:intensity});
 const asphalt=mat(0x171c2e),concrete=mat(0x303048),cream=mat(0xe2b08e),glass=mat(0x133c64,0x2d91b5,.38);
 const pink=mat(0xf265a4,0xe54789,.65),cyan=mat(0x4de2d8,0x2ce8e4,.8),yellow=mat(0xffcc85,0xffba6c,.55);
-const box=(root,w,h,d,x,y,z,m)=>{const a=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);a.position.set(x,y,z);a.castShadow=true;a.receiveShadow=true;root.add(a);return a};
+const boxGeometries=new Map();
+const boxGeometry=(w,h,d)=>{
+ const key=[w,h,d].join("|");
+ if(!boxGeometries.has(key))boxGeometries.set(key,new THREE.BoxGeometry(w,h,d));
+ return boxGeometries.get(key);
+};
+const box=(root,w,h,d,x,y,z,m)=>{const a=new THREE.Mesh(boxGeometry(w,h,d),m);a.position.set(x,y,z);a.castShadow=false;a.receiveShadow=false;root.add(a);return a};
 const sphere=(root,r,x,y,z,m)=>{const a=new THREE.Mesh(new THREE.SphereGeometry(r,12,9),m);a.position.set(x,y,z);a.castShadow=true;root.add(a);return a};
 const cylinder=(root,top,bottom,height,x,y,z,m)=>{const a=new THREE.Mesh(new THREE.CylinderGeometry(top,bottom,height,8),m);a.position.set(x,y,z);a.castShadow=true;root.add(a);return a};
 function neonLabel(word,accent='#ffcb9b'){
@@ -32,12 +38,20 @@ function building(root,seed,x,z,w,d,height,theme){
  const toward=z<0?1:-1,doorZ=z+toward*(d/2+.09);
  box(root,3.1,3.7,.22,x,1.85,doorZ,glass);
  box(root,3.5,.22,.45,x,3.9,doorZ,trim);
+ // Repeated facade panes are two instanced draw calls, not 60-100 separate meshes.
+ const litMatrices=[],darkMatrices=[],transform=new THREE.Matrix4();
  for(let floor=0;floor<Math.floor((height-4)/3.3);floor++){
   for(let lane=0;lane<Math.floor((w-3)/2.7);lane++){
    const wx=x-w/2+2+lane*2.7,wy=5+floor*3.3;
-   const lit=rand(seed+floor*57+lane*37)>.25;
-   box(root,1.45,1.8,.13,wx,wy,z+toward*(d/2+.14),lit?yellow:glass);
+   const list=rand(seed+floor*57+lane*37)>.25?litMatrices:darkMatrices;
+   list.push(new THREE.Matrix4().makeTranslation(wx,wy,z+toward*(d/2+.14)));
   }
+ }
+ for(const [list,material] of [[litMatrices,yellow],[darkMatrices,glass]]){
+  if(!list.length)continue;
+  const instanced=new THREE.InstancedMesh(boxGeometry(1.45,1.8,.13),material,list.length);
+  list.forEach((matrix,i)=>instanced.setMatrixAt(i,matrix));instanced.instanceMatrix.needsUpdate=true;
+  instanced.castShadow=false;instanced.receiveShadow=false;instanced.computeBoundingSphere();root.add(instanced);
  }
  const sign=neonLabel(theme.key,theme.lit);
  const signMesh=box(root,w*.66,2.5,.16,x,5.9,z+toward*(d/2+.23),sign);
@@ -81,7 +95,7 @@ function actor(root,shirt=0xeea170){
 export function createWorld(){
  const scene=new THREE.Scene();scene.background=new THREE.Color(0x21172f);scene.fog=new THREE.FogExp2(0x291c3e,.008);
  const hemi=new THREE.HemisphereLight(0xa8bbff,0x372338,2.05);scene.add(hemi);
- const moon=new THREE.DirectionalLight(0xffad9e,2.4);moon.position.set(-30,85,-35);moon.castShadow=true;moon.shadow.mapSize.set(1024,1024);moon.shadow.camera.left=-80;moon.shadow.camera.right=80;moon.shadow.camera.top=80;moon.shadow.camera.bottom=-80;scene.add(moon);
+ const moon=new THREE.DirectionalLight(0xffad9e,2.4);moon.position.set(-30,85,-35);moon.castShadow=false;moon.shadow.mapSize.set(512,512);moon.shadow.camera.left=-80;moon.shadow.camera.right=80;moon.shadow.camera.top=80;moon.shadow.camera.bottom=-80;scene.add(moon);
  const ground=new THREE.Mesh(new THREE.PlaneGeometry(160,160),asphalt);ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
  const root=new THREE.Group();scene.add(root);
  // two streets cross at the player spawn, continuous driveable world

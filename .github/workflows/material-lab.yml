@@ -10,6 +10,7 @@ on:
       - "tests/material-receipt-view.test.mjs"
       - "tests/material-microscope.test.mjs"
       - "tests/material-execution-accounting.test.mjs"
+      - "tests/material-sass-inspector.test.mjs"
       - "tests/test_gather_receipt.py"
       - "tools/*gather*receipt.py"
       - "tools/export_gather_receipt_view.py"
@@ -24,6 +25,7 @@ on:
       - "tests/material-receipt-view.test.mjs"
       - "tests/material-microscope.test.mjs"
       - "tests/material-execution-accounting.test.mjs"
+      - "tests/material-sass-inspector.test.mjs"
       - "tests/test_gather_receipt.py"
       - "tools/*gather*receipt.py"
       - "tools/export_gather_receipt_view.py"
@@ -42,7 +44,7 @@ jobs:
         with:
           node-version: "22"
       - name: Validate address, sector and code relationships
-        run: node --test tests/material-lab.test.mjs tests/material-evidence.test.mjs tests/material-receipt-view.test.mjs tests/material-microscope.test.mjs tests/material-execution-accounting.test.mjs
+        run: node --test tests/material-lab.test.mjs tests/material-evidence.test.mjs tests/material-receipt-view.test.mjs tests/material-microscope.test.mjs tests/material-execution-accounting.test.mjs tests/material-sass-inspector.test.mjs
       - name: Verify offline receipt integrity tests (no GPU required)
         run: python3 -m unittest discover -s tests -p test_gather_receipt.py -v
       - name: Install pinned runtime and bundler

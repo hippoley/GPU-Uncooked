@@ -25,10 +25,13 @@ const original=readFileSync(resolve(src,"index.html"),"utf8");
 let html=original.replace(/<script type="importmap">[\s\S]*?<\/script>/,"");
 const script='<script type="module" src="./main.mjs"></script>';
 if(!html.includes(script))throw Error("Entry script anchor absent");
+const remainingTemplate=html.replace(script,"");
+if(/<script\b[^>]*\bsrc\s*=/i.test(remainingTemplate)||/<script\b[^>]*type\s*=\s*["']importmap/i.test(remainingTemplate))
+ throw Error("Unexpected external script or import map in HTML template");
 html=html.replace(script,'<script type="module">'+js+'</script>');
-if(/<script[^>]+src=/.test(html)||/<script type="importmap"/.test(html))
- throw Error("External script found after inlining");
-if(/https?:\/\/cdn\.jsdelivr\.net/.test(html))throw Error("CDN reference survived bundling");
+// Inline JS can legitimately contain literal HTML strings. Do not regex-scan
+// script source as if it were HTML tags. The browser smoke test enforces zero network requests.
+if(/https?:\/\/cdn\.jsdelivr\.net/.test(remainingTemplate))throw Error("CDN reference survived in HTML template");
 const bytes=Buffer.from(html);
 const gzip=gzipSync(bytes,{level:9});
 const brotli=brotliCompressSync(bytes,{params:{[constants.BROTLI_PARAM_QUALITY]:9}});

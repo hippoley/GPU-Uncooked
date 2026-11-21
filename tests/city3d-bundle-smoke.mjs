@@ -42,6 +42,10 @@ const sameScene=await page.evaluate(()=>({
 assert.equal(sameScene.facades,metrics.facadeWindows,"Geometry must persist across camera mode");
 assert.equal(sameScene.batches,metrics.facadeInstancedBatches,"Batched geometry must persist across camera mode");
 await page.locator("#viewmode").click();
+await page.keyboard.press("p");
+assert.equal(await page.locator("body").evaluate(el=>el.classList.contains("photo-mode")),true);
+await page.screenshot({path:"dist/city3d/standalone-cinematic.png"});
+await page.keyboard.press("p");
 console.log(JSON.stringify({status:"PASS",selfContained:true,compressedBytes:report.brotliBytes,
  drawCalls:metrics.drawCalls,triangles:metrics.triangles,cornerProps:metrics.cornerProps,externalRequests:external.length},null,2));
 await browser.close();

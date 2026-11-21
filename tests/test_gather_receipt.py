@@ -4,6 +4,7 @@ from pathlib import Path
 import tempfile
 import unittest
 from tools.verify_gather_receipt import verify
+from tools.export_gather_receipt_view import export
 
 def h(b): return hashlib.sha256(b).hexdigest()
 class ReceiptTests(unittest.TestCase):
@@ -31,6 +32,20 @@ class ReceiptTests(unittest.TestCase):
    "profile_requested":False,"file_sha256":files}
   (root/"manifest.json").write_text(json.dumps(manifest))
   return manifest
+ def test_export_view_never_upgrades_trust(self):
+  with tempfile.TemporaryDirectory() as d:
+   root=Path(d);self.make(root)
+   result=export(root)
+   self.assertEqual(result["schema"],"gpu-uncooked.receipt-view.v1")
+   self.assertEqual(result["classification"],"UNATTESTED_RAW_CAPTURE")
+   self.assertFalse(result["hardware_attested"])
+   self.assertIsNone(result["measured_gpu_metrics"])
+   self.assertEqual(len(result["runs"]),3)
+ def test_export_rejects_modified_sass(self):
+  with tempfile.TemporaryDirectory() as d:
+   root=Path(d);self.make(root)
+   (root/"gather.sass.txt").write_text("unverified altered instructions")
+   with self.assertRaisesRegex(ValueError,"Mismatching file hash"): export(root)
  def test_coherent_mock_passes_integrity_but_not_attestation(self):
   with tempfile.TemporaryDirectory() as d:
    root=Path(d);self.make(root)

@@ -26,6 +26,19 @@ assert.ok(metrics.drawCalls<500,"Avoid runaway draw calls for the six-building s
 assert.deepEqual(external,[],"No runtime CDN, textures or geometry downloads allowed");
 await page.locator("#start").click();
 await page.screenshot({path:"dist/city3d/standalone-desktop.png"});
+// View-consistency is tested as two distinct real camera poses of one unchanged 3D scene.
+await page.locator("#viewmode").click();
+assert.match(await page.locator("#viewmode").innerText(),/第一人称/);
+await page.waitForTimeout(250);
+await page.screenshot({path:"dist/city3d/standalone-first-person.png"});
+const sameScene=await page.evaluate(()=>({
+ facades:window.__CITY3D_DIAGNOSTICS.facadeWindows,
+ batches:window.__CITY3D_DIAGNOSTICS.facadeInstancedBatches,
+ quality:document.documentElement.dataset.sceneQuality
+}));
+assert.equal(sameScene.facades,metrics.facadeWindows,"Geometry must persist across camera mode");
+assert.equal(sameScene.batches,metrics.facadeInstancedBatches,"Batched geometry must persist across camera mode");
+await page.locator("#viewmode").click();
 console.log(JSON.stringify({status:"PASS",selfContained:true,compressedBytes:report.brotliBytes,
  drawCalls:metrics.drawCalls,triangles:metrics.triangles,cornerProps:metrics.cornerProps,externalRequests:external.length},null,2));
 await browser.close();

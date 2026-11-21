@@ -87,6 +87,9 @@ for(const device of [{name:"desktop",width:1440,height:900},{name:"mobile",width
  assert.ok(sceneStats?.webgl,"Real WebGL scene must be rendered");
  assert.ok(sceneStats.drawCalls>0&&sceneStats.triangles>0,"A non-empty 3D scene must be rasterized");
  assert.ok(sceneStats.textures>=6,"Procedural road, facade and neon map textures must exist");
+ assert.equal(sceneStats.quality,"medium","The default cinematic corner must select medium detail");
+ assert.ok(sceneStats.cornerProps>=20,"The 3D world must actually contain generated street-level objects");
+ assert.ok(sceneStats.cornerBatchCalls>=3,"Repeated corner elements must use GPU instanced batches");
  await page.locator("#start").click();
  assert.equal(await page.locator("#intro").isHidden(),true);
  await page.keyboard.down("ArrowLeft");

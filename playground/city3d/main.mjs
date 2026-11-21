@@ -62,6 +62,20 @@ try{
  // Load Three.js as an ESM package pinned in the HTML import map.
  const {THREE,scene,root,player,...rest}=await import("./world.mjs").then(m=>{const w=m.createWorld();return {...w,THREE:w.THREE}});
  world={scene,root,player,...rest,THREE};
+ // Successful calculation changes the district's physical marker when the player returns.
+ try{
+  const receipt=JSON.parse(localStorage.getItem("gpu-uncooked.freight.v1")||"null");
+  if(receipt?.completed===true&&Number.isFinite(receipt.credits)){
+   const factory=world.markers?.find(m=>m.d.id==="factory");
+   if(factory){
+    factory.gem.material=new THREE.MeshStandardMaterial({color:0xffdc92,emissive:0xff9d4d,emissiveIntensity:1.8});
+    factory.ring.material=new THREE.MeshBasicMaterial({color:0xffd783});
+    factory.group.scale.setScalar(1.26);
+   }
+   $("discovered").textContent="FREIGHT CLEARED · "+receipt.credits+" CREDITS";
+   document.documentElement.dataset.freightCleared="true";
+  }
+ }catch{ /* leave city usable if local storage unavailable */ }
  renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:"high-performance"});
  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.15));
  renderer.setSize(wrap.clientWidth,wrap.clientHeight,false);

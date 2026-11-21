@@ -234,12 +234,18 @@ canvas.addEventListener("pointermove",e=>{
  drag=e.clientX;
 });
 for(const event of ["pointerup","pointercancel","lostpointercapture"])canvas.addEventListener(event,()=>drag=null);
+function cullDistantExhibits(){
+ // The world remains spatially continuous; only out-of-sight geometry is hidden.
+ // Saves software-rasterizer work and real GPU draw calls on low-power laptops.
+ for(const st of stageObjects)st.group.visible=Math.abs(camera.position.z-st.z)<37;
+}
 function resize(){
  const width=innerWidth,height=innerHeight;
  renderer.setSize(width,height,false);camera.aspect=width/height;
  camera.fov=width<height?79:65;camera.updateProjectionMatrix();
 }
 window.addEventListener("resize",resize);resize();
+cullDistantExhibits();
 renderer.render(scene,camera);
 document.documentElement.dataset.microverseReady="true";
 $("loading").hidden=true;
@@ -280,6 +286,7 @@ function frame(now){
   if(p.age>1.4){scene.remove(p.mesh);p.mesh.geometry.dispose();energy.splice(i,1)}
  }
  camera.lookAt(camera.position.x+Math.sin(yaw)*9,2.05,camera.position.z-Math.cos(yaw)*9);
+ cullDistantExhibits();
  renderer.render(scene,camera);frames++;
  requestAnimationFrame(frame);
 }

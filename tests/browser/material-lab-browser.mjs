@@ -23,6 +23,11 @@ assert.equal(await page.locator("#sectors").innerText(),"4");
 assert.equal(await page.locator("#bytes").innerText(),"128B");
 await page.locator("[data-stride='8']").click();
 assert.equal(await page.locator("#sectors").innerText(),"32");
+assert.equal(await page.locator("#account-coverage").innerText(),"32 × 32 B");
+assert.equal(await page.locator("#account-load").innerText(),"128 B");
+assert.match(await page.locator("#account-missing").innerText(),/DRAM bytes: UNKNOWN/);
+assert.equal(await page.locator("html").getAttribute("data-material-profiler-kind"),"UNKNOWN");
+
 assert.equal(await page.locator("#micro-matrix tbody tr").count(),3);
 assert.match(await page.locator("#micro-matrix tbody").innerText(),/1024B/);
 await page.locator('[data-micro-phase="index"]').click();

@@ -16,8 +16,8 @@ for(const device of [{name:"desktop",width:1440,height:900},{name:"mobile",width
    assert.equal(overflow,false,chapter+" horizontal overflow on "+device.name);
  };
  await visit("hub","index.html");
- assert.equal(await page.locator("a[href='./01-thread-mapping/index.html']").count(),1);
- await page.locator("a[href='./01-thread-mapping/index.html']").click();
+ assert.equal(await page.locator(".cards a[href='./01-thread-mapping/index.html']").count(),1);
+ await page.locator(".cards a[href='./01-thread-mapping/index.html']").click();
  await page.locator("#elements").evaluate(el=>{el.value="50";el.dispatchEvent(new Event("input",{bubbles:true}));});
  await page.locator("#block-size").evaluate(el=>{el.value="16";el.dispatchEvent(new Event("input",{bubbles:true}));});
  await page.locator("#prediction").fill("4");

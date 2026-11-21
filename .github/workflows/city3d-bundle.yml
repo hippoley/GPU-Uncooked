@@ -1,0 +1,50 @@
+name: Self-contained Silicon City 3D build
+on:
+  pull_request:
+    paths:
+      - "playground/city3d/**"
+      - "tools/build-city3d.mjs"
+      - "tests/city3d-bundle-smoke.mjs"
+      - ".github/workflows/city3d-bundle.yml"
+  push:
+    branches:
+      - "feat/interactive-gpu-kitchen-playground"
+    paths:
+      - "playground/city3d/**"
+      - "tools/build-city3d.mjs"
+      - "tests/city3d-bundle-smoke.mjs"
+      - ".github/workflows/city3d-bundle.yml"
+  workflow_dispatch:
+
+jobs:
+  single-file-city:
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.1-noble
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install exact bundler and renderer versions
+        run: npm install --no-save --no-audit --no-fund esbuild@0.25.12 three@0.170.0 playwright@1.56.1
+      - name: Build and measure the COMPLETE 3D city entry
+        run: node tools/build-city3d.mjs
+      - name: Smoke-test standalone HTML in real Chromium
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/city3d-bundle-http.log 2>&1 &
+          node tests/city3d-bundle-smoke.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gpu-uncooked-standalone-3d-city
+          path: |
+            dist/city3d/index.html
+            dist/city3d/build-report.json
+            dist/city3d/standalone-desktop.png
+            dist/city3d/standalone-first-person.png
+            dist/city3d/standalone-cinematic.png
+            dist/city3d/standalone-cuda-xray.png
+          if-no-files-found: warn
+          retention-days: 14

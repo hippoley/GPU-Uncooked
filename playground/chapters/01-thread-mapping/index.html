@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chapter 01 — CUDA Thread Kitchen · GPU Uncooked</title>
+<meta name="description" content="Play a CUDA thread mapping game, inspect blocks and predict a CUDA launch.">
+<style>
+:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#0c111c;color:#f0f5fc}*{box-sizing:border-box}body{margin:0}main{max-width:1060px;margin:auto;padding:24px}a{color:#ffc17f}h1{font-size:clamp(2rem,6vw,3.5rem);letter-spacing:-.05em;line-height:1.1}h2{margin-top:0}.muted{color:#b2c0d4}.eyebrow{color:#ffbc73;text-transform:uppercase;font-weight:800;letter-spacing:.13em;font-size:.75rem}.panel{border:1px solid #354258;background:#172131;padding:22px;border-radius:18px;margin:16px 0}.split{display:grid;grid-template-columns:1fr 1fr;gap:18px}label{font-size:.9rem;font-weight:600;display:block;margin:14px 0 6px}input[type=range]{width:100%;accent-color:#ffbb77}button{background:#ffbb77;color:#111825;border:0;border-radius:8px;padding:11px 14px;font-weight:800;cursor:pointer}button.secondary{background:#314258;color:#f5f8ff}button:focus-visible,input:focus-visible{outline:3px solid #8bd4ff;outline-offset:3px}.chips{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}.chip{background:#0c1421;border-radius:9px;padding:9px 12px;font-size:.85rem}.block{background:#0f1929;border:1px solid #364761;border-radius:12px;padding:12px;margin:12px 0}.threads{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px;margin-top:10px}.thread{border:1px solid #38695d;background:#194c42;min-height:34px;border-radius:6px;color:#fff;font-size:.75rem;cursor:pointer}.thread.ghost{background:#273345;color:#a0afc2;border-color:#354358}.thread.selected{outline:3px solid #ffc17f;outline-offset:1px}.code{white-space:pre-wrap;overflow-wrap:anywhere;background:#0a1423;border-radius:10px;padding:17px;font-size:.85rem;line-height:1.6}.feedback{margin-top:12px;padding:12px;border-left:3px solid #ffc17f;background:#111b2a}.stat{font-variant-numeric:tabular-nums;font-weight:750}footer{font-size:.8rem;color:#a3b0c4;padding-bottom:28px}@media(max-width:750px){.split{grid-template-columns:1fr}main{padding:15px}.panel{padding:16px}}
+</style></head><body><main>
+<a href="../../index.html">← GPU Kitchen Playground</a><div class="eyebrow" style="margin-top:32px">Chapter 01 / Game + Interactive lab</div>
+<h1>Who cooks which number?<br><span style="color:#ffbb77">Your first CUDA launch.</span></h1>
+<p class="muted">Game: guess how many teams of cooks are needed. Interactive lab: click a CUDA thread to inspect its index and the array element it processes. This models the logical launch only.</p>
+<div class="split">
+<section class="panel" aria-label="Interactive CUDA launch">
+<h2>Interactive lab · Thread explorer</h2>
+<label for="elements">Array length N: <output id="n-value">50</output></label>
+<input id="elements" type="range" min="1" max="96" value="50" step="1">
+<label for="block-size">Threads per block: <output id="block-value">16</output></label>
+<input id="block-size" type="range" min="8" max="32" value="16" step="8">
+<div class="chips"><span class="chip">Blocks: <b id="blocks" class="stat"></b></span><span class="chip">Launched: <b id="launched" class="stat"></b></span><span class="chip">Guarded: <b id="guarded" class="stat"></b></span></div>
+<div id="grid" aria-label="Clickable CUDA logical threads"></div>
+<p id="thread-info" class="feedback" aria-live="polite">Select a thread to inspect blockIdx.x and threadIdx.x.</p>
+</section>
+<section class="panel" aria-label="GPU puzzle">
+<h2>Game · Predict the launch</h2>
+<p class="muted">Without looking at the formula, predict how many blocks CUDA must launch to cover every element.</p>
+<label for="prediction">Your prediction (block count)</label>
+<input id="prediction" type="number" min="1" max="96" value="3" style="width:100%;padding:12px;border:1px solid #506078;background:#0c1421;color:#fff;border-radius:8px">
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px"><button id="check">Check answer</button><button class="secondary" id="new-puzzle">New challenge</button></div>
+<p id="feedback" class="feedback" aria-live="polite">Choose a block count and check your answer.</p>
+<h2 style="margin-top:30px">Real CUDA mapping</h2>
+<pre class="code" id="code"></pre>
+<p class="muted" style="font-size:.85rem">In a real CUDA kernel, each logical thread computes its global index. Extra launched threads are skipped by the `if (i &lt; n)` guard. Execution order and SM placement are not simulated.</p>
+</section></div>
+<section class="panel"><h2>What did you just learn?</h2><p>The restaurant team is a <b>thread block</b>; each cook is a <b>CUDA thread</b>. The GPU runs many blocks, but the hardware decides when and on which SM to schedule them. A block is <b>not</b> a warp: NVIDIA warps group 32 threads for execution.</p><p><b>Next:</b> run the equivalent CUDA kernel on RTX 4090 or A100, then inspect whether all output elements are correct. Do not confuse this browser demonstration with actual GPU measurement.</p></section>
+<footer>GPU Uncooked · Browser teaching model · No CUDA executed in this page</footer>
+<div class="panel"><strong>Next chapter:</strong> <a href="../02-warp-divergence/index.html">Chapter 02 · Warp Divergence →</a> · <a href="../index.html">All chapters</a></div>
+</main><script type="module" src="./main.mjs"></script></body></html>

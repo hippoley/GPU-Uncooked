@@ -1,0 +1,26 @@
+name: Playground checks
+on:
+  pull_request:
+    paths:
+      - "playground/**"
+      - "tests/*.test.mjs"
+      - ".github/workflows/playground.yml"
+  push:
+    branches:
+      - "feat/interactive-gpu-kitchen-playground"
+    paths:
+      - "playground/**"
+      - "tests/*.test.mjs"
+      - ".github/workflows/playground.yml"
+jobs:
+  node-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: node --test tests/*.test.mjs
+      - name: Report source-size budget (external Three.js is excluded)
+        run: node playground/city3d/size-report.mjs

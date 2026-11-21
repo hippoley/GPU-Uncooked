@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="GPU Uncooked: a playable restaurant analogy for GPU bottlenecks.">
+<title>GPU Uncooked — The Kitchen Lab</title>
+<link rel="stylesheet" href="./style.css"><script type="module" src="./app.mjs"></script>
+</head><body>
+<header class="top"><a href="https://github.com/hippoley/GPU-Uncooked">GPU <span>UNCOOKED</span></a><span class="tag">EP01 / Interactive lesson</span></header>
+<main>
+<div style="border:2px solid #f1b76f;background:linear-gradient(135deg,#123f57,#0b2131);border-radius:15px;padding:24px;margin-bottom:20px"><strong style="font-size:19px;color:#ffd086">NEW PLAYABLE GAME · MEMORY ABYSS</strong><p style="max-width:650px;color:#bfdfec">Drive a pixel submarine, collect data crystals, escape Cache Miss predators, return to base and upgrade your gear. A game-first CUDA learning prototype.</p><a href="./arcade/index.html" style="display:inline-block;background:#ffcd81;color:#122435;border-radius:8px;padding:12px 20px;text-decoration:none;font-weight:900">PLAY THE ARCADE →</a></div><section class="hero"><p class="eyebrow">THE GPU KITCHEN · EXPERIMENT 01</p>
+<h1>1,000 cooks.<br><em>Still a slow kitchen?</em></h1>
+<p class="lead">When the pantry cannot deliver ingredients fast enough, hiring more cooks does not fix the dinner rush. Change the kitchen and watch the bottleneck move.</p>
+<p class="note">Illustrative capacity model, not measured GPU performance or a discrete-event simulation.</p></section>
+<div style="background:#1d2a3c;border:1px solid #425470;border-radius:12px;padding:16px;margin-bottom:22px"><strong>NEW · Chapter 01: CUDA Thread Mapping</strong><p style="margin:6px 0 12px;color:#b8c6d9">Play the block-count puzzle, then click real CUDA logical thread indices.</p><a href="./chapters/01-thread-mapping/index.html" style="color:#ffba71;font-weight:750">Play Chapter 01 →</a></div><div style="background:#1d2a3c;border:1px solid #425470;border-radius:12px;padding:16px;margin-bottom:22px"><strong>NEW · Chapter 02: Warp Divergence</strong><p style="margin:6px 0 12px;color:#b8c6d9">Control 32 CUDA lanes, reveal branch masks and predict how many paths are active.</p><a href="./chapters/02-warp-divergence/index.html" style="color:#ffba71;font-weight:750">Play Chapter 02 →</a></div><div style="background:#1d2a3c;border:1px solid #425470;border-radius:12px;padding:16px;margin-bottom:22px"><strong>NEW · Chapter 03: Memory Coalescing</strong><p style="margin:6px 0 12px;color:#b8c6d9">Predict 32-byte sectors touched by a warp, select each lane, and explore aligned versus strided global-memory loads.</p><a href="./chapters/03-memory-coalescing/index.html" style="color:#ffba71;font-weight:750">Play Chapter 03 →</a></div><div style="background:#1d2a3c;border:1px solid #425470;border-radius:12px;padding:16px;margin-bottom:22px"><strong>START HERE · Play CUDA Chapters 01–03</strong><p style="margin:6px 0 12px;color:#b8c6d9">A guided journey from thread indexing to warp execution to memory coalescing.</p><a href="./chapters/index.html" style="color:#ffba71;font-weight:750">Start the three-chapter learning path →</a></div><div style="background:linear-gradient(120deg,#3d285c,#b35b87);border:1px solid #ffc6a9;border-radius:12px;padding:20px;margin:14px 0 22px"><strong style="font-size:20px;color:#fff0c9">SILICON CITY · FREE ROAM</strong><p style="color:#f8e6f4">WASD 漫步六大霓虹街区，在任务地点进入 GPU 游戏和 CUDA 实验。</p><a href="./city/index.html" style="display:inline-block;background:#ffdaab;color:#2a1535;padding:11px 18px;border-radius:6px;font-weight:900;text-decoration:none">ENTER THE CITY →</a></div><section class="kitchen-scene" aria-labelledby="scene-title">
+<div class="scene-heading"><div><p class="eyebrow">LIVE KITCHEN · STYLIZED SIMULATION</p><h2 id="scene-title">Inside the kitchen</h2></div><button type="button" id="pause" class="secondary">Pause animation</button></div>
+<div class="scene-grid">
+<div class="pantry"><div class="scene-icon">📦</div><strong>PANTRY</strong><span>Ingredient supply</span><div id="supply-flow" class="supply-flow" aria-hidden="true"><span>●</span><span>●</span><span>●</span></div></div>
+<div class="kitchen-floor"><div class="scene-label">COOKING STATIONS · UP TO 24 DISPLAYED</div><div id="stations" class="stations" aria-hidden="true"></div><p id="scene-status" class="scene-status"></p></div>
+<div class="queue"><div class="scene-icon">🧾</div><strong>ORDERS</strong><div><b id="remaining">1000</b><small>waiting</small></div><div><b id="served">0</b><small>served</small></div></div>
+</div>
+<div class="scene-footer"><span><b id="active-cooks">0</b> cooks active · <b id="waiting-cooks">0</b> waiting</span><span id="scene-time">0.0 simulated seconds</span></div>
+<div class="track"><div id="order-fill" class="fill orange" role="progressbar" aria-label="Orders served" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div></div>
+<p class="foot">Representative stations and aggregate flow are visual metaphors, not a per-thread or GPU cycle simulation. Playback runs at 12 simulated seconds per real second.</p>
+</section>
+<section class="lab" aria-labelledby="lab-title">
+<div class="controls"><h2 id="lab-title">Run the restaurant</h2><p>Each order requires one cook for the selected time and one ingredient bundle.</p>
+<label for="cooks">Cooks <output id="cooks-value" for="cooks">8</output></label><input id="cooks" type="range" min="1" max="128" step="1" value="8">
+<label for="cook-time">Seconds to cook an order <output id="cook-time-value" for="cook-time">8</output></label><input id="cook-time" type="range" min="1" max="20" step="1" value="8">
+<label for="ingredients">Ingredient bundles per second <output id="ingredients-value" for="ingredients">4</output></label><input id="ingredients" type="range" min="1" max="16" step="1" value="4">
+<label for="orders">Customer orders <output id="orders-value" for="orders">1000</output></label><input id="orders" type="range" min="100" max="5000" step="100" value="1000">
+<div class="buttons"><button id="challenge" type="button">Try the bottleneck challenge</button><button id="reset" class="secondary" type="button">Reset</button></div>
+</div>
+<div class="results" aria-live="polite"><h2>Kitchen dashboard</h2>
+<div class="metrics"><div><span>Meals per second</span><strong id="throughput">1.00</strong></div><div><span>Ideal time to serve all*</span><strong id="duration">1000s</strong></div></div>
+<p id="diagnosis" class="diagnosis">Add cooks to see what changes.</p>
+<div class="meter"><div class="meter-top"><span>Cooking capacity</span><b id="compute-label"></b></div><div class="track"><div id="compute-bar" class="fill blue"></div></div></div>
+<div class="meter"><div class="meter-top"><span>Ingredient supply</span><b id="supply-label"></b></div><div class="track"><div id="supply-bar" class="fill orange"></div></div></div>
+<p id="lesson" class="lesson"></p><p class="foot">*Steady-state approximation: excludes startup, queues, batching, communication and fixed overheads.</p>
+</div></section>
+<section class="reveal"><p class="eyebrow">UNDER THE HOOD</p><h2>Now translate the kitchen into silicon.</h2>
+<div class="mapping"><article><span>👨‍🍳</span><h3>Cooks</h3><p>Parallel compute capacity — not literally GPU core count.</p></article><article><span>📦</span><h3>Pantry supply</h3><p>Data movement limits. Real cache hierarchies are more complicated.</p></article><article><span>🍽️</span><h3>Meals / second</h3><p>Useful throughput — not peak FLOPS.</p></article></div>
+<h2>The real idea: Roofline</h2><p>Performance has two ceilings: computation and data movement. A simplified Roofline model states:</p>
+<pre>attainable performance ≤ min(peak compute, arithmetic intensity × memory bandwidth)</pre>
+<p>Our kitchen is only a capacity analogy. Actual GPU kernels involve latency, caching, dependencies, occupancy and launch overhead.</p>
+<div class="next"><h3>Can you prove it on a real GPU?</h3><p>Our RTX 4090 and A100 hardware campaign is separate. No benchmark numbers have been collected in this playground.</p><a href="https://github.com/hippoley/GPU-Uncooked/blob/main/campaigns/4090-vs-a100.md">Read the experiment plan ↗</a></div>
+</section></main><footer>GPU Uncooked · One question. One experiment. One receipt. <a href="https://github.com/hippoley/GPU-Uncooked">Contribute on GitHub ↗</a></footer>
+</body></html>

@@ -271,10 +271,10 @@ function showReceipt(){
   return;
  }
  const r=importedReceipt;
- info.textContent="IMPORTED / UNATTESTED (NOT MEASURED)\\n"+r.deviceName+" / "+r.deviceUuid+
-  "\\nCOMMIT "+r.commit+"\\nSOURCE SHA256 "+r.sourceSha256+
-  "\\nFILE HASH "+r.hashes[receiptTab]+
-  "\\nCaution: integrity is NOT independent GPU attestation";
+ info.textContent="IMPORTED / UNATTESTED (NOT MEASURED)\n"+r.deviceName+" / "+r.deviceUuid+
+  "\nCOMMIT "+r.commit+"\nSOURCE SHA256 "+r.sourceSha256+
+  "\nFILE HASH "+r.hashes[receiptTab]+
+  "\nCaution: integrity is NOT independent GPU attestation";
  target.textContent=r.text[receiptTab].slice(0,6000)||
    "该收据中对应产物为空。";
  document.documentElement.dataset.materialGpuMeasured="false";

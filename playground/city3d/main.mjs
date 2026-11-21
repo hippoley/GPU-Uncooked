@@ -87,7 +87,7 @@ try{
  renderer.setSize(wrap.clientWidth,wrap.clientHeight,false);
  renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;renderer.shadowMap.enabled=false;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
  camera=new THREE.PerspectiveCamera(61,wrap.clientWidth/wrap.clientHeight,.1,260);
- const target=new THREE.Vector3(pos.x,2.5,pos.z),camPoint=new THREE.Vector3(pos.x+8,7.9,pos.z+11);
+ const target=new THREE.Vector3(pos.x,1.55,pos.z),camPoint=new THREE.Vector3(pos.x+6,4.6,pos.z+7);
  camera.position.copy(camPoint);camera.lookAt(target);
  window.addEventListener("resize",resize);resize();
  renderer.render(scene,camera);
@@ -133,14 +133,14 @@ try{
    $("prompt").textContent=d?"E · "+d.name:"EXPLORE THE CITY";
   }
   world.update(elapsed,dt);
-  const look=new THREE.Vector3(pos.x,2.6,pos.z);
+  const look=new THREE.Vector3(pos.x,1.55,pos.z);
   const portrait=wrap.clientHeight>wrap.clientWidth;
-  const radius=portrait?17:13,altitude=portrait?10.8:7.9;
+  const radius=portrait?12:8.5,altitude=portrait?6.7:4.6;
   const alpha=1-Math.exp(-dt*4.7);
   if(viewMode==="first"){
-   const desired=new THREE.Vector3(pos.x,2.85,pos.z);
+   const desired=new THREE.Vector3(pos.x,1.72,pos.z);
    camera.position.lerp(desired,alpha);
-   camera.lookAt(new THREE.Vector3(pos.x-Math.sin(orbit+.6)*17,2.9,pos.z-Math.cos(orbit+.6)*17));
+   camera.lookAt(new THREE.Vector3(pos.x-Math.sin(orbit+.6)*17,1.72,pos.z-Math.cos(orbit+.6)*17));
   }else{
    const desired=new THREE.Vector3(pos.x+Math.sin(orbit+.6)*radius,altitude,pos.z+Math.cos(orbit+.6)*radius);
    camera.position.lerp(desired,alpha);

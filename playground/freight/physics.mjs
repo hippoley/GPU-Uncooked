@@ -48,6 +48,24 @@ export function swapRequests(manifest,a,b){
  const copy=manifest.slice();[copy[a],copy[b]]=[copy[b],copy[a]];
  return copy;
 }
+/** Gather all 8 requests of the selected 32B sector into the chosen convoy.
+ * This models an intentional physical shipping operation, not automatic GPU sorting.
+ * Each swap preserves the manifest permutation and makes grouping consequences visible.
+ */
+export function consolidateSector(manifest,selectedSlot){
+ validateManifest(manifest);
+ if(!Number.isInteger(selectedSlot)||selectedSlot<0||selectedSlot>=TOTAL)throw new RangeError("Invalid selected slot");
+ const output=manifest.slice(),sector=sectorOf(output[selectedSlot]),wave=Math.floor(selectedSlot/LANES);
+ let moves=0;
+ for(let idx=0;idx<TOTAL;idx++){
+  if(Math.floor(idx/LANES)===wave||sectorOf(output[idx])!==sector)continue;
+  const target=output.findIndex((address,j)=>Math.floor(j/LANES)===wave&&sectorOf(address)!==sector);
+  if(target<0)throw new RangeError("Wave is unexpectedly full");
+  [output[idx],output[target]]=[output[target],output[idx]];
+  moves++;
+ }
+ return {manifest:output,moves,sector,wave};
+}
 export function regroupManifest(manifest){
  validateManifest(manifest);
  return manifest.slice().sort((a,b)=>a-b);

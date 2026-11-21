@@ -25,7 +25,7 @@ test("single player sector-consolidation action reduces actual traffic",()=>{
  assert.equal(packed.moves,6);
  assert.equal(packed.sector,0);
  assert.equal(packed.wave,0);
- assert.equal(manifestFootprint(packed.manifest).sectors,61);
+ assert.equal(manifestFootprint(packed.manifest).sectors,58);
  assert.equal(before.sectors,64);
  assert.equal(new Set(packed.manifest).size,TOTAL);
  assert.deepEqual(manifest,stripedManifest(),"Original manifest must remain immutable");

@@ -30,15 +30,18 @@ test("single player sector-consolidation action reduces actual traffic",()=>{
  assert.equal(new Set(packed.manifest).size,TOTAL);
  assert.deepEqual(manifest,stripedManifest(),"Original manifest must remain immutable");
 });
-test("multiple deliberate consolidations can finish contract without one-click sorting",()=>{
- let manifest=stripedManifest(),steps=0;
- // Each wave can consolidate disjoint sectors. Repeatedly pick a sector still scattered.
- for(let sector=0;sector<12;sector++){
-  const loc=manifest.findIndex((address,i)=>Math.floor(i/LANES)===Math.floor(sector/4)&&Math.floor(address/8)===sector);
-  if(loc>=0){const action=consolidateSector(manifest,loc);manifest=action.manifest;steps++;}
+test("four player-selected cargo consolidations can win without automatic sorting",()=>{
+ let manifest=stripedManifest();
+ const traces=[];
+ // Player selects the four initial sector clusters at the head of this convoy.
+ for(const slot of [0,8,16,24]){
+  const action=consolidateSector(manifest,slot);
+  manifest=action.manifest;
+  traces.push(manifestFootprint(manifest).sectors);
  }
- assert.ok(steps>=8);
- assert.ok(manifestFootprint(manifest).sectors<64);
+ assert.deepEqual(traces,[58,52,46,40]);
+ assert.equal(evaluateDispatch(manifest).withinBudget,true);
+ assert.equal(new Set(manifest).size,TOTAL);
 });
 test("repacking allows meaningful winning choices and scoring",()=>{
  const bad=evaluateDispatch(stripedManifest());

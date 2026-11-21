@@ -104,6 +104,37 @@ await page.locator("#ncu-comparison-file").setInputFiles({
 });
 await page.waitForFunction(()=>document.querySelector("#ncu-comparison-status")?.textContent?.startsWith("REJECTED"));
 assert.equal(await page.locator("html").getAttribute("data-material-gpu-measured"),"false");
+// Public report intake is separate from the original gather profiler series.
+function publicFixture(id,value){
+ return {schema:"gpu-uncooked.public-ncu-report.v1",report_id:id,
+  classification:"THIRD_PARTY_UNVERIFIED",status:"PARSED_UNVERIFIED",
+  hardware_attested:false,binary_identity_bound_to_our_gather:false,
+  reproduces_our_stride_experiment:false,
+  source_repo:"smartxiaohuolong/triton-tle-attention-optimization-demo",
+  source_revision:"53fcfbf0c11430ca9db23f8d90c4ec71b686efc8",
+  source_sha256:"a".repeat(64),ncu_stdout_sha256:"b".repeat(64),
+  source_device_claim:"H100 third-party author claim",
+  metrics:[{launch_id:"1",kernel:"attention_kernel",metric:"dram__bytes_read.sum",unit:"byte",raw_value:value}]};
+}
+await page.locator("#public-ncu-left").setInputFiles({
+ name:"left-public.json",mimeType:"application/json",
+ buffer:Buffer.from(JSON.stringify(publicFixture("rswgmma_uniform4096","4096")))
+});
+await page.locator("#public-ncu-right").setInputFiles({
+ name:"right-public.json",mimeType:"application/json",
+ buffer:Buffer.from(JSON.stringify(publicFixture("memdesc_transpose_uniform4096","2048")))
+});
+await page.waitForFunction(()=>document.querySelector("#public-ncu-status")?.textContent?.includes("1 unique shared metrics"));
+assert.match(await page.locator("#public-ncu-table").innerText(),/dram__bytes_read/);
+assert.match(await page.locator("#public-ncu-status").innerText(),/THIRD_PARTY_UNVERIFIED/);
+assert.equal(await page.locator("html").getAttribute("data-material-gpu-measured"),"false");
+const forgedPublic=publicFixture("memdesc_transpose_uniform4096","2048");
+forgedPublic.hardware_attested=true;
+await page.locator("#public-ncu-right").setInputFiles({
+ name:"forged-public.json",mimeType:"application/json",buffer:Buffer.from(JSON.stringify(forgedPublic))
+});
+await page.waitForFunction(()=>document.querySelector("#public-ncu-status")?.textContent?.startsWith("REJECTED"));
+assert.equal(await page.locator("html").getAttribute("data-material-gpu-measured"),"false");
 assert.deepEqual(errors,[],"No uncaught browser failures");
 assert.deepEqual(external,[],"No external runtime requests");
 console.log(JSON.stringify({status:"PASS",threeJsInline:true,drawCalls:render.drawCalls,

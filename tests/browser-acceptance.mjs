@@ -98,6 +98,30 @@ for(const device of [{name:"desktop",width:1440,height:900},{name:"mobile",width
  await page.screenshot({path:"browser-artifacts/"+device.name+"-city3d-first-person.png",fullPage:true});
  await page.locator("#viewmode").click();
  assert.match(await page.locator("#viewmode").innerText(),/第三人称/);
+ // Action -> model -> result -> next action: an actual playable freight mission.
+ await page.goto("http://127.0.0.1:8765/playground/freight/index.html",{waitUntil:"networkidle"});
+ assert.equal(await page.locator("#job").innerText(),"01 / 03");
+ assert.equal(await page.locator("#sectors").innerText(),"64");
+ await page.locator("#dispatch").click();
+ await page.waitForTimeout(750);
+ assert.match(await page.locator("#result").innerText(),/运输预算告急/);
+ await page.locator("#regroup").click();
+ assert.equal(await page.locator("#sectors").innerText(),"16");
+ await page.locator("#dispatch").click();
+ await page.locator("#result button").waitFor({state:"visible",timeout:5000});
+ await page.locator("#result button").click();
+ assert.equal(await page.locator("#job").innerText(),"02 / 03");
+ for(let round=2;round<=3;round++){
+  await page.locator("#regroup").click();
+  assert.equal(await page.locator("#sectors").innerText(),"16");
+  await page.locator("#dispatch").click();
+  await page.locator("#result button").waitFor({state:"visible",timeout:5000});
+  await page.locator("#result button").click();
+ }
+ const receipt=await page.evaluate(()=>JSON.parse(localStorage.getItem("gpu-uncooked.freight.v1")));
+ assert.equal(receipt.completed,true);
+ assert.ok(receipt.credits>0);
+ await page.screenshot({path:"browser-artifacts/"+device.name+"-freight-finished.png",fullPage:true});
  await page.close();
 }
 await browser.close();

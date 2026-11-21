@@ -54,6 +54,37 @@ node --test tests/material-execution-accounting.test.mjs
 
 Do not put test fixtures through the true-GPU-measurement promotion path.
 
+## Static SASS inspection (next verified input boundary)
+
+The Material Lab receipt inspector can now parse a `cuobjdump --dump-sass`
+listing for the single unambiguous `gather` kernel and show **static listing**
+length, opcode families, and per-opcode counts. This requires an imported
+receipt-view JSON with an actual SASS listing; synthetic CI fixtures are
+clearly fixtures and do not prove that H100 has been used.
+
+The inspector deliberately reports:
+- static function instruction rows: `REPORTED_UNVERIFIED`
+- dynamic instruction execution / per-warp issue count: `UNKNOWN`
+- register consumption: `UNKNOWN` until a compiler resource report is bound
+- elapsed cycles, stall breakdown, L1/L2 sectors and DRAM bytes: `UNKNOWN`
+
+A real SASS listing contains static instructions, including control and exit
+operations. Branching, predication, warp scheduling and reuse mean it is
+incorrect to multiply static rows by 32 lanes or by the grid size to claim
+dynamic execution counts. Not every static instruction may be executed.
+
+Run the focused tests with:
+
+```sh
+node --test tests/material-sass-inspector.test.mjs \
+  tests/material-execution-accounting.test.mjs
+```
+
+**Still missing:** capture a genuine GPU-targeted binary + ptxas registers
+from a device-specific build; reliably associate disassembly and raw Nsight
+profiles with exactly that binary, one launch, and a published experiment
+configuration. This first parser is not the final evidence-binding protocol.
+
 ## Next real-hardware gate
 
 Build a larger multi-CTA controlled benchmark separately from

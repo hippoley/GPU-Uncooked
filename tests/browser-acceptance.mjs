@@ -102,6 +102,11 @@ for(const device of [{name:"desktop",width:1440,height:900},{name:"mobile",width
  await page.goto("http://127.0.0.1:8765/playground/freight/index.html",{waitUntil:"networkidle"});
  assert.equal(await page.locator("#job").innerText(),"01 / 03");
  assert.equal(await page.locator("#sectors").innerText(),"64");
+ await page.locator(".pallet").first().click();
+ await page.locator("#consolidate").click();
+ assert.equal(await page.locator("#sectors").innerText(),"61","Physical cargo consolidation must immediately reduce sector footprint");
+ await page.locator("#reset").click();
+ assert.equal(await page.locator("#sectors").innerText(),"64");
  await page.locator("#dispatch").click();
  await page.waitForTimeout(750);
  assert.match(await page.locator("#result").innerText(),/运输预算告急/);

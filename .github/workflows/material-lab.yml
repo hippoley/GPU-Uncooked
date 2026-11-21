@@ -1,0 +1,48 @@
+name: CUDA Real-Material Workbench
+on:
+  push:
+    branches: ["feat/interactive-gpu-kitchen-playground"]
+    paths:
+      - "playground/material-lab/**"
+      - "tools/build-material-lab.mjs"
+      - "tests/material-lab*.mjs"
+      - ".github/workflows/material-lab.yml"
+  pull_request:
+    paths:
+      - "playground/material-lab/**"
+      - "tools/build-material-lab.mjs"
+      - "tests/material-lab*.mjs"
+      - ".github/workflows/material-lab.yml"
+  workflow_dispatch:
+jobs:
+  evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.1-noble
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate address, sector and code relationships
+        run: node --test tests/material-lab.test.mjs
+      - name: Install pinned runtime and bundler
+        run: npm install --no-save --no-audit --no-fund three@0.170.0 esbuild@0.25.12 playwright@1.56.1
+      - name: Build actual standalone HTML and measure size
+        run: node tools/build-material-lab.mjs
+      - name: Run 3D Chromium interaction, gather formula and screenshot tests
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/material-lab-http.log 2>&1 &
+          node tests/material-lab-browser.test.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gpu-uncooked-cuda-real-material-lab
+          path: |
+            dist/material-lab/index.html
+            dist/material-lab/build-report.json
+            dist/material-lab/industrial-overview.png
+            dist/material-lab/industrial-memory.png
+          if-no-files-found: warn
+          retention-days: 14

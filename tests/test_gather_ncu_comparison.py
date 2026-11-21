@@ -205,6 +205,19 @@ class NcuComparisonTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"unit is incompatible"):
             parse_raw_csv(raw)
 
+    def test_reject_missing_or_ambiguous_launch_id(self):
+        no_id=csv_text(1).replace("ID,Kernel Name,","Kernel Name,").replace("1,gather,","gather,")
+        with self.assertRaisesRegex(ValueError,"per-launch ID"):
+            parse_raw_csv(no_id)
+        blank=csv_text(1).replace("1,gather,"," ,gather,")
+        with self.assertRaisesRegex(ValueError,"launch ID"):
+            parse_raw_csv(blank)
+
+    def test_reject_fractional_counter_claim(self):
+        fractional=csv_text(1).replace(f'"{REQUIRED[0]}",sector,100',f'"{REQUIRED[0]}",sector,100.5')
+        with self.assertRaisesRegex(ValueError,"finite nonnegative"):
+            parse_raw_csv(fractional)
+
     def test_reject_non_numeric_and_duplicate_rows(self):
         text=csv_text(1).replace("100\n","nan\n")
         with self.assertRaisesRegex(ValueError,"non-numeric"): parse_raw_csv(text)

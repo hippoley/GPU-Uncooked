@@ -1,0 +1,48 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GPU UNCOOKED — SILICON CITY / FREE ROAM</title>
+<meta name="description" content="Walk through an original neon CUDA arcade city. Visit six districts, enter playable GPU games and interactive CUDA labs.">
+<style>
+:root{color-scheme:dark;background:#080b18;color:#fff7e9;font:15px/1.5 system-ui,-apple-system,"Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#3b214e,#0b1120 65%)}
+main{max-width:1180px;margin:auto;padding:18px}nav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.brand{font-size:clamp(18px,2.4vw,27px);font-weight:1000;font-style:italic;letter-spacing:-.07em;text-shadow:3px 3px #491950}
+.brand b{color:#ffc18e}.brand small{display:block;font-size:10px;font-style:normal;letter-spacing:.25em;color:#9ce4e5;text-shadow:none}
+a{color:#e5d8f5}a:focus-visible,button:focus-visible{outline:3px solid #a3fcff;outline-offset:3px}
+.tag{font-size:11px;letter-spacing:.12em;color:#ffc98b;font-weight:800}
+.stage{position:relative;overflow:hidden;border:2px solid #ad7aba;border-radius:14px;box-shadow:0 20px 90px #060613cf,0 0 38px #cf5aa944;background:#14152d}
+canvas{display:block;width:100%;height:auto;aspect-ratio:16/9;image-rendering:pixelated;touch-action:none}
+.topbar{position:absolute;top:12px;left:14px;right:14px;display:flex;gap:10px;justify-content:space-between;pointer-events:none}
+.topbar span{box-shadow:0 4px 24px #04071783;background:#0a1023dd;backdrop-filter:blur(7px);border:1px solid #e0b2b46e;border-radius:5px;padding:7px 11px;font-size:clamp(10px,1.5vw,14px);font-weight:850;letter-spacing:.07em;text-shadow:0 2px #161029}
+.topbar strong{color:#ffc78a}.bottom{position:absolute;left:15px;right:15px;bottom:13px;display:flex;justify-content:space-between;align-items:end;gap:10px;pointer-events:none}
+.mission{backdrop-filter:blur(8px);background:linear-gradient(120deg,#090e21e8,#1b1737e8);border-left:4px solid #ffb48c;padding:12px 16px;border-radius:6px;max-width:min(425px,62%);box-shadow:0 5px 25px #02041888}
+.mission small{display:block;color:#72e4e8;letter-spacing:.13em;font-size:10px;font-weight:900}.mission strong{display:block;font-size:clamp(13px,1.8vw,21px)}.mission p{margin:3px 0;color:#e0d0e2;font-size:clamp(10px,1.25vw,13px)}
+.prompt{backdrop-filter:blur(5px);color:#ffe2b0;background:#070c1ddc;padding:10px 15px;border:1px solid #bb82c3;border-radius:8px;font-weight:850;font-size:12px;max-width:32%;text-align:right}
+.stage::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,#ffffff05 0 1px,transparent 1px 5px);pointer-events:none;z-index:2;opacity:.15}
+.stage:fullscreen{display:flex;align-items:center;justify-content:center;background:#060815;border:0;border-radius:0}
+.stage:fullscreen canvas{max-height:100vh;object-fit:contain}
+.modal{position:absolute;inset:0;display:grid;place-items:center;background:linear-gradient(140deg,#070b1be8,#200c2bdd);padding:14px;z-index:5}
+.modal[hidden]{display:none}.dossier::before{content:"SILICON CITY  /  NIGHT 01";display:block;letter-spacing:.25em;color:#9bece2;font-size:11px;margin-bottom:15px;font-weight:900}
+.dossier{max-width:520px;width:100%;border:1px solid #e7b68c;border-radius:12px;padding:25px;background:linear-gradient(145deg,#231a37,#0b1428);box-shadow:0 30px 70px #000b,0 0 0 5px #d67eb624;max-height:90%;overflow:auto}
+.dossier h1{font-size:clamp(31px,5vw,56px);letter-spacing:-.06em;line-height:.98;margin:14px 0;font-style:italic}.dossier p{color:#c6c0d4;line-height:1.7}
+.actions{display:flex;gap:10px;flex-wrap:wrap}.button,button{font:800 14px system-ui,sans-serif;border-radius:6px;border:1px solid #ffdbaa;background:#ffc999;color:#261b35;padding:11px 15px;cursor:pointer;text-decoration:none}
+button.secondary,.button.secondary{border-color:#8d7caa;background:#322643;color:#f7e3fd}
+.controls{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;padding:14px 0}
+.controls p{color:#bdafcc;font-size:12px;margin:0}.pad{display:flex;gap:8px;align-items:center}.pad button{min-width:48px;min-height:44px;padding:10px}.touch-spot{color:#8af0ed;font-size:11px}
+.legend{padding:17px;border:1px solid #524267;background:#16162b;border-radius:10px;color:#cabdd5;line-height:1.8;font-size:13px}
+.legend b{color:#f8c395}.legend a{color:#7bdfec}
+footer{font-size:11px;color:#9485a8;padding:15px 0}
+@media(orientation:landscape) and (max-height:600px){.stage:fullscreen canvas{height:100vh;width:auto}.stage:fullscreen .topbar span{font-size:13px}}
+@media(max-width:650px){main{padding:7px}.stage{border-radius:7px}.topbar{left:4px;right:4px;top:4px;gap:3px}.topbar span{padding:4px;font-size:9px}.bottom{left:5px;right:5px;bottom:5px}.mission{padding:5px 7px;max-width:70%;border-left-width:2px}.mission small{font-size:8px}.mission strong{font-size:10px}.mission p{font-size:8px}.prompt{padding:5px;font-size:8px;max-width:28%}.controls{justify-content:center}.dossier{padding:15px}.legend{font-size:12px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style></head><body><main>
+<nav><div class="brand">GPU <b>UNCOOKED</b><small>SILICON CITY · NIGHT SHIFT</small></div><a href="../city3d/index.html" style="color:#f9d294;font-weight:900;margin-right:15px">ENTER 3D CITY ↗</a><a href="../chapters/index.html" class="tag">ALL DISTRICTS ↗</a></nav>
+<div class="stage"><canvas id="city" tabindex="0" width="960" height="540" aria-label="Silicon City 街区探索地图。使用 WASD 或方向键移动，在任务点按 E 互动。"></canvas>
+<div class="topbar"><span>◈ SILICON CITY <strong>/ FREE ROAM</strong></span><span id="clock">20:45 / NIGHT SHIFT</span><span id="explored">DISCOVERED <strong>0 / 6</strong></span></div>
+<div class="bottom"><div class="mission"><small id="mission-small">WELCOME MISSION / 001</small><strong id="mission-name">走进霓虹城市</strong><p id="mission-info">靠近任意街区的光圈，按 E 接任务。</p></div><div class="prompt" id="prompt">WASD / 方向键移动<br>E 互动 · 地图探索</div></div>
+<div class="modal" id="modal"><div class="dossier"><div class="tag" id="modal-kicker">WELCOME TO SILICON CITY</div><h1 id="modal-title">今晚，城市属于你。</h1><p id="modal-message">这里有六个 GPU 主题街区，每个街区会是一种独立游戏。沿街道行走，靠近发光任务点，按 E 查看任务。显存码头已经有可玩的潜入游戏；线程工厂和 Warp 路段提供 CUDA 互动实验。其余街区仍在开发。</p><div class="actions" id="modal-actions"><button id="start">开始夜间探索 ▶</button></div></div></div>
+</div>
+<div class="controls"><p>🎮 WASD / 方向键移动 · E 互动 · ESC 关闭任务卡 · 手机可用触屏方向键</p>
+<div class="pad"><button class="secondary" data-key="left" aria-label="向左">◀</button><button class="secondary" data-key="up" aria-label="向上">▲</button><button class="secondary" data-key="down" aria-label="向下">▼</button><button class="secondary" data-key="right" aria-label="向右">▶</button><button id="interact">E · 互动</button><button id="fullscreen" class="secondary" aria-label="全屏游戏">⛶ 全屏</button></div></div>
+<div class="legend"><b>六个街区，六种游戏类型。</b> 目前 Memory Abyss 深海冒险可玩；Thread Factory 和 Warp Rush 已有教学实验。走到建筑附近后互动即可进入对应内容。<br><a href="../chapters/index.html">查看所有章节及状态</a> · <a href="../arcade/index.html">直接打开 Memory Abyss</a>。当前是原创 2D 城市探索竖切片，不是 GTA VI 级别的 3D 开放世界。</div>
+<footer>GPU Uncooked — 原创霓虹都市及 GPU 游戏世界观。没有使用 GTA 或 Rockstar 的游戏素材、角色、音乐或地图；没有实时 GPU 性能数据。</footer>
+</main><script type="module" src="./main.mjs"></script></body></html>

@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GPU UNCOOKED: Memory Abyss</title>
+<style>
+/* Local font stack: no remote asset needed to run offline. */
+:root{color-scheme:dark;--gold:#ffcd7d;--cyan:#93eefa;--glass:#071f34c9}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -20%,#174967,#03111f 66%);color:#e7f9ff;font-family:Rajdhani,system-ui,"Microsoft YaHei",sans-serif;min-height:100vh}
+header{display:flex;align-items:center;justify-content:space-between;max-width:1220px;margin:auto;padding:22px 18px}header b{font-size:clamp(18px,2.1vw,27px);color:#ffe0a2;letter-spacing:.15em;text-shadow:0 3px #17233d}header small{font-size:13px;letter-spacing:.14em;color:#9ddde7}
+main{max-width:1220px;margin:auto;padding:0 16px 32px}
+.stage{position:relative;border:2px solid #5e9fb6;border-radius:18px;overflow:hidden;background:#051a2d;box-shadow:0 35px 110px #000b,0 0 46px #20dbf515,inset 0 0 0 2px #072b40}
+canvas{display:block;width:100%;height:auto;image-rendering:pixelated;touch-action:none}
+.hud{position:absolute;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;gap:8px;font:700 clamp(10px,1.7vw,16px) Rajdhani,monospace;pointer-events:none;letter-spacing:.05em}
+.hud span{background:#03182ee6;border:1px solid #65bcdd95;padding:8px 12px;border-radius:8px;box-shadow:0 6px 0 #0315236b,0 0 25px #16c8fa1a;backdrop-filter:blur(8px);white-space:nowrap}.hud b{color:#ffe09d;font-variant-numeric:tabular-nums}
+#modal{position:absolute;inset:0;background:linear-gradient(135deg,#020e1de8,#061b2dd5);display:grid;place-items:center;padding:14px}
+#modal.hide{display:none}
+.dialog{background:linear-gradient(160deg,#103c55f7,#081a31f7);border:1px solid #84dde7;border-radius:15px;max-width:610px;padding:32px;text-align:center;box-shadow:0 26px 80px #000c,0 0 0 5px #0a385568;max-height:93%;overflow:auto}
+.dialog:before{content:"✦  THE DEEP SEA IS CALLING  ✦";display:block;color:#86e0e6;letter-spacing:.3em;font-size:12px;margin-bottom:20px}
+h1{color:#ffdb98;font-size:clamp(34px,6vw,59px);line-height:1.05;margin:10px 0;text-shadow:0 4px #48364a;letter-spacing:-.04em}
+p{line-height:1.65;color:#bad8df;font-size:clamp(14px,1.7vw,18px)}
+button{border:1px solid #ffd89b;background:linear-gradient(180deg,#fff1b7,#e4a75e);color:#1b3040;padding:11px 18px;font:800 16px Rajdhani,system-ui,sans-serif;cursor:pointer;border-radius:9px;min-width:60px;box-shadow:0 5px 0 #925d38;transition:filter .16s,transform .16s}
+button:hover{filter:brightness(1.12);transform:translateY(-2px)}button:focus-visible{outline:3px solid white;outline-offset:3px}button:active{transform:translateY(3px);box-shadow:0 2px #925d38}
+.alt{background:linear-gradient(180deg,#1c5371,#133149);border-color:#44849d;color:#e2fcff;box-shadow:0 5px #0a2235}.buttons{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.mission-card{position:absolute;bottom:17px;left:18px;max-width:min(420px,55%);display:flex;flex-direction:column;gap:2px;border:1px solid #70d9e19c;border-left:4px solid #ffcf89;border-radius:10px;padding:10px 15px;background:#031628dc;box-shadow:0 8px 32px #020c16a8;pointer-events:none}.mission-card strong{font-size:16px;color:#fff4be}.mission-card span{font-size:12px;color:#b5dfea}.mission-kicker{font-size:10px!important;letter-spacing:.18em;color:#ffca88!important}.mission-card[data-tone="danger"]{border-left-color:#ff6789}.mission-card[data-tone="success"]{border-left-color:#85ffad}.mission-card[data-tone="gold"]{border-left-color:#ffe18c}.mission-card[data-tone="action"]{border-left-color:#bda2ff}
+.controls{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:16px 0}.pad{display:flex;gap:8px}.help{color:#afcfdd;font-size:15px}
+.story{background:linear-gradient(120deg,#0d293b,#10263d);padding:22px;border:1px solid #335e72;border-radius:13px;box-shadow:inset 0 0 36px #06cee607}.story strong{font-size:18px;color:#ffda95}.story p{font-size:15px;margin:9px 0}
+small{color:#8fb2c3}.readout{color:#80e7e9;font-weight:700}
+@media(max-width:640px){header{padding:14px 4px}header small{font-size:10px}main{padding:0 6px 22px}.dialog{padding:13px}.dialog:before{margin-bottom:7px;font-size:9px}p{font-size:13px}.hud{gap:3px;top:5px;left:5px;right:5px}.hud span{font-size:10px;padding:4px 5px;border-radius:4px}.mission-card{left:7px;bottom:7px;max-width:65%;padding:5px 7px}.mission-card strong{font-size:10px}.mission-card span{font-size:9px}.controls{justify-content:center}.help{font-size:12px}.pad button{min-width:44px;padding:9px}}
+@media(prefers-reduced-motion:reduce){button{transition:none}}
+</style>
+<header><b>GPU UNCOOKED</b><small>SILICON CITY <span style="color:#eab874">/</span> FLOODED MARINA · MEMORY ABYSS</small></header>
+<main><div style="display:flex;justify-content:space-between;gap:12px;align-items:center;margin:0 0 12px;font-size:12px;font-weight:800;letter-spacing:.1em;color:#a7e5ed"><a style="color:#f7d3b1;text-decoration:none" href="../chapters/index.html">← RETURN TO SILICON CITY</a><span>DISTRICT 03 / FLOODED MARINA</span></div><div class="stage"><canvas id="scene" width="960" height="540"></canvas>
+<div class="hud"><span>O₂ <b id="o">100</b> UNITS</span><span>PACKETS <b id="p">0</b>/8</span><span>SECTORS <b id="s">0</b></span><span>CREDITS <b id="c">0</b></span><span>WARP <b id="pulse-status">READY</b></span></div>
+<div class="mission-card" id="mission-card" role="status" aria-live="polite"><span class="mission-kicker" id="mission-kicker">SIGNAL / 01</span><strong id="mission-title">第一潜：探索失落的 L2 遗迹</strong><span id="mission-detail">收集 8 个晶体并返回上方灯塔。</span></div>
+<div id="modal"><div class="dialog"><small id="subtitle">EXPEDITION 01</small><h1 id="title">潜入显存海沟</h1><p id="desc">收集闪光数据晶体，避开红色 Cache Miss 鱼，在氧气耗尽前回到海面。白天探索，回基地经营升级；每次收集都对应 CUDA 的真实内存地址知识。</p><div class="buttons" id="actions"><button id="go">开始下潜 ▶</button></div></div></div></div>
+<div class="controls"><div class="help">WASD / 方向键移动 · SPACE 或 P 发射 Warp Pulse（消耗 8 氧气，冷却 6 秒）· 收集 8 个晶体后回到顶部撤离</div><div class="pad"><button class="alt" data-key="left">◀</button><button class="alt" data-key="up">▲</button><button class="alt" data-key="down">▼</button><button class="alt" data-key="right">▶</button><button id="pulse-button" aria-label="Activate Warp Pulse">⚡ PULSE</button></div></div>
+<div class="story"><strong>CUDA 真知识，而不是装饰。</strong><p>现在相邻地址带来更高的游戏结算奖励。选择连续数据布局，并优先回收相邻索引晶体，能增加局部性分数；跨步访存任务作为可重复挑战。这个奖励是游戏机制，不是 GPU 运行速度。</p><p>晶体代表 4 字节 float。它们的“数据索引”决定触及哪些 32B 对齐扇区。连续访问与跨步访问会有不同的扇区覆盖率。游戏报告使用地址模型，不冒充真实 GPU 事务或硬件性能测量。</p></div>
+<small>原创游戏原型。借鉴探索→收获→基地升级的高层循环，不复制《潜水员戴夫》的美术、角色、音乐或关卡。</small></main>
+<script type="module">
+import {footprint, expeditionReward} from "./mission.mjs";
+import {pulseTargets,pulseReady} from "./pulse.mjs";
+import {renderWorld} from "./render.mjs";
+import {chapterBeat,dangerSpeed,finalGrade} from "./campaign.mjs";
+(()=>{"use strict";
+const $=id=>document.getElementById(id),canvas=$("scene"),g=canvas.getContext("2d");
+const W=960,H=540,ship={x:470,y:80,vx:0,vy:0};let phase="menu",last=0,t=0,oxygen=100,maxO=100,credits=0,count=0,stride=1,stones=[],enemies=[],found=[],bubbles=[],challenge=1,signal="",signalUntil=0,particles=[],lastPulse=-99,pulseRing=0,diveStarted=0,pulseUsed=false,rareFound=false,beatId="",ambushShown=false;
+const key=new Set(),rand=(a,b)=>a+Math.random()*(b-a);
+for(let i=0;i<70;i++)bubbles.push({x:rand(0,W),y:rand(0,H),v:rand(7,30),r:rand(1,3)});
+document.addEventListener("keydown",e=>{const k=e.key.toLowerCase();if(k.startsWith("arrow")||k===" ")e.preventDefault();key.add(k)});
+document.addEventListener("keyup",e=>key.delete(e.key.toLowerCase()));
+for(const b of document.querySelectorAll("[data-key]")){const k=b.dataset.key;b.onpointerdown=e=>{e.preventDefault();key.add(k)};b.onpointerup=b.onpointerleave=b.onpointercancel=()=>key.delete(k)}
+function hud(){$("o").textContent=Math.ceil(oxygen);$("p").textContent=count;$("s").textContent=footprint(found).count;$("c").textContent=credits;$("pulse-status").textContent=pulseReady(t,lastPulse)?"READY":Math.ceil(6-(t-lastPulse))+"s"}
+function buttons(actions){const node=$("actions");node.replaceChildren();for(const [label,cb,alt] of actions){const b=document.createElement("button");b.textContent=label;if(alt)b.className="alt";b.onclick=cb;node.append(b)}}
+function overlay(title,desc,actions,subtitle="MISSION REPORT"){phase="base";$("modal").classList.remove("hide");$("subtitle").textContent=subtitle;$("title").textContent=title;$("desc").innerHTML=desc;buttons(actions)}
+function dive(){oxygen=maxO;count=0;found=[];particles=[];signal="";rareFound=false;pulseUsed=false;ambushShown=false;beatId="";diveStarted=t;lastPulse=-99;pulseRing=0;ship.x=470;ship.y=78;ship.vx=ship.vy=0;
+stones=Array.from({length:13},(_,i)=>({i,index:i*stride,x:175+(i%7)*102+rand(-17,17),y:185+Math.floor(i/7)*150+rand(-17,17),got:false}));
+enemies=Array.from({length:4},(_,i)=>({x:rand(120,850),y:230+i*63,dx:i%2?-64:62,phase:rand(0,5)}));
+phase="dive";$("modal").classList.add("hide");hud()}
+function settle(success){const result=expeditionReward(found,oxygen,success);const grade=finalGrade({collected:count,oxygen,rareFound,success});const payout=result.reward+grade.bonus;credits+=payout;hud();
+const report=count?"回收 "+count+" 个 float，共 "+result.requestedBytes+"B；触及 "+result.count+" 个对齐 32B 扇区。教学覆盖率 "+(result.coverage*100).toFixed(1)+"%。<br>局部性奖励 <b>+"+result.localityBonus+"</b> credits。"+(grade.bonus?"<br>稀有遗物额外奖励 <b>+"+grade.bonus+"</b> credits。":"")+"<br>探索评级：<b>"+grade.title+"</b>。":"没有收集到晶体。";
+overlay(success?"回收成功！":"紧急撤离",'<b style="color:#ffca75">+'+payout+' CREDITS</b><br>'+report+'<br>这并非 GPU 实测性能。',[[ "返回基地",base ]])}
+function base(){overlay("基地 · 设备升级","当前资金 "+credits+" credits，氧气容量 "+maxO+"。<br>下一潜可选择两种 CUDA 数据布局：连续（stride 1）或跨步（stride 8）。",[
+["连续内存 · 再潜",()=>{stride=1;challenge++;dive()}],["跨步访存 · 再潜",()=>{stride=8;challenge++;dive()}],["升级氧气仓 · 80",()=>{if(credits>=80){credits-=80;maxO+=25}base()},true]],"RESEARCH STATION")}
+$("go").onclick=dive;
+function collect(stone){if(stone.got)return;const before=footprint(found).count;stone.got=true;found.push(stone.index);count++;if(stone.i===11){rareFound=true;signal="ANCIENT GPU RELIC FOUND";signalUntil=t+2.5;}const after=footprint(found).count;signal=after===before?"COALESCED! + LOCALITY":"NEW SECTOR TOUCHED";signalUntil=t+1.2;for(let i=0;i<10;i++)particles.push({x:stone.x,y:stone.y,vx:rand(-90,90),vy:rand(-100,40),life:.5})}
+function pulse(){if(phase!=="dive"||!pulseReady(t,lastPulse)||oxygen<9)return;pulseUsed=true;lastPulse=t;oxygen=Math.max(0,oxygen-8);pulseRing=.4;const indices=pulseTargets(stones,ship.x,ship.y,105,8);for(const index of indices){const stone=stones.find(s=>s.index===index&&!s.got);if(stone)collect(stone)}for(const fish of enemies){if(Math.hypot(fish.x-ship.x,fish.y-ship.y)<135)fish.stunnedUntil=t+2.3}signal="WARP PULSE · "+indices.length+" PACKETS";signalUntil=t+1.2;hud()}
+$("pulse-button").onclick=pulse;
+document.addEventListener("keydown",e=>{if((e.key.toLowerCase()==="p"||e.code==="Space")&&!e.repeat){if(phase==="dive"){e.preventDefault();pulse()}}});
+function update(dt){t+=dt;pulseRing=Math.max(0,pulseRing-dt);particles=particles.filter(p=>p.life>0);for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt}for(const b of bubbles){b.y-=b.v*dt;if(b.y<0){b.y=H;b.x=rand(0,W)}}if(phase!=="dive")return;
+const dx=Number(key.has("d")||key.has("arrowright")||key.has("right"))-Number(key.has("a")||key.has("arrowleft")||key.has("left"));
+const dy=Number(key.has("s")||key.has("arrowdown")||key.has("down"))-Number(key.has("w")||key.has("arrowup")||key.has("up"));
+ship.vx+=(dx*188-ship.vx)*Math.min(1,dt*8);ship.vy+=(dy*188-ship.vy)*Math.min(1,dt*8);
+ship.x=Math.max(27,Math.min(W-27,ship.x+ship.vx*dt));ship.y=Math.max(58,Math.min(H-36,ship.y+ship.vy*dt));
+oxygen=Math.max(0,oxygen-dt*(ship.y>120?3:1.2));if(!oxygen){settle(false);return}
+for(const s of stones)if(!s.got&&Math.hypot(s.x-ship.x,s.y-ship.y)<27)collect(s);
+for(const e of enemies){if((e.stunnedUntil||0)>t)continue;e.x+=e.dx*dt*dangerSpeed({collected:count,elapsed:t-diveStarted});if(e.x<40||e.x>925)e.dx*=-1;if(Math.hypot(e.x-ship.x,e.y+Math.sin(t*2+e.phase)*7-ship.y)<36)oxygen=Math.max(0,oxygen-dt*21)}
+const beat=chapterBeat({collected:count,elapsed:t-diveStarted,pulseUsed,rareFound,oxygen});if(beat.id!==beatId){beatId=beat.id;$("mission-kicker").textContent="EXPEDITION / "+String(challenge).padStart(2,"0")+" · "+beat.id.toUpperCase();$("mission-title").textContent=beat.title;$("mission-detail").textContent=beat.body;$("mission-card").dataset.tone=beat.tone;if(beat.id==="ambush"&&!ambushShown){ambushShown=true;signal="WARNING · CACHE MISS SWARM";signalUntil=t+2.5}}
+if(count>=8&&ship.y<=90){settle(true);return}hud()}
+function draw(){renderWorld(g,{time:t,ship,stones,enemies,bubbles,particles,pulseRing,phase,signal,signalUntil,count,oxygen});}
+function frame(ms){const dt=Math.min(.04,(ms-last)/1000||0);last=ms;update(dt);draw();requestAnimationFrame(frame)}requestAnimationFrame(frame)
+})();
+</script></html>

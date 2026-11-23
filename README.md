@@ -1,84 +1,186 @@
+<div align="center">
+
 # GPU Uncooked
 
-**Reverse-engineering GPU performance, one bottleneck at a time.**
+### Step inside CUDA. Follow the instructions. Question the numbers.
 
-> From a busy restaurant to the silicon, from intuitive stories to falsifiable experiments.
+**An interactive, evidence-driven GPU exploration lab.**  
+Walk through a GPU world, inspect CUDA memory behavior, and investigate real Hopper SASS instructions—without confusing a beautiful reconstruction with what the silicon actually did.
 
-GPU Uncooked is an **open, experiment-driven GPU systems fieldbook**. We explain computing systems with a kitchen metaphor, test the explanations on real hardware, and turn measured bottlenecks into kernel improvements and architecture questions.
+[**Run the Material Lab locally ↓**](#run-locally) · [**See the GPU experiences ↓**](#choose-your-way-in) · [**Inspect the real H100 evidence**](docs/PUBLIC_H100_SASS_DIFFERENCE.md)
 
-Our starting hardware: **six NVIDIA RTX 4090 GPUs and access to NVIDIA A100 hardware**. The physical topology, A100 SKU/count, software stack, and access rights are **not yet verified**. No benchmark numbers are claimed until raw measurements exist.
+**Three.js · CUDA C++ · PTX / SASS · Nsight Compute · Python · Node.js**
 
-## The idea
-
-A restaurant can hire 1,000 cooks and still serve meals slowly if ingredients arrive through one narrow door. GPUs face an analogous problem: adding arithmetic capacity does not guarantee faster programs. Bandwidth, locality, parallelism, scheduling, and communication determine actual throughput.
-
-**But analogies are hypotheses, not measurements.** Each episode must show where the kitchen model works, where it fails, and what a profiler or benchmark reveals.
-
-## Four loops
-
-| Loop | Question | Public artifact |
-| --- | --- | --- |
-| **Explain** | What is the intuitive model? | One accessible story + diagram |
-| **Measure** | Does it survive real hardware? | Reproducible experiment + raw receipt |
-| **Improve** | Can we remove the bottleneck? | Correctness-tested optimization + before/after |
-| **Predict** | What architecture trade-off follows? | Falsifiable architecture note |
-
-## Season 01 — The GPU Kitchen
-
-| Episode | Kitchen question | Technical subject | Evidence |
-| --- | --- | --- | --- |
-| 00 | What kitchen do we actually own? | Hardware inventory, topology, driver, clocks | Pending |
-| 01 | Why don't 1,000 cooks help? | Roofline, arithmetic intensity, bandwidth ceiling | Pending |
-| 02 | Why is walking to the pantry expensive? | Registers, L1/L2, global memory, coalescing | Pending |
-| 03 | Why do cooks work in squads? | Warp, SIMT, occupancy, divergence | Pending |
-| 04 | Why install a specialized oven? | GEMM, Tensor Cores, precision and accuracy | Pending |
-| 05 | Why are six kitchens not one giant kitchen? | PCIe, NCCL, all-reduce, scaling efficiency | Pending |
-| 06 | Why does dinner rush change everything? | LLM prefill/decode, batching, KV cache | Pending |
-| 07 | When should we rebuild the restaurant? | Architecture choices, system bottlenecks | Pending |
-
-An episode is **not done** until the experiment and explanation agree, or the disagreement is documented.
-
-## Start here
-
-1. Read [the research charter](docs/RESEARCH_CHARTER.md) and [evidence protocol](docs/EVIDENCE_PROTOCOL.md).
-2. Read [the first experimental campaign](campaigns/4090-vs-a100.md).
-3. Capture machine inventory **before** running any load.
-4. Run one isolated GPU experiment on an approved maintenance window; then validate on the other architecture.
-5. Publish a reproducible result, including any failures or deviations from the prediction.
-
-### Minimum inventory commands (read-only)
-
-```bash
-nvidia-smi -L
-nvidia-smi topo -m
-nvidia-smi --query-gpu=index,name,uuid,memory.total,driver_version,pci.bus_id,power.limit --format=csv
-```
-
-Do not assume six 4090 cards are in a single host; **RTX 4090 has no NVLink**. Do not assume an A100 SKU or NVLink topology. Always verify real connectivity, workloads on shared hosts, power limits and container isolation first.
-
-## What this project is not
-
-- Not another GPU glossary or an unverified NVIDIA strategy essay.
-- Not a benchmark leaderboard with mismatched software versions.
-- Not a claim to have reverse-engineered proprietary silicon.
-- Not a collection of synthetic wins without end-to-end application impact.
-- Not an invitation to saturate shared machines without operator approval.
-
-## Evidence status
-
-**Published real GPU measurements: none yet.** Any simulation is prominently identified as simulation; CI unit tests are not GPU performance evidence. Every future performance claim must include the machine profile, commands, source commit, raw results, statistical method, correctness checks, and limitations.
-
-## Research questions
-
-- When does a single RTX 4090 outperform or underperform A100 for an *identical, supported* workload and precision?
-- What fraction of a kernel's time is arithmetic vs movement and synchronization?
-- How does effective throughput change across 1 / 2 / 4 / 6 RTX 4090s under data, tensor, and pipeline parallelism?
-- Under which traffic regimes do inference optimizations reduce **end-to-end** latency and cost?
-- Which architecture changes follow from these bottlenecks, and what evidence would disprove them?
-
-## Contribute
-
-Start with a reproducible experiment, a counterexample, a correctness bug, or a well-supported architectural explanation. Negative results are welcome when reproducible. See the [evidence protocol](docs/EVIDENCE_PROTOCOL.md).
+</div>
 
 ---
-**One question. One experiment. One receipt. One stronger mental model.**
+
+## This isn't another GPU diagram.
+
+Most GPU visualizations tell you *what* an SM, warp, or cache is.
+
+**GPU Uncooked asks a harder question: what evidence connects the CUDA code you wrote to the work the GPU actually reported doing?**
+
+You can change the memory-access stride of a real CUDA `gather` example and see the **derived** addresses and 32-byte regions. You can inspect the code's execution-accounting ledger. You can also investigate **vendor-decoded, third-party H100 reports** to see how two Hopper kernels differ at the SASS instruction level.
+
+Every view keeps the same boundary: **derived ≠ profiler-reported ≠ independently hardware-attested.**
+
+### One real example: fewer shared-memory stores, more register permutations
+
+Two public Hopper `full_source` Nsight Compute reports contain separate kernel identities and their own SASS execution statistics:
+
+| From the archived reports | RS-WGMMA | Transposed memdesc |
+|:--|--:|--:|
+| **Kernel duration** | **60.864 μs** | **41.184 μs** |
+| Registers / thread | 118 | 80 |
+| Static SASS lines | 1,488 | 1,440 |
+| **`STS` executed** | **1,229,824** | **181,248** |
+| **`PRMT` executed** | **17,152** | **803,584** |
+| `QGMMA` executed | 131,072 | 131,072 |
+
+**The puzzle:** The matrix-operation instruction count is unchanged. Shared-memory stores plummet; register permutations surge. The second kernel's *reported* duration is shorter.
+
+What happened in the operand-preparation path? Is this a deliberate trade between shared-memory traffic and register-level reordering? **Explore the SASS inspector, then challenge the hypothesis.**
+
+> **Evidence boundary:** These are vendor-decoded **third-party** reports labeled `THIRD_PARTY_UNVERIFIED`, not a benchmark we independently reran on H100. The values come from the **same pair of full-source reports**; they must not be mixed with separate 61.056/38.816 μs reports. Counts are aggregated **instruction executions, not cycles**. This comparison does not prove which change caused the runtime difference.
+
+[Read the SASS evidence and caveats](docs/PUBLIC_H100_SASS_DIFFERENCE.md) · [See the successful offline decode run](https://github.com/hippoley/GPU-Uncooked/actions/runs/45096310906) · [Inspect the source-side decoder](tools/diff_public_h100_sass.py)
+
+## Choose your way in
+
+| Experience | What you actually do | Evidence level |
+|:--|:--|:--|
+| **[Real-Material Lab](playground/material-lab/index.html)** | Select a CUDA `gather` stride, inspect lane addresses and sectors, import receipts, investigate `QGMMA`, `STS`, `PRMT` | Derived source model + separately labeled third-party H100 reports |
+| **[CUDA Microverse](playground/microverse/index.html)** | Navigate an interactive GPU-inspired environment and explore its layers | Educational spatial reconstruction |
+| **[Silicon City 3D](playground/city3d/index.html)** | Explore a self-contained GPU-inspired 3D world | Interactive visualization, **not** physical silicon telemetry |
+| **[Guided CUDA chapters](playground/chapters/index.html)** | Work through thread mapping, warp divergence, and memory coalescing | Interactive teaching models |
+| **[Original GPU Kitchen](playground/index.html)** | Experiment with how compute and supply bottlenecks interact | Explicitly simplified capacity analogy |
+
+### Run locally
+
+From the repository root:
+
+```bash
+git clone https://github.com/hippoley/GPU-Uncooked.git
+cd GPU-Uncooked
+git switch --track origin/feat/interactive-gpu-kitchen-playground
+python3 -m http.server 8000
+```
+
+Open the workbench at **http://localhost:8000/playground/material-lab/**.
+
+Other local entry points are `/playground/microverse/`, `/playground/city3d/`, and `/playground/chapters/`. The Python server simply serves files; **no NVIDIA GPU is needed**. The *source* Material Lab imports Three.js from a pinned CDN URL and therefore needs network access for that dependency. For a **self-contained HTML build** without a runtime CDN dependency, follow the bundling instructions below.
+
+> The latest workbench features live on [Draft PR #2](https://github.com/hippoley/GPU-Uncooked/pull/2), branch `feat/interactive-gpu-kitchen-playground`; the commands above deliberately select that branch. **Links to experience files in this README open GitHub source paths, not a hosted live demo.** GitHub Pages deployment is **not a verified public entry point** at this time.
+
+## The evidence chain
+
+```mermaid
+flowchart LR
+    A["CUDA source\ngather.cu"] --> B["Derived access model\nwarp lanes · addresses · sectors"]
+    A --> C["Compile + run\nwhen NVIDIA hardware is available"]
+    C --> D["PTX / SASS / Nsight\nraw receipts"]
+    D --> E["Hash + identity checks\nprovenance"]
+    E --> F["Evidence-grounded\ninteractive views"]
+    G["Pinned public H100\n.ncu-rep files"] --> H["Offline NVIDIA\nNsight decoder"]
+    H --> I["Third-party SASS\n& metrics"]
+    I --> F
+    B --> F
+```
+
+**What the labels mean:**
+
+- **`DERIVED`** — determined from source and stated assumptions (such as lane-to-address mapping); **not** a hardware observation.
+- **`REPORTED_UNVERIFIED`** — operator-provided profiler output with software-side provenance and integrity checks; **not** independent device attestation.
+- **`THIRD_PARTY_UNVERIFIED`** — archived upstream measurements decoded from pinned public reports. The report bytes and parsing may be checked; **the H100 execution was not reproduced here**.
+- **`UNKNOWN`** — a requested hardware fact is not established. We show the gap rather than invent a cycle trace.
+
+**What this project does not do:** emulate a transistor-accurate H100, recover per-warp execution timing from aggregate counters, or prove performance causality from opcode totals alone.
+
+## Reproduce the experiment—not just the screenshot
+
+### A. Verify the CUDA gather semantics without a GPU
+
+```bash
+node --test tests/material-execution-accounting.test.mjs
+node --test tests/material-sass-inspector.test.mjs
+```
+
+The source kernel lives in [`playground/material-lab/gather.cu`](playground/material-lab/gather.cu). For the three stride cases, the deterministic source-side model predicts:
+
+| Stride | Distinct 32-byte source regions covered by 32 lanes |
+|--:|--:|
+| 1 | 4 |
+| 4 | 16 |
+| 8 | 32 |
+
+This is **address coverage**, not measured HBM traffic. For a controlled actual GPU receipt, follow [the CUDA capture runbook](docs/GATHER_GPU_CAPTURE.md) and [the Nsight three-stride protocol](docs/NCU_THREE_STRIDE_EVIDENCE.md).
+
+### B. Decode the public Hopper evidence without a GPU
+
+The archived Nsight reports are downloaded **from a pinned upstream Git commit** and verified against their Git Blob hashes before decoding. On a machine with compatible NVIDIA Nsight Compute (`ncu`):
+
+```bash
+python3 tools/public_h100_reports.py fetch \
+  --report rswgmma_uniform4096 \
+  --dir /tmp/gpu-public-reports
+
+python3 tools/public_h100_reports.py extract \
+  --report rswgmma_uniform4096 \
+  --dir /tmp/gpu-public-reports \
+  --output /tmp/gpu-public-rswgmma
+```
+
+Then repeat for `memdesc_transpose_uniform4096`. To investigate the two **distinct full-source kernels**, use the `*_full_source` report IDs and the [SASS diff tool](tools/diff_public_h100_sass.py).
+
+You can also inspect the [successful vendor-decoded CI run and archived outputs](https://github.com/hippoley/GPU-Uncooked/actions/runs/45096310906), subject to GitHub artifact retention. The complete procedure and fixed report identities are in [PUBLIC_H100_EVIDENCE.md](docs/PUBLIC_H100_EVIDENCE.md).
+
+### C. Build the self-contained Material Lab
+
+The checked-in JavaScript source imports Three.js. The standalone build bundles the browser dependencies into one HTML file:
+
+```bash
+npm install --no-save --no-audit --no-fund three@0.170.0 esbuild@0.25.12 playwright@1.56.1
+node tools/build-material-lab.mjs
+```
+
+Serve `dist/` with a local HTTP server and open `http://localhost:8000/material-lab/` (or open the output HTML directly where local browser module policy permits). The build generates a size report and enforces a **1.4 MB Brotli budget**; the budget is a build constraint, **not** a claim about full silicon fidelity.
+
+## Architecture, not theater
+
+| Layer | Implementation | What it can and cannot establish |
+|:--|:--|:--|
+| **Spatial exploration** | Three.js browser scenes | Makes concepts navigable; no claim of exact chip floorplan |
+| **CUDA semantics** | Gather kernel + address/sector accounting | Reproducible lane-level address model; no measured cache path |
+| **Compiler evidence** | PTX/SASS import and static opcode inspection | Inspects archived instruction representations; no invented dynamic timing |
+| **Execution evidence** | Nsight receipt capture, hashing, source/SASS CSV parsing | Attributes reported counters; not an independent hardware witness |
+| **Interactive investigation** | Hopper opcode inspector + public report comparisons | Connects reported metrics to technical questions; correlation is not causation |
+
+[Execution accounting contract](docs/EXECUTION_ACCOUNTING_CONTRACT.md) · [Evidence protocol](docs/EVIDENCE_PROTOCOL.md) · [1:1 evidence boundaries](docs/INSIDE_CUDA_1TO1_EVIDENCE_CONTRACT.md)
+
+## Build with us
+
+The most useful contribution is **one falsifiable improvement**: a CUDA kernel with a correctness test, an actual profiler receipt, a reproducible mismatch, a SASS-to-source mapping, or a concrete error in the visualization's explanation.
+
+A good issue or PR states the **hypothesis**, includes **source and environment identity**, supplies **raw artifacts or a minimal fixture**, reports **what failed as well as what passed**, and distinguishes **measured facts from inferences**.
+
+Areas worth investigating next:
+
+- Link a real SASS **program counter and full instruction text** to its own per-address `Instructions Executed` count.
+- Understand Hopper `QGMMA` operand setup and synchronization **without inventing an execution order**.
+- Re-run the pinned source experiments on controlled NVIDIA hardware and measure repeatability.
+- Replace unclear metaphorical visuals with **evidence-addressable, clickable machine behavior**.
+
+See [the research charter](docs/RESEARCH_CHARTER.md), [the archived GPU experiments](campaigns/4090-vs-a100.md), and [the CUDA experiment runbooks](docs/GATHER_GPU_CAPTURE.md).
+
+---
+
+<div align="center">
+
+### The GPU is real. The evidence should be, too.
+
+**Don't just watch the kernel. Ask what proves the story.**
+
+[Run locally](#run-locally) · [Read the H100 SASS investigation](docs/PUBLIC_H100_SASS_DIFFERENCE.md) · [Contribute](https://github.com/hippoley/GPU-Uncooked/issues)
+
+</div>

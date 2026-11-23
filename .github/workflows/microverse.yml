@@ -1,0 +1,51 @@
+name: CUDA Microverse · Eleven Room Expedition
+on:
+  pull_request:
+    paths:
+      - "playground/microverse/**"
+      - "tools/build-microverse.mjs"
+      - "tests/microverse-*.mjs"
+      - ".github/workflows/microverse.yml"
+  push:
+    branches:
+      - "feat/interactive-gpu-kitchen-playground"
+    paths:
+      - "playground/microverse/**"
+      - "tools/build-microverse.mjs"
+      - "tests/microverse-*.mjs"
+      - ".github/workflows/microverse.yml"
+  workflow_dispatch:
+jobs:
+  playable-expedition:
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.1-noble
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Test entire software-and-hardware learning contract
+        run: node --test tests/microverse-tour.test.mjs
+      - name: Install pinned 3D runtime and bundler
+        run: npm install --no-save --no-audit --no-fund esbuild@0.25.12 three@0.170.0 playwright@1.56.1
+      - name: Build single HTML and measure full transfer footprint
+        run: node tools/build-microverse.mjs
+      - name: Walk the actual 3D expedition in Chromium
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/microverse-http.log 2>&1 &
+          node tests/microverse-browser-smoke.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gpu-uncooked-inside-the-gpu
+          path: |
+            dist/microverse/index.html
+            dist/microverse/build-report.json
+            dist/microverse/start-screen.png
+            dist/microverse/first-room.png
+            dist/microverse/inside-warp.png
+            dist/microverse/expedition-complete.png
+          if-no-files-found: warn
+          retention-days: 14

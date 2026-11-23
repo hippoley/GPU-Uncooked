@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="GPU Uncooked Silicon City: six original genre-distinct CUDA games and companion interactive experiments.">
+<title>GPU UNCOOKED — SILICON CITY</title>
+<style>
+:root{color-scheme:dark;--cream:#fff1dc;--pink:#ff79ad;--gold:#ffc47a;--cyan:#73dce8;background:#110e29;color:var(--cream);font-family:system-ui,-apple-system,"Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}body{margin:0;background:#11102b}a{color:inherit;text-decoration:none}a:focus-visible{outline:3px solid #7af2e8;outline-offset:4px}
+main{margin:0 auto;max-width:1310px;padding:0 25px 60px}
+.hero{position:relative;min-height:590px;overflow:hidden;background:radial-gradient(ellipse at 85% 55%,#ffb67a 0,#ed788c 30%,#7356aa 55%,#211b52 100%);isolation:isolate}
+.hero::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#151335b2 0%,#26154228 66%),repeating-linear-gradient(0deg,transparent 0 60px,#ffffff09 60px 61px);z-index:1;pointer-events:none}
+.hero .sun{position:absolute;right:14%;top:24%;width:260px;height:260px;border-radius:50%;background:linear-gradient(#ffe2b5,#ff9976);filter:blur(2px);box-shadow:0 0 90px #ffb3938c}
+.skyline{position:absolute;bottom:0;left:0;right:0;height:60%;overflow:hidden}
+.building{position:absolute;bottom:0;background:#252045;border-top:5px solid #4e396a;box-shadow:inset 8px 0 #ffffff0a;z-index:1}
+.building:after{content:"";position:absolute;inset:15px 11px;background-image:linear-gradient(90deg,#ffd39577 4px,transparent 4px),linear-gradient(#ffd39570 4px,transparent 4px);background-size:22px 21px;opacity:.7}
+.palm{position:absolute;bottom:0;width:8px;height:230px;background:#221a43;transform:rotate(-9deg);z-index:3}
+.palm:before{content:"";position:absolute;top:-8px;left:-70px;width:150px;height:70px;border-radius:50%;background:radial-gradient(ellipse,#24204d 10%,#24204d 25%,transparent 72%);box-shadow:0 0 0 2px #28204a88}
+.floor{position:absolute;bottom:0;left:0;right:0;height:110px;background:linear-gradient(0deg,#0b1024,#202345aa);z-index:4;box-shadow:0 -18px 55px #39335a85}
+.floor:after{content:"";position:absolute;bottom:18px;left:0;right:0;border-top:2px dashed #f3bc8773;transform:skewY(-2deg)}
+.nav{position:relative;z-index:10;display:flex;justify-content:space-between;align-items:center;padding:27px 33px;gap:10px}
+.brand{font-weight:1000;letter-spacing:-.06em;font-size:25px;line-height:.85;font-style:italic;text-shadow:3px 3px #2b164f}
+.brand span{display:block;font-size:9px;color:#a2f3ed;letter-spacing:.3em;font-style:normal;margin-top:8px}
+.nav a{font-weight:800;letter-spacing:.08em;font-size:12px;color:#fff1d8}
+.hero-content{position:relative;z-index:8;padding:76px 45px 70px;max-width:870px}
+.kicker{color:#a9f9ff;letter-spacing:.28em;font-weight:900;font-size:13px;text-shadow:0 2px #20142c}
+h1{font-size:clamp(58px,10.4vw,145px);line-height:.82;letter-spacing:-.09em;font-style:italic;margin:23px 0 16px;text-transform:uppercase;text-shadow:6px 8px 0 #301f5d,0 0 38px #f3a9cc3b}
+h1 span{color:#ffe0a5}h1 i{color:#fc82bc}
+.hero-content p{max-width:620px;color:#fff0e8;line-height:1.75;font-size:17px;text-shadow:0 1px 2px #231335}
+.hero-cta{display:inline-flex;background:#ffe0a0;color:#281b44;border:2px solid #fff0c6;border-radius:3px;transform:skewX(-6deg);font-weight:1000;letter-spacing:.04em;padding:14px 24px;margin-top:10px;box-shadow:8px 8px 0 #641d70a8}
+.chapter-head{padding:52px 0 21px;display:flex;align-items:end;justify-content:space-between;gap:20px}
+.chapter-head h2{font-size:clamp(30px,5vw,56px);line-height:1;letter-spacing:-.07em;margin:0;text-transform:uppercase;font-style:italic}
+.chapter-head p{font-size:13px;color:#baabc9;max-width:450px;line-height:1.6}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.game{border:1px solid #61476e;background:#201936;overflow:hidden;border-radius:7px;display:flex;flex-direction:column;transition:transform .22s;box-shadow:0 16px 33px #03051670}
+.game:hover{transform:translateY(-5px)}
+.art{height:215px;position:relative;overflow:hidden;isolation:isolate;background:linear-gradient(160deg,var(--light),var(--dark))}
+.art:before{content:"";position:absolute;inset:0;background:linear-gradient(165deg,transparent 38%,#110b2988 88%),repeating-linear-gradient(90deg,transparent 0 43px,#00000024 43px 47px)}
+.art:after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 72% 34%,#ffe2a755,transparent 48%)}
+.symbol{position:absolute;font-size:100px;z-index:2;left:32%;top:21%;filter:drop-shadow(0 13px 6px #150d3655);transform:rotate(-11deg)}
+.district{position:absolute;z-index:4;top:16px;left:16px;background:#170e2dba;border:1px solid #ffffff66;padding:7px 10px;font-size:10px;font-weight:900;letter-spacing:.13em}
+.num{position:absolute;z-index:3;right:10px;bottom:-20px;font-size:100px;font-weight:1000;letter-spacing:-.13em;color:#ffffff44}
+.factory{--light:#ffab70;--dark:#8d3d55}.rush{--light:#fe71c5;--dark:#40238c}.abyss{--light:#3ed8ed;--dark:#103e86}.castle{--light:#85dcb0;--dark:#274653}.forge{--light:#e9aa6d;--dark:#652645}.cluster{--light:#b6a3f9;--dark:#283a7e}
+.content{padding:20px;display:flex;flex:1;flex-direction:column;gap:11px}
+.genre{color:#ef94bc;font-weight:850;font-size:11px;letter-spacing:.09em}
+.content h3{margin:0;font-size:27px;letter-spacing:-.065em}
+.content p{margin:0;font-size:13px;color:#ccc1d9;line-height:1.7;flex:1}
+.topic{font-size:12px;color:#9aece3;font-weight:750}
+.actions{display:flex;gap:8px;flex-wrap:wrap;padding-top:3px}
+.action{display:inline-flex;align-items:center;justify-content:center;border:1px solid #ffdaa4;padding:10px 14px;background:#ffd394;color:#2d203c;font-size:12px;font-weight:900;border-radius:3px}
+.action.secondary{background:#382b4e;color:#f8e6ff;border-color:#7d648f}
+.status{display:inline-block;border:1px solid #674f78;color:#ada2bb;padding:10px;font-size:12px}
+.lab{margin-top:33px;padding:27px;border-left:4px solid #f79bba;background:#211c36}
+.lab h2{margin:0 0 7px;font-style:italic;font-size:30px}.lab p{color:#d1c4de;font-size:14px;line-height:1.75}.lab a{color:#ffe1a4;text-decoration:underline}
+footer{padding:30px 0;color:#a99ab8;font-size:11px}
+@media(max-width:890px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.hero{min-height:540px}}
+@media(max-width:620px){main{padding:0 13px 30px}.hero{min-height:530px}.hero-content{padding:60px 25px 30px}.nav{padding:20px}.cards{grid-template-columns:1fr}.art{height:195px}.chapter-head{display:block}.hero .sun{right:-90px;top:33%}.nav a{font-size:10px}}
+@media(prefers-reduced-motion:reduce){.game{transition:none}}
+</style></head><body>
+<section class="hero"><div class="sun"></div><div class="skyline">
+<div class="building" style="left:0;width:14%;height:76%"></div><div class="building" style="left:12%;width:9%;height:96%"></div><div class="building" style="left:23%;width:13%;height:68%"></div><div class="building" style="left:36%;width:11%;height:85%"></div><div class="building" style="left:50%;width:9%;height:60%"></div><div class="building" style="left:61%;width:15%;height:89%"></div><div class="building" style="left:77%;width:12%;height:61%"></div><div class="building" style="left:88%;width:13%;height:94%"></div><div class="palm" style="left:9%"></div><div class="palm" style="right:11%;height:210px"></div><div class="floor"></div></div>
+<div class="nav"><div class="brand">GPU UNCOOKED<span>ORIGINAL CUDA ARCADE</span></div><a href="../index.html">ARCHIVE: GPU KITCHEN ↗</a></div>
+<div class="hero-content"><div class="kicker">WELCOME TO SILICON CITY / SEASON 01</div><h1>SILICON<br><span>CITY</span><i>.</i></h1><p>六个街区、六种完全不同的游戏。穿过霓虹街道、潜入数据海湾、指挥机器人和计算基地。先玩得痛快，再去 CUDA Lab 拆穿这个世界的运行规则。</p><a class="hero-cta" href="../material-lab/index.html">▶ 真实 CUDA 代码 × 芯片物料实验台</a> <a class="hero-cta" style="background:#112941;color:#c4f8eb;border-color:#9ee5e0;margin-left:8px" href="../city3d/index.html">探索 Silicon City 3D</a></div></section>
+<main><section class="chapter-head"><h2>CHOOSE YOUR DISTRICT.</h2><p>统一都市电影式气质，保留每章的独立玩法。已开发与尚未开发的作品明确区分。</p></section>
+<div class="cards">
+<article class="game"><div class="art factory"><span class="district">01 · FREIGHT DISTRICT</span><span class="symbol">🏭</span><span class="num">01</span></div><div class="content"><div class="genre">自动化策略 / 解谜</div><h3>THREAD FACTORY</h3><p>驾驶城市工厂的机器人运输系统，规划每个任务的线程索引；港口物流任务已可玩：亲手交换与重新编组货箱，影响车队的访存扇区成本。</p><div class="topic">GRID / BLOCK / THREAD</div><div class="actions"><a class="action" href="../freight/index.html">PLAY FREIGHT MISSION →</a><a class="action secondary" href="../material-lab/index.html">CODE → MEMORY · REAL LAB</a><a class="action secondary" href="./01-thread-mapping/index.html">CUDA LAB</a></div></div></article>
+<article class="game"><div class="art rush"><span class="district">02 · NEON EXPRESSWAY</span><span class="symbol">⚡</span><span class="num">02</span></div><div class="content"><div class="genre">同步节奏 / 动作</div><h3>WARP RUSH</h3><p>让 32 位队员穿梭城市高速赛道。未来会有分路与汇合节拍挑战；目前可进入分支可视化实验。</p><div class="topic">WARP / SIMT / DIVERGENCE</div><div class="actions"><a class="action secondary" href="./02-warp-divergence/index.html">PLAY EXISTING LAB →</a></div></div></article>
+<article class="game"><div class="art abyss"><span class="district">03 · FLOODED MARINA</span><span class="symbol">🤿</span><span class="num">03</span></div><div class="content"><div class="genre">深海回收 / 冒险撤离</div><h3>MEMORY ABYSS</h3><p>从霓虹码头潜入被淹没的数据遗迹，收集晶体，避开缓存生物并在氧气耗尽前返回。</p><div class="topic">MEMORY COALESCING</div><div class="actions"><a class="action" href="../arcade/index.html">PLAY GAME →</a><a class="action secondary" href="./03-memory-coalescing/index.html">CUDA LAB</a></div></div></article>
+<article class="game"><div class="art castle"><span class="district">04 · DATA FINANCE DISTRICT</span><span class="symbol">🏙️</span><span class="num">04</span></div><div class="content"><div class="genre">塔防 / 快速存储</div><h3>CACHE CASTLE</h3><p>守住金融数据堡垒，利用有限的缓存和复用策略阻挡浪潮。</p><div class="topic">SHARED MEMORY / CACHE</div><div class="actions"><span class="status">IN DEVELOPMENT</span></div></div></article>
+<article class="game"><div class="art forge"><span class="district">05 · THE INDUSTRIAL BELT</span><span class="symbol">🔶</span><span class="num">05</span></div><div class="content"><div class="genre">矩阵拼接 / 连锁反应</div><h3>TENSOR FORGE</h3><p>在高温工业区控制矩阵熔炉，拼出最有效率的计算组合。</p><div class="topic">GEMM / TENSOR CORE</div><div class="actions"><span class="status">IN DEVELOPMENT</span></div></div></article>
+<article class="game"><div class="art cluster"><span class="district">06 · THE NETWORK PORT</span><span class="symbol">🛰️</span><span class="num">06</span></div><div class="content"><div class="genre">多节点战术 / 运输模拟</div><h3>CLUSTER COMMAND</h3><p>指挥多台 GPU 计算基地，把数据运送到最需要它的地方。</p><div class="topic">MULTI-GPU / COMMUNICATION</div><div class="actions"><span class="status">IN DEVELOPMENT</span></div></div></article>
+</div><section class="lab"><h2>AFTER THE HEIST, THE LAB.</h2><p>游戏给你直觉，互动实验让你验证直觉。已有 <a href="./01-thread-mapping/index.html">线程映射</a>、<a href="./02-warp-divergence/index.html">Warp 分支</a>、<a href="./03-memory-coalescing/index.html">内存扇区</a> 三个实验。所有得分均是教学模型，不是 GPU 实机性能测试。</p><p><a href="https://github.com/hippoley/GPU-Uncooked/blob/feat/interactive-gpu-kitchen-playground/docs/CUDA_ARCADE_PRODUCT_BIBLE_V2.md">Read the original creative bible</a></p></section>
+<footer>GPU UNCOOKED · SILICON CITY · Original visual identity. Cinematic neon-metropolis inspiration; no Rockstar artwork, characters, music or GTA assets used. Current public Pages deployment is not verified.</footer>
+</main></body></html>

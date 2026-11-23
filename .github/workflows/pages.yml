@@ -1,0 +1,49 @@
+name: Publish CUDA Playground to GitHub Pages
+on:
+  push:
+    branches: [main, feat/interactive-gpu-kitchen-playground]
+    paths:
+      - "playground/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure GitHub Pages publishing
+        uses: actions/configure-pages@v5
+      - name: Validate static entry points
+        run: |
+          test -f playground/chapters/index.html
+          test -f playground/chapters/01-thread-mapping/index.html
+          test -f playground/chapters/02-warp-divergence/index.html
+          test -f playground/chapters/03-memory-coalescing/index.html
+      - name: Prepare Pages artifact
+        run: |
+          mkdir -p public
+          cp -a playground/. public/
+          printf '%s\n' '<!doctype html><html lang="en"><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=./chapters/index.html"><title>GPU UNCOOKED — SILICON CITY</title><a href="./chapters/index.html">Enter Silicon City</a></html>' > public/index.html
+          touch public/.nojekyll
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+  deploy:
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

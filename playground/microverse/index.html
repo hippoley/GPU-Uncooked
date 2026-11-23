@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GPU UNCOOKED · 我在 GPU 里面</title>
+<meta name="description" content="Beginner-first miniature 3D CUDA hardware expedition. Walk through CPU, CUDA, GPU memory and compute layers.">
+<style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,"Microsoft YaHei",sans-serif;--ink:#ecfaff;--muted:#acc3d4;--mint:#82f6d8;--gold:#ffe1a4;--navy:#06111c}
+*{box-sizing:border-box}body{margin:0;color:var(--ink);background:#030914;overflow:hidden}
+button{border:1px solid #74bfc0;background:#10273b;color:#e8fafc;border-radius:11px;padding:11px 17px;font:750 13px system-ui,"Microsoft YaHei",sans-serif;cursor:pointer;min-height:44px}
+button:hover{background:#194259}button:disabled{opacity:.35;cursor:default}button.primary{background:#b8f8dc;border:1px solid #e9ffe9;color:#102536;box-shadow:0 0 18px #4be9be3b;font-weight:900}
+button:focus-visible{outline:3px solid #f8e3a9;outline-offset:3px}a{color:#b7f3e9}
+#game{position:relative;width:100vw;height:100dvh;overflow:hidden}
+#view{width:100%;height:100%;display:block;touch-action:none}
+.hud{position:absolute;z-index:4;pointer-events:none}
+.header{top:14px;left:18px;right:18px;display:flex;justify-content:space-between;gap:10px;align-items:start}
+.brand{font-weight:1000;letter-spacing:-.045em;font-size:clamp(17px,2vw,27px);line-height:1.05;text-shadow:0 2px 12px #000}
+.brand small{font-size:9px;letter-spacing:.19em;color:#91e7db;display:block;font-weight:800;margin-bottom:5px}
+.counter{background:#071c2be8;padding:10px 14px;border:1px solid #649c9b88;border-radius:9px;text-align:right;font-size:11px}
+.counter strong{display:block;font-size:19px;color:var(--gold)}
+#guide{position:absolute;left:19px;bottom:18px;z-index:4;width:min(465px,calc(100vw - 38px));background:#071826e9;border:1px solid #9bcbd3a2;border-radius:18px;box-shadow:0 20px 75px #000a;backdrop-filter:blur(14px);padding:19px 20px 16px}
+.guide-top{font-size:10px;letter-spacing:.17em;font-weight:900;color:var(--mint)}
+#place{margin:7px 0 8px;font-size:clamp(23px,3vw,32px);font-weight:950;letter-spacing:-.05em}
+#question{font-size:15px;color:#fbe6be;font-weight:800;line-height:1.55;margin:9px 0}
+#story{font-size:13px;color:#d0e0e8;line-height:1.6;margin:8px 0}
+#truth{font-size:11px;color:#9eb9bf;line-height:1.5;margin:7px 0}
+#truth[hidden]{display:none}
+.controls{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:14px;pointer-events:auto}
+.controls #operate{flex:1;min-width:155px}
+#prompt{margin-top:9px;font-size:11px;color:#7deccf;font-weight:750}
+#trail{position:absolute;top:76px;right:17px;z-index:4;width:183px;max-height:calc(100dvh - 125px);background:#061321d9;border:1px solid #537c8e80;border-radius:12px;padding:12px;overflow:auto}
+#trail h2{margin:0 0 9px;font-size:12px;color:#fff0c3}
+#trail ol{list-style:none;padding:0;margin:0;display:grid;gap:5px}
+#trail li{font-size:11px;padding:7px 8px;border:1px solid #3c566784;border-radius:6px;color:#87a2b1}
+#trail li.current{border-color:#e1d197;color:#fff0ce;background:#7d745b42}
+#trail li.done{color:#83ddc7;border-color:#367c72}
+#mobile{position:absolute;z-index:5;bottom:16px;right:16px;display:flex;gap:5px;pointer-events:auto}
+#mobile button{width:46px;padding:8px;font-size:19px}
+#start{position:absolute;inset:0;z-index:20;background:radial-gradient(ellipse at 65% 34%,#183c58d9,#030714fa 72%);display:grid;place-items:center;padding:20px}
+#start[hidden]{display:none}
+.start-card{max-width:650px;width:100%;background:#0b1a2ee8;border:1px solid #79c4cf;border-radius:20px;padding:clamp(26px,5vw,44px);box-shadow:0 24px 110px #000c}
+.start-card h1{font-size:clamp(40px,7vw,76px);line-height:1;letter-spacing:-.07em;margin:12px 0}
+.start-card h1 em{color:#acefd9;font-style:normal}.start-card p{font-size:16px;color:#cbdae3;line-height:1.8}
+.start-card .easy{background:#103848;border-left:4px solid #71e9d1;padding:12px 16px;border-radius:5px;font-size:14px;color:#ebf6ed;margin:16px 0}
+.start-card footer{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+#done{position:absolute;inset:0;z-index:14;background:#04131bf0;display:grid;place-items:center;padding:20px}
+#done[hidden]{display:none}#done .start-card{border-color:#a3eac3}
+#loading{position:absolute;inset:0;z-index:30;background:#061320;display:grid;place-items:center;text-align:center;color:#c8eedf;font-weight:900}
+#loading[hidden]{display:none}
+#error{color:#ffb1ab;font-size:12px;margin-top:8px}
+#status{position:absolute;z-index:4;left:18px;top:68px;font-size:10px;color:#b7d2d0;pointer-events:none}
+@media(max-width:760px){
+ .header{top:7px;left:9px;right:9px}.brand{font-size:17px}.counter{padding:6px 9px}
+ #trail{display:none}#guide{left:8px;bottom:67px;width:calc(100vw - 16px);padding:13px 14px 11px;border-radius:12px}
+ #place{font-size:22px}#question{font-size:13px;margin:5px 0}#story{font-size:12px;line-height:1.4}#truth{font-size:10px}
+ #mobile{right:10px;bottom:8px}.controls button{min-height:40px;padding:7px 10px;font-size:11px}
+ #status{top:53px;left:9px}
+}
+@media(min-width:761px){#mobile{display:none}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"}}</script>
+</head><body><div id="game">
+<canvas id="view" aria-label="可以进入并行计算机内部的三维探险场景" tabindex="0"></canvas>
+<div class="hud header"><div class="brand"><small>GPU UNCOOKED · INSIDE THE MACHINE</small>我在 GPU 里面</div><div class="counter">已经亲眼看见<strong id="progress">0 / 11</strong></div></div>
+<div id="status">镜头：拖动鼠标环顾 · 移动：W/S 或方向键 · 无需懂 CUDA</div>
+<aside id="trail" aria-label="探索路径"><h2>你的探险路径</h2><ol id="stops"></ol></aside>
+<section id="guide" aria-label="探险向导">
+<div class="guide-top" id="step">第 1 站 · 跟着发光路线</div>
+<h2 id="place">CPU 指挥室</h2>
+<div id="question">这里发生了什么？</div>
+<p id="story"></p>
+<p id="truth" hidden></p>
+<div class="controls">
+<button id="operate" class="primary">让它运转 · E</button>
+<button id="walk">带我走到下一站</button>
+<button id="show-truth" title="揭开这一站硬件与隐喻的区别">看真实原理</button>
+</div>
+<div id="prompt" aria-live="polite">跟着光线走，到了设备按 E。</div>
+</section>
+<div id="mobile"><button id="back" aria-label="向后走">↓</button><button id="forward" aria-label="向前走">↑</button></div>
+<div id="start"><div class="start-card">
+<div style="color:#92f3d5;font-weight:900;letter-spacing:.16em;font-size:11px">第一集 · 一颗数据的奇幻旅程</div>
+<h1>缩小一万倍，<br><em>进入计算机。</em></h1>
+<p>你现在只有灰尘那么大。眼前是一座真正可以走进去的微型 GPU 城市。CPU 如何交任务？数据从哪里来？为什么有那么多线程？你会亲眼看见它们工作。</p>
+<div class="easy">你只需要两件事：<b>“带我走”</b>，和<b>“让它运转”</b>。不需要任何 CUDA 基础。</div>
+<footer><button class="primary" id="begin">▶ 开始微缩探险</button><span style="font-size:12px;color:#abc7d5">约 5 分钟 · 11 站 · 自由行走也可以</span></footer>
+</div></div>
+<div id="done" hidden><div class="start-card">
+<div style="color:#a1f4d7">第一集 · 完成</div><h1>你穿过了<br><em>一整个计算过程。</em></h1>
+<p>现在你知道：CPU 交付工作，CUDA 发起执行，数据进入存储层，SM 安排线程，Warp 协作执行，寄存器和共享内存帮助计算，最后必须验证结果。</p>
+<div class="easy">这是一张帮助理解的<b>交互式空间地图</b>，并不是 NVIDIA 芯片内部的真实平面图。某些数据流和执行阶段会并行或绕开这里展示的路径。</div>
+<footer><button class="primary" id="again">重新进入机器</button><a href="../city3d/index.html">回到 Silicon City</a></footer>
+</div></div>
+<div id="loading">正在构造微缩 GPU 世界<div id="error"></div></div>
+</div><script type="module" src="./main.mjs"></script></body></html>

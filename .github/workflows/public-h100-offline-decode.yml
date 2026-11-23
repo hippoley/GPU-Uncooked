@@ -1,0 +1,121 @@
+name: Offline decode of pinned public H100 Nsight reports
+on:
+  workflow_dispatch:
+  push:
+    branches: ["feat/interactive-gpu-kitchen-playground"]
+    paths:
+      - ".github/workflows/public-h100-offline-decode.yml"
+      - "tools/probe_public_h100_sass.py"
+      - "tests/test_public_h100_sass_probe.py"
+      - "tools/diff_public_h100_sass.py"
+      - "tests/test_diff_public_h100_sass.py"
+jobs:
+  decode:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch immutable upstream reports and check blob digests
+        run: |
+          mkdir -p dist/public-h100-evidence/reports
+          python3 tools/public_h100_reports.py fetch --report rswgmma_uniform4096 --dir dist/public-h100-evidence/reports | tee dist/public-h100-evidence/fetch-rswgmma.json
+          python3 tools/public_h100_reports.py fetch --report memdesc_transpose_uniform4096 --dir dist/public-h100-evidence/reports | tee dist/public-h100-evidence/fetch-memdesc.json
+      - name: Download NVIDIA Nsight Compute 2026.2.0 and preserve tool identity
+        run: |
+          set -euo pipefail
+          curl -fL --retry 3 --connect-timeout 30 --max-time 900 \
+            -o /tmp/nsight-compute-2026.2.0.deb \
+            https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/nsight-compute-2026.2.0_2026.2.0.7-1_amd64.deb
+          sha256sum /tmp/nsight-compute-2026.2.0.deb | tee dist/public-h100-evidence/ncu-deb-sha256.txt
+          mkdir -p /tmp/gpu-ncu
+          dpkg-deb -x /tmp/nsight-compute-2026.2.0.deb /tmp/gpu-ncu
+          NCU="$(find /tmp/gpu-ncu -type f -name ncu -print -quit)"
+          test -n "$NCU"
+          chmod +x "$NCU"
+          "$NCU" --version | tee dist/public-h100-evidence/ncu-version.txt
+          echo "NCU_EXE=$NCU" >> "$GITHUB_ENV"
+      - name: Offline decode two original reports without executing CUDA
+        run: |
+          set -euo pipefail
+          python3 tools/public_h100_reports.py extract --report rswgmma_uniform4096 \
+            --dir dist/public-h100-evidence/reports \
+            --output dist/public-h100-evidence/rswgmma --ncu "$NCU_EXE" \
+            | tee dist/public-h100-evidence/rswgmma-status.json || true
+          python3 tools/public_h100_reports.py extract --report memdesc_transpose_uniform4096 \
+            --dir dist/public-h100-evidence/reports \
+            --output dist/public-h100-evidence/memdesc --ncu "$NCU_EXE" \
+            | tee dist/public-h100-evidence/memdesc-status.json || true
+      - name: Fail closed if H100 report extraction cannot be supported
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path("dist/public-h100-evidence")
+          items=[]
+          for p in [root/"rswgmma"/"report.json",root/"memdesc"/"report.json"]:
+              if not p.exists():
+                  raise SystemExit(f"Missing report extraction output: {p}")
+              x=json.loads(p.read_text())
+              items.append({"report_id":x["report_id"],"status":x["status"],"metrics":len(x["metrics"]),
+                            "source_sha256":x["source_sha256"],"hardware_attested":x["hardware_attested"]})
+          (root/"acceptance.json").write_text(json.dumps(items,indent=2)+"\n")
+          print(items)
+          if any(x["status"]!="PARSED_UNVERIFIED" or not x["metrics"] or x["hardware_attested"] for x in items):
+              raise SystemExit("Offline decode unsupported or incomplete; raw stdout/stderr retained")
+          PY
+      - name: Validate no-GPU SASS evidence boundaries
+        run: python3 -m unittest discover -s tests -p test_public_h100_sass_probe.py -v
+      - name: Fetch full-source variants by immutable upstream blob hash
+        run: |
+          set -euo pipefail
+          python3 tools/public_h100_reports.py fetch --report rswgmma_uniform4096_full_source --dir dist/public-h100-evidence/reports
+          python3 tools/public_h100_reports.py fetch --report memdesc_transpose_uniform4096_full_source --dir dist/public-h100-evidence/reports
+      - name: Probe archived SASS views from four pinned reports
+        run: |
+          set -euo pipefail
+          python3 tools/probe_public_h100_sass.py --ncu "$NCU_EXE" --report dist/public-h100-evidence/reports/rswgmma_uniform4096.ncu-rep --output dist/public-h100-evidence/sass-rswg || true
+          python3 tools/probe_public_h100_sass.py --ncu "$NCU_EXE" --report dist/public-h100-evidence/reports/memdesc_transpose_uniform4096.ncu-rep --output dist/public-h100-evidence/sass-memdesc || true
+          python3 tools/probe_public_h100_sass.py --ncu "$NCU_EXE" --report dist/public-h100-evidence/reports/rswgmma_uniform4096_full_source_cleaned_20261111.ncu-rep --output dist/public-h100-evidence/sass-rswg-full || true
+          python3 tools/probe_public_h100_sass.py --ncu "$NCU_EXE" --report dist/public-h100-evidence/reports/memdesc_transpose_uniform4096_full_source_cleaned_20261111.ncu-rep --output dist/public-h100-evidence/sass-memdesc-full || true
+      - name: Inventory SASS evidence without claiming unverified instruction equality
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,hashlib
+          root=Path("dist/public-h100-evidence")
+          records=[]
+          for name in ["sass-rswg","sass-memdesc","sass-rswg-full","sass-memdesc-full"]:
+              p=root/name/"sass-probe.json"
+              if not p.exists():
+                  raise SystemExit("Missing SASS probe receipt: "+str(p))
+              record=json.loads(p.read_text())
+              records.append({"name":name,"status":record["status"],"stdout_sha256":record["source_stdout_sha256"],"source_report_sha256":record["source_report_sha256"],"instruction_count":record["instruction_count"]})
+          (root/"sass-inventory.json").write_text(json.dumps({"classification":"THIRD_PARTY_UNVERIFIED","same_binary":"UNKNOWN","records":records},indent=2)+"\n")
+          print(json.dumps(records,indent=2))
+          PY
+      - name: Validate opcode differences and fail-closed duration linkage
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p test_diff_public_h100_sass.py -v
+          python3 tools/diff_public_h100_sass.py \
+            --left dist/public-h100-evidence/sass-rswg-full/source.stdout.csv \
+            --right dist/public-h100-evidence/sass-memdesc-full/source.stdout.csv \
+            --output dist/public-h100-evidence/full-source-sass-diff.json
+      - name: Decode full-source report metrics as distinct kernel records
+        run: |
+          set -euo pipefail
+          python3 tools/public_h100_reports.py extract --report rswgmma_uniform4096_full_source \
+            --dir dist/public-h100-evidence/reports \
+            --output dist/public-h100-evidence/rsw-full-metrics --ncu "$NCU_EXE" || true
+          python3 tools/public_h100_reports.py extract --report memdesc_transpose_uniform4096_full_source \
+            --dir dist/public-h100-evidence/reports \
+            --output dist/public-h100-evidence/memdesc-full-metrics --ncu "$NCU_EXE" || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: public-h100-ncu-offline-raw-evidence
+          path: dist/public-h100-evidence/
+          retention-days: 14
+          if-no-files-found: warn

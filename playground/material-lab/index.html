@@ -1,0 +1,179 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>INSIDE CUDA · Silicon Memory Workbench</title>
+<meta name="description" content="Trace real CUDA gather code into 32 thread addresses, 32-byte sectors and float32 values inside a cinematic interactive 3D GPU workbench.">
+<style>
+:root{color-scheme:dark;--ink:#e7eef2;--mute:#93a4b1;--gold:#d7a16d;--cyan:#62c8c8;font-family:Inter,system-ui,"Microsoft YaHei",sans-serif}
+*{box-sizing:border-box}body{margin:0;background:#090c12;color:var(--ink);overflow:hidden}
+button{font:700 12px Inter,system-ui,sans-serif;background:#16212a;color:#e6eff4;border:1px solid #4a5c64;padding:10px 12px;border-radius:4px;cursor:pointer}
+button:focus-visible{outline:2px solid #d4a56d;outline-offset:2px}
+button[aria-pressed="true"]{background:#2c514f;border-color:#5baca5;color:#e2fffa}
+a{color:#8bc4cf}p{line-height:1.5}
+#app{height:100dvh;display:grid;grid-template-columns:minmax(0,1fr) minmax(310px,360px)}
+#viewport{position:relative;min-width:0;background:#070d14}
+#view{width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+#view:active{cursor:grabbing}
+#top{position:absolute;top:0;left:0;right:0;padding:22px 25px;display:flex;align-items:start;justify-content:space-between;pointer-events:none;background:linear-gradient(#050a1190,transparent)}
+#top h1{font-size:19px;margin:0;letter-spacing:.15em;color:#f4f2eb;font-weight:850}
+#top span{display:block;color:#91a6b2;font-size:10px;letter-spacing:.2em;margin-bottom:6px}
+#top .rev{font:11px ui-monospace,monospace;color:#8fa6ab}
+#scene-label{position:absolute;left:25px;bottom:23px;font-size:11px;letter-spacing:.13em;color:#d4dedf;background:#09141cc9;border-left:2px solid var(--gold);padding:12px 14px;max-width:540px}
+#scene-label strong{display:block;font-size:14px;margin:5px 0;letter-spacing:.02em;color:#fff}
+#scene-label small{display:block;line-height:1.5;color:#9ab0b5;font-size:11px;letter-spacing:0}
+#scene-ui{position:absolute;top:76px;left:24px;display:flex;gap:8px}
+#scene-ui button{background:#111b24e8;backdrop-filter:blur(7px)}
+#inspector{border-left:1px solid #263643;background:linear-gradient(150deg,#101923,#090d14 70%);overflow-y:auto;padding:25px 22px 35px;min-height:0}
+.eyebrow{color:#b9a27f;font:800 10px ui-monospace,monospace;letter-spacing:.2em}
+h2{font-size:26px;line-height:1.12;letter-spacing:-.04em;margin:11px 0 7px;font-weight:780}
+.copy{color:#b2c1ca;font-size:12px;margin:0 0 18px}
+.panel{border-top:1px solid #2a3743;padding:16px 0}
+.heading{font-size:10px;color:#90b1b7;text-transform:uppercase;letter-spacing:.17em;font-weight:800;margin-bottom:10px}
+#code{background:#070e16;border:1px solid #2b3f4a;padding:11px 6px;margin:8px 0;overflow-x:auto;font:11px/1.95 ui-monospace,"Cascadia Code",Consolas,monospace;color:#c5d9dd;white-space:pre;tab-size:2}
+#code .line{display:block;padding:0 4px;white-space:pre}
+#code .line.active{background:#6d573128;border-left:2px solid #e0b278;color:#ffeac7}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.grid button{padding:9px 6px}
+.pipeline{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.pipeline button{padding:9px 2px;font-size:10px}
+#metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.metric{border:1px solid #253943;padding:12px;background:#0e1b25}
+.metric strong{font:800 24px ui-monospace,monospace;display:block;color:#efd0a6}
+.metric small{font-size:10px;color:#91a6ae}
+#lane-list{display:grid;grid-template-columns:repeat(8,1fr);gap:4px}
+#lane-list button{min-width:0;padding:7px 0;font:800 10px ui-monospace,monospace;color:#abc5ca}
+#lane-list button.selected{background:#855c38;border-color:#dfae7c;color:#fff6e6}
+#address-detail{font:11px/1.7 ui-monospace,monospace;color:#abced3;background:#07111a;padding:10px 12px;border-left:2px solid #6dbab5;margin-top:9px}
+#interpretation{font-size:12px;color:#c8d6db;line-height:1.65}
+#loading{position:absolute;inset:0;display:grid;place-items:center;background:#090e17;color:#d6c5a6;z-index:15;font:700 13px ui-monospace,monospace;letter-spacing:.15em}
+#loading[hidden]{display:none}
+#status{font:10px ui-monospace,monospace;color:#7997a0}
+#footer{font-size:10px;color:#71858e;line-height:1.7}
+#receipt-file{display:block;width:100%;font:11px ui-monospace,monospace;color:#c5d9dd;margin:10px 0}
+#receipt-info{color:#c6d4d9;font:11px/1.6 ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere}
+#receipt-text{font:10px/1.5 ui-monospace,monospace;max-height:160px;overflow:auto;white-space:pre-wrap;background:#070e16;border:1px solid #2b3f4a;padding:9px}
+#receipt-mode{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+#accounting{margin:12px 0;padding:14px;border:1px solid #51616c;background:linear-gradient(140deg,#13212e,#0b111a)}
+#accounting h3{font-size:17px;margin:0 0 6px}
+#account-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:10px 0}
+.account-item{background:#080f19;border:1px solid #253745;padding:10px}
+.account-item strong{display:block;font:700 17px ui-monospace,monospace;color:#edcda4}
+.account-item small{display:block;margin-top:5px;color:#9baeb7;font:10px/1.4 ui-monospace,monospace}
+#account-tally{white-space:pre-wrap;font:11px/1.65 ui-monospace,monospace;color:#bdd5d9;padding:11px;background:#071019}
+#account-missing{font:11px/1.6 ui-monospace,monospace;color:#e0ac91;background:#261e1d;padding:11px;margin-top:7px}
+#microscope{border:1px solid #536a6e;background:linear-gradient(150deg,#172a33,#0b161f);padding:14px;margin:12px 0}
+#microscope h3{margin:0 0 7px;font-size:16px;letter-spacing:-.02em}
+#micro-phases{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin:10px 0}
+#micro-phases button{font-size:10px;padding:9px 3px}
+#micro-phases button[aria-pressed="true"]{border-color:#e4b786;background:#3f3026;color:#ffe6c7}
+.micro-highlight{font:700 17px/1.3 ui-monospace,monospace;color:#f2d1a5;overflow-wrap:anywhere;padding:9px 0}
+#micro-detail{font:12px/1.6 system-ui,sans-serif;color:#c9d9dd;min-height:68px}
+#micro-regions{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:3px;margin:10px 0}
+#micro-regions button{font:10px ui-monospace,monospace;padding:7px 0;background:#15212b;border-color:#38505c;border-radius:2px}
+#micro-regions button.active{background:#b87541;color:#171c22}
+#micro-regions button.selected{outline:2px solid #f3d39e}
+.micro-legend{font:10px/1.5 ui-monospace,monospace;color:#91aab1}
+#micro-matrix{width:100%;border-collapse:collapse;font:11px/1.5 ui-monospace,monospace;margin:9px 0}
+#micro-matrix td,#micro-matrix th{padding:5px 4px;border-bottom:1px solid #33444a;text-align:right}
+#micro-matrix th:first-child,#micro-matrix td:first-child{text-align:left}
+#micro-matrix tr.active{color:#ffdda9;background:#48342577}
+#micro-code{font:11px/1.6 ui-monospace,monospace;color:#a8d6d6;background:#061018;padding:9px;white-space:pre-wrap}
+#micro-proof{font:10px/1.5 ui-monospace,monospace;color:#d8aa86;border-left:2px solid #ad7950;padding:8px;background:#2c201d77}
+@media(max-width:840px){#app{display:block;overflow:auto}#viewport{height:62dvh}#inspector{height:auto;overflow:visible}#top{padding:15px}#scene-label{left:15px;bottom:10px;padding:8px 10px;font-size:9px}#scene-ui{top:66px;left:15px}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"}}</script>
+</head><body><main id="app"><section id="viewport">
+<canvas id="view" tabindex="0" aria-label="Close-up realistic visual model of CUDA SM threads and device memory"></canvas>
+<div id="top"><div><span>GPU UNCOOKED / MATERIAL STUDY 001</span><h1>INSIDE CUDA</h1></div><div class="rev">REAL ADDRESS DATA / CUDA C++</div></div>
+<div id="scene-ui"><button id="focus-threads">THREADS</button><button id="focus-memory">MEMORY</button><button id="focus-overview">OVERVIEW</button></div>
+<div id="scene-label"><span id="visual-step">01 / SOURCE</span><strong id="visual-title">256 个真实 float32 数据位置</strong><small id="visual-description">这些不只是发光立方体。每一块都对应数组中的一个真实索引、4 字节数据和具体访存地址。</small></div>
+<div id="loading">BUILDING SILICON WORKBENCH</div>
+</section><aside id="inspector">
+<div class="eyebrow">CODE ⇄ DATA ⇄ PHYSICAL MODEL</div><h2>一行 CUDA，进入芯片内部。</h2>
+<p class="copy">点击一条线程，观察它究竟取走哪一个数字。换一种地址排列，再看实际访问了多少个 32B 扇区。</p>
+<div class="panel"><div class="heading">A / 改变 CUDA 的 stride 参数</div><div class="grid"><button data-stride="1">1 · 连续</button><button data-stride="4">4 · 跨步</button><button data-stride="8">8 · 稀疏</button></div></div>
+<section id="accounting" aria-label="GPU execution accounting ledger">
+<div class="eyebrow">DEEP DIVE 002 / EXECUTION ACCOUNTING · NO FAKE COUNTERS</div>
+<h3>GPU 执行核算账本</h3>
+<p class="copy">同一段 CUDA 代码：哪些字节与线程操作能精确推导？哪些执行周期与 SASS 数量现在还没有证据？</p>
+<div id="account-grid">
+<div class="account-item"><strong id="account-load">—</strong><small>源端有效加载 / DERIVED</small></div>
+<div class="account-item"><strong id="account-coverage">—</strong><small>32B 区域覆盖 / DERIVED</small></div>
+<div class="account-item"><strong id="account-store">—</strong><small>目的端有效写回 / DERIVED</small></div>
+<div class="account-item"><strong id="account-warp">—</strong><small>本 Kernel 启动 Warp / DERIVED</small></div>
+</div>
+<div id="account-tally"></div>
+<div id="account-missing"></div>
+</section>
+<div id="microscope" aria-label="CUDA execution semantic microscope">
+<div class="eyebrow">DEEP DIVE 001 / INSTRUCTION MICROSCOPE · DERIVED</div>
+<h3>进入这一条线程：从寄存器值到地址请求</h3>
+<p class="copy">不是播放动画：每一步可以查清当前线程正在计算什么，整个 Warp 有哪些地址，读和写为什么不一样。</p>
+<div id="micro-phases" aria-label="Step through CUDA semantic stages"></div>
+<div class="micro-highlight" id="micro-value">SELECT A LANE</div>
+<div id="micro-detail"></div>
+<div class="micro-legend">当前语义操作（不是生成的 PTX 或 SASS）</div>
+<pre id="micro-code"></pre>
+<div class="heading">Warp 的 32 个相对 32B 区域 · 点击可查看参与的线程</div>
+<div id="micro-regions" aria-label="Select a 32-byte theoretical region"></div>
+<div class="micro-legend" id="micro-region-detail"></div>
+<div class="heading">同一份二进制 · 改变运行时 stride</div>
+<table id="micro-matrix"><thead><tr><th>stride</th><th>源区域</th><th>覆盖</th><th>有效比例</th><th>目的区域</th></tr></thead><tbody></tbody></table>
+<div id="micro-proof">真实 SASS 和 NCU 指标尚需 GPU 实机证据；此处每个值是源码导出的假设条件下的计算结果。</div>
+</div>
+<div class="panel"><div class="heading">B / 走进计算过程</div><div class="pipeline">
+<button data-step="source">01 源码</button><button data-step="dispatch">02 线程</button><button data-step="memory">03 访存</button><button data-step="result">04 结果</button>
+</div><div id="code" role="img" aria-label="The actual CUDA gather kernel, line highlighted to show current stage"></div></div>
+<div class="panel"><div class="heading">C / 实际数组位置 · 32 个线程</div><div id="lane-list" aria-label="Select one of 32 CUDA lanes"></div>
+<div id="address-detail" aria-live="polite"></div></div>
+<div class="panel"><div class="heading">D / 可重复计算的扇区覆盖模型</div><div id="metrics"><div class="metric"><strong id="sectors">16</strong><small>独立 32B 扇区</small></div><div class="metric"><strong id="bytes">512B</strong><small>扇区覆盖量 / 有效载荷 128B</small></div></div>
+<p id="interpretation"></p></div>
+<div class="panel"><div class="heading">E / 导入真实编译产物（未经独立认证）</div>
+<p class="copy">先在 GPU 主机上采集，再用离线校验器生成 receipt-view.json。导入后可检查 PTX / SASS 文本，但不会认证 GPU 执行或推导物理路径。</p>
+<label for="receipt-file" class="heading">导入 receipt-view.json</label>
+<input type="file" id="receipt-file" accept=".json,application/json" aria-label="Import unattested CUDA receipt-view JSON">
+<p id="receipt-info" role="status" aria-live="polite">NOT IMPORTED · NO GPU EXECUTION RECEIPT</p>
+<div id="receipt-mode"><button type="button" data-receipt-tab="source">CUDA C++</button><button type="button" data-receipt-tab="ptx">PTX</button><button type="button" data-receipt-tab="sass">SASS</button></div>
+<pre id="receipt-text">无实际编译产物可显示。</pre>
+<div class="heading">NCU · 三种 stride 的独立采集对照（未经独立认证）</div>
+<p class="copy">选择同一二进制的三组 Nsight 原始记录经离线解析生成的 comparison.json。DERIVED 是源码预测区域；PROFILE 是操作者报告的计数器值，两者绝不是同一种单位。</p>
+<input id="ncu-comparison-file" type="file" accept=".json,application/json" aria-label="Import unverified Nsight three-stride comparison JSON">
+<p id="ncu-comparison-status" role="status" aria-live="polite">UNKNOWN / NO IMPORTED NCU COMPARISON</p>
+<table id="ncu-comparison-table" style="width:100%;border-collapse:collapse;font:10px/1.8 ui-monospace,monospace">
+<thead><tr><th>Stride</th><th>DERIVED 32B<br>src regions</th><th>NCU L1<br>load sectors</th><th>NCU DRAM<br>read bytes</th><th>NCU DRAM<br>write bytes</th></tr></thead>
+<tbody><tr><td>1</td><td>4</td><td>UNKNOWN</td><td>UNKNOWN</td><td>UNKNOWN</td></tr>
+<tr><td>4</td><td>16</td><td>UNKNOWN</td><td>UNKNOWN</td><td>UNKNOWN</td></tr>
+<tr><td>8</td><td>32</td><td>UNKNOWN</td><td>UNKNOWN</td><td>UNKNOWN</td></tr></tbody></table>
+<p class="copy">导入后仍为 REPORTED_UNVERIFIED。真实 GPU 身份、计数器归属、缓存状态及设备独立见证尚未认证。请勿将 L1 Sector 直接视作 HBM 读取次数。</p>
+<div class="heading">PUBLIC H100 · 第三方 Nsight 报告对照</div>
+<p class="copy">已预载两份公开 H100 报告经 NVIDIA Nsight Compute 离线解码的 11 项关键指标，源自固定 Git 提交和原始哈希。你也可以导入两份完整 report.json 查看全部共同指标。第三方数据不等于我们 gather 的 H100 实测。</p>
+<input id="public-ncu-left" type="file" accept=".json,application/json" aria-label="Import RS-WGMMA public report">
+<input id="public-ncu-right" type="file" accept=".json,application/json" aria-label="Import Memdesc public report">
+<p id="public-ncu-status" role="status">UNKNOWN / PUBLIC REPORTS NOT IMPORTED</p>
+<pre id="public-ncu-provenance" style="white-space:pre-wrap;font:11px/1.5 ui-monospace,monospace"></pre>
+<div id="public-ncu-table" style="font:11px/1.6 ui-monospace,monospace;max-height:240px;overflow:auto"></div>
+<p class="copy">THIRD_PARTY_UNVERIFIED · 源报告来自公开 GitHub 仓库，设备身份由作者声明。仅比较两个报告同名同单位且唯一的指标，不计算未经证实的加速比。</p>
+<div class="heading">PUBLIC H100 · Full-source SASS 执行差分</div>
+<p class="copy">两份 H100 第三方 full_source 报告真实解出的 QGMMA/STS/PRMT 等指令执行计数与该两次报告自身的 Duration。与上方普通报告是不同的 Kernel 身份，不得混合解释。</p>
+<p id="full-sass-status" role="status">THIRD_PARTY_UNVERIFIED / SOURCE VIEW</p>
+<div id="full-sass-table" style="font:11px/1.6 ui-monospace,monospace;max-height:270px;overflow:auto"></div>
+<div id="full-sass-inspector" role="region" aria-label="Hopper opcode execution investigation" style="border:1px solid #47646b;border-radius:9px;padding:10px;margin:12px 0">
+<div class="heading">INSPECT · 点击一条真实 SASS 指令类别</div>
+<p id="full-sass-inspect-title" role="status" aria-live="polite">QGMMA · 矩阵乘法执行</p>
+<p id="full-sass-inspect-operation" class="copy"></p>
+<div id="full-sass-inspect-bars"></div>
+<p id="full-sass-inspect-delta" class="copy"></p>
+<p id="full-sass-inspect-question" class="copy"></p>
+<p id="full-sass-inspect-limit" class="copy"></p>
+</div>
+<pre id="full-sass-provenance" style="white-space:pre-wrap;font:10px/1.45 ui-monospace,monospace"></pre>
+<p class="copy">这些是每个报告的 SASS 指令执行计数（不是 GPU 时钟周期，也不是逐线程时序）。尚无独立硬件认证或单变量因果实验。</p>
+<div class="heading">SASS 静态指令账 · 不等于实际执行次数</div>
+<div id="sass-static-summary" role="status" aria-live="polite">UNKNOWN · 尚未导入可解析的 gather SASS</div>
+<pre id="sass-static-breakdown" style="white-space:pre-wrap;max-height:150px;overflow:auto;font:11px/1.5 ui-monospace,monospace;color:#b0c7c9"></pre>
+<p class="copy">静态反汇编只说明二进制含有哪些指令，不能证明它们被执行了多少次，也不能据此计算周期或访存流量。</p>
+
+</div>
+<div class="panel"><div class="heading">F / 真实原理与边界</div>
+<p class="copy">真实 CUDA Kernel 写在 <code>gather.cu</code>。三维模型使用与 Kernel 一致的地址映射，并非真实芯片的逐晶体管重建，也没有凭空编造 GPU 耗时。</p>
+<a href="https://docs.nvidia.com/cuda/cuda-c-best-practices-guide/" target="_blank" rel="noopener">NVIDIA 官方 CUDA Best Practices</a>
+</div><div id="footer">32 active threads · one warp · aligned float32 base · 32B sector model. Cache behavior, memory instructions and measured timings require real hardware. The geometry is an original, explanatory physical visualization.</div><p id="status">INITIALIZING</p>
+</aside></main><script type="module" src="./main.mjs"></script></body></html>

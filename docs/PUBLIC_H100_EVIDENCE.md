@@ -26,7 +26,7 @@ python3 tools/public_h100_reports.py extract --report rswgmma_uniform4096 --dir 
 python3 tools/public_h100_reports.py extract --report memdesc_transpose_uniform4096 --dir /tmp/gpu-public-reports --output /tmp/gpu-public-memdesc
 ```
 
-The tool uses `ncu --import <report> --page raw --csv --print-units base`. This **imports** saved reports and does not execute a CUDA kernel. It writes `report.json`, `ncu-stdout.txt`, `ncu-stderr.txt` with immutable provenance fields, raw per-metric strings, source hashes and errors. It refuses to overwrite an existing output directory.
+The tool uses `ncu --import <report> --page details --csv --print-units base`. This **imports** saved reports and does not execute a CUDA kernel. It writes `report.json`, `ncu-stdout.txt`, `ncu-stderr.txt` with immutable provenance fields, per-metric raw strings with Section Name, source hashes and errors. It refuses to overwrite an existing output directory.
 
 If `ncu` cannot parse a report or the installed version emits a different CSV schema, output is marked `EXTRACTION_FAILED` or `UNSUPPORTED_CSV_SCHEMA`. The tool does **not** substitute fictional numbers.
 
@@ -43,3 +43,5 @@ python3 -m unittest discover -s tests -p test_public_h100_reports.py -v
 ```
 
 NVIDIA reference: https://docs.nvidia.com/nsight-compute/NsightComputeCli/index.html
+
+**Format correction:** NVIDIA `--page raw --csv` is a wide per-launch table; the parser expects long-form per-metric rows, so use `--page details --csv`. Comparing metrics also requires a matching Nsight section (when present) and unit, not just a matching metric name. This rule prevents same-named metrics in different sections from being conflated.

@@ -64,7 +64,7 @@ def extract(name,report_folder,out_folder,*,ncu="ncu",runner=subprocess.run):
  out=Path(out_folder)
  if out.exists():raise ValueError("Output directory already exists")
  if shutil.which(ncu) is None:raise ValueError("ncu is unavailable; install compatible Nsight Compute")
- command=[ncu,"--import",str(src.resolve()),"--page","raw","--csv","--print-units","base"]
+ command=[ncu,"--import",str(src.resolve()),"--page","details","--csv","--print-units","base"]
  result=runner(command,capture_output=True,text=True,timeout=90,check=False)
  status="PARSED_UNVERIFIED";error=None;metrics=[]
  if result.returncode!=0:
@@ -81,9 +81,10 @@ def extract(name,report_folder,out_folder,*,ncu="ncu",runner=subprocess.run):
   "source_size_bytes":info["bytes"],"source_git_blob_sha1":info["git_blob_sha1"],
   "source_sha256":info["sha256"],
   "source_device_claim":"NVIDIA H100 SM90 (upstream README; unverified)",
+  "source_device_verified":False,
   "status":status,"classification":"THIRD_PARTY_UNVERIFIED","hardware_attested":False,
   "binary_identity_bound_to_our_gather":False,"reproduces_our_stride_experiment":False,
-  "ncu_command":command,"ncu_exit_code":result.returncode,
+  "ncu_command":command,"ncu_page":"details","ncu_exit_code":result.returncode,
   "ncu_stdout_sha256":hashlib.sha256(result.stdout.encode()).hexdigest(),
   "ncu_stderr_sha256":hashlib.sha256(result.stderr.encode()).hexdigest(),
   "error":error,"metrics":metrics}

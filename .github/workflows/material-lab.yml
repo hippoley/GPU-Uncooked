@@ -13,6 +13,7 @@ on:
       - "tests/material-sass-inspector.test.mjs"
       - "tests/material-ncu-comparison-view.test.mjs"
       - "tests/material-public-ncu-view.test.mjs"
+      - "tests/material-public-h100-sass-snapshot.test.mjs"
       - "playground/material-lab/public-ncu-view.mjs"
       - "tests/test_gather_receipt.py"
       - "tests/test_gather_ncu_comparison.py"

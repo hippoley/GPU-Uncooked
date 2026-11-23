@@ -110,6 +110,15 @@ await page.locator("#ncu-comparison-file").setInputFiles({
 });
 await page.waitForFunction(()=>document.querySelector("#ncu-comparison-status")?.textContent?.startsWith("REJECTED"));
 assert.equal(await page.locator("html").getAttribute("data-material-gpu-measured"),"false");
+// The full-source Hopper panel must show actual decoded SASS, not fabricated gather readings.
+assert.match(await page.locator("#full-sass-status").innerText(),/THIRD_PARTY_UNVERIFIED/);
+assert.match(await page.locator("#full-sass-table").innerText(),/QGMMA/);
+assert.match(await page.locator("#full-sass-table").innerText(),/1229824/);
+assert.match(await page.locator("#full-sass-table").innerText(),/803584/);
+assert.match(await page.locator("#full-sass-table").innerText(),/60864/);
+assert.match(await page.locator("#full-sass-table").innerText(),/41184/);
+assert.match(await page.locator("#full-sass-provenance").innerText(),/45096310906/);
+assert.equal(await page.locator("html").getAttribute("data-material-gpu-measured"),"false");
 // Public report intake is separate from the original gather profiler series.
 function publicFixture(id,value){
  return {schema:"gpu-uncooked.public-ncu-report.v1",report_id:id,

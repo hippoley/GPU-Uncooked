@@ -54,6 +54,15 @@ class TestPublicH100Intake(unittest.TestCase):
   self.assertEqual(x[0]["raw_value"],"4096")
   with self.assertRaisesRegex(ValueError,"identity"):
    m.parse_ncu_raw_csv(sample.replace("1,rswgmma,","1,,"))
+ def test_actual_2026_2_style_details_csv_omits_trailing_rule_columns(self):
+  header='"ID","Process ID","Process Name","Host Name","Kernel Name","Context","Stream","Block Size","Grid Size","Device","CC","Section Name","Metric Name","Metric Unit","Metric Value","Rule Name","Rule Type","Rule Description","Estimated Speedup Type","Estimated Speedup"\\n'
+  metric='"0","1562070","python3.12","127.0.0.1","attention_kernel","1","7","(128, 1, 1)","(512, 1, 1)","0","9.0","GPU Speed Of Light Throughput","Duration","ns","61056",\\n'
+  result=m.parse_ncu_raw_csv(header+metric)
+  self.assertEqual(len(result),1)
+  self.assertEqual(result[0]["raw_value"],"61056")
+  self.assertEqual(result[0]["section"],"GPU Speed Of Light Throughput")
+  self.assertEqual(result[0]["unit"],"ns")
+
  def test_extractor_records_failure_without_manufacturing_metrics(self):
   with tempfile.TemporaryDirectory() as td:
    home=Path(td);root=home/"reports";root.mkdir()

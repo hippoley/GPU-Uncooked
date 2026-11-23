@@ -53,7 +53,8 @@ def parse_ncu_raw_csv(text):
   if not metric:continue
   launch=r[ix["ID"]].strip();kernel=r[ix["Kernel Name"]].strip()
   if not launch or not kernel:raise ValueError("Metric lacks explicit kernel identity")
-  records.append({"launch_id":launch,"kernel":kernel,"metric":metric,
+  section=r[header.index("Section Name")].strip() if "Section Name" in header else ""
+  records.append({"launch_id":launch,"kernel":kernel,"section":section,"metric":metric,
                   "unit":r[ix["Metric Unit"]].strip(),"raw_value":r[ix["Metric Value"]].strip()})
  if not records:raise ValueError("No identifiable metric records")
  return records

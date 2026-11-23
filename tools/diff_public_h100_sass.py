@@ -3,9 +3,9 @@
 import argparse,csv,hashlib,io,json,re
 from collections import Counter
 from pathlib import Path
-ADDR=re.compile(r"0x[0-9a-fA-F]+\\Z")
-PRED=re.compile(r"^@!?[A-Za-z0-9_]+\\s+")
-OP=re.compile(r"([A-Z][A-Za-z0-9_.]*)(?:\\s|\\Z)")
+ADDR=re.compile(r"0x[0-9a-fA-F]+\Z")
+PRED=re.compile(r"^@!?[A-Za-z0-9_]+\s+")
+OP=re.compile(r"([A-Z][A-Za-z0-9_.]*)(?:\s|\Z)")
 
 def parse(text):
     rows=list(csv.reader(io.StringIO(text)))
@@ -29,7 +29,7 @@ def parse(text):
         match=OP.match(source)
         if not match:raise ValueError("Missing SASS opcode at "+addr)
         raw=r[ix["Instructions Executed"]].replace(",","").strip()
-        if not re.fullmatch(r"\\d+",raw):raise ValueError("Noninteger SASS execution count")
+        if not re.fullmatch(r"\d+",raw):raise ValueError("Noninteger SASS execution count")
         opcode=match.group(1).split(".")[0]
         static[opcode]+=1
         dynamic[opcode]+=int(raw)
@@ -66,7 +66,7 @@ def main():
     out=Path(a.output)
     if out.exists():p.error("Refusing to overwrite output")
     result=compare(Path(a.left).read_text(),Path(a.right).read_text())
-    out.write_text(json.dumps(result,indent=2)+"\\n")
+    out.write_text(json.dumps(result,indent=2)+"\n")
     print(json.dumps({"left":result["left"]["kernel"],"right":result["right"]["kernel"],
                       "left_executions":result["left"]["reported_instruction_executions"],
                       "right_executions":result["right"]["reported_instruction_executions"]}))

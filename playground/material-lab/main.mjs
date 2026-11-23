@@ -8,7 +8,7 @@ import {inspectSassListing} from "./sass-inspector.mjs";
 import {parseNcuComparison} from "./ncu-comparison-view.mjs";
 import {validatePublicNcuReport,comparePublicNcuReports} from "./public-ncu-view.mjs";
 import {PUBLIC_H100_SNAPSHOT,SNAPSHOT_ORIGIN} from "./public-h100-snapshot.mjs";
-import {FULL_SOURCE_SASS,validateFullSourceSass} from "./public-h100-sass-snapshot.mjs";
+import {FULL_SOURCE_SASS,validateFullSourceSass,investigateFullSourceOpcode} from "./public-h100-sass-snapshot.mjs";
 
 // Industrial material visual language: ceramic substrate, milled copper, satin metal,
 // glass passivation and address-bearing silicon cells. Not a literal GPU die floorplan.
@@ -457,6 +457,34 @@ $("ncu-comparison-file").addEventListener("change",async()=>{
 });
 // The default values are a small, explicitly attributed subset of vendor-decoded
 // public reports. They never stand in for our own CUDA gather execution.
+function inspectFullSourceOpcode(opcode){
+ const evidence=investigateFullSourceOpcode(FULL_SOURCE_SASS,opcode);
+ $("full-sass-inspect-title").textContent=opcode+" · "+evidence.stage;
+ $("full-sass-inspect-operation").textContent=evidence.operation;
+ $("full-sass-inspect-delta").textContent=
+  "Nsight Instructions Executed · RS "+evidence.left.toLocaleString("en-US")+
+  " / Memdesc "+evidence.right.toLocaleString("en-US")+" / "+evidence.deltaLabel;
+ $("full-sass-inspect-question").textContent="待检验假设："+evidence.researchQuestion;
+ $("full-sass-inspect-limit").textContent="证据边界："+evidence.claimLimit+
+  " [THIRD_PARTY_UNVERIFIED · 非周期级轨迹]";
+ const container=$("full-sass-inspect-bars");container.replaceChildren();
+ for(const [label,ratio,value] of [
+  ["RS-WGMMA",evidence.leftFraction,evidence.left],
+  ["Memdesc",evidence.rightFraction,evidence.right]
+ ]){
+  const row=document.createElement("div");row.style.margin="7px 0";
+  const heading=document.createElement("div");heading.textContent=label+" · "+value.toLocaleString("en-US");
+  const track=document.createElement("div");track.style.cssText="height:12px;background:#243d48;border-radius:6px;overflow:hidden";
+  const filled=document.createElement("div");filled.style.cssText=
+    "height:12px;background:#64a5ab;width:"+Math.round(ratio*10000)/100+"%";
+  track.append(filled);row.append(heading,track);container.append(row);
+ }
+ document.querySelectorAll("[data-full-sass-opcode]").forEach(node=>{
+  const isSelected=node.dataset.fullSassOpcode===opcode;
+  node.setAttribute("aria-pressed",String(isSelected));
+  node.style.fontWeight=isSelected?"700":"400";
+ });
+}
 function renderFullSourceSass(){
  const source=validateFullSourceSass(FULL_SOURCE_SASS);
  const container=$("full-sass-table");container.replaceChildren();
@@ -471,9 +499,19 @@ function renderFullSourceSass(){
  ];
  for(const [i,values] of rows.entries()){
   const tr=document.createElement("tr");
-  for(const val of values){
+  for(const [j,val] of values.entries()){
    const cell=document.createElement(i===0?"th":"td");
-   cell.textContent=String(val);cell.style.padding="4px";tr.append(cell);
+   if(i>=5&&j===0){
+    const button=document.createElement("button");
+    button.type="button";button.textContent=String(val);
+    button.dataset.fullSassOpcode=source.rows[i-5].opcode;
+    button.setAttribute("aria-pressed","false");
+    button.setAttribute("aria-label","Inspect SASS "+source.rows[i-5].opcode);
+    button.style.cssText="font:inherit;color:inherit;background:transparent;border:1px solid #6a8790;padding:3px 6px;border-radius:5px;cursor:pointer";
+    button.addEventListener("click",()=>inspectFullSourceOpcode(source.rows[i-5].opcode));
+    cell.append(button);
+   }else cell.textContent=String(val);
+   cell.style.padding="4px";tr.append(cell);
   }
   table.append(tr);
  }
@@ -487,6 +525,7 @@ function renderFullSourceSass(){
   "\nDECODE RUN "+source.sourceRun+
   "\nCausality: UNKNOWN; H100 hardware identity: upstream claim";
  document.documentElement.dataset.materialGpuMeasured="false";
+ inspectFullSourceOpcode("QGMMA");
 }
 renderFullSourceSass();
 const publicNcuFiles={

@@ -20,7 +20,7 @@ test("public WGMMA comparison keeps third party status and exact raw units",()=>
  const result=comparePublicNcuReports(left,right);
  assert.equal(result.classification,"THIRD_PARTY_UNVERIFIED");
  assert.equal(result.hardwareAttested,false);
- assert.deepEqual(result.metrics,[{metric:"dram__bytes_read.sum",unit:"byte",left:"4096",right:"2048"}]);
+ assert.deepEqual(result.metrics,[{section:"",metric:"dram__bytes_read.sum",unit:"byte",left:"4096",right:"2048"}]);
 });
 test("spoofed gathered source and independently attested booleans rejected",()=>{
  for(const change of [{hardware_attested:true},{classification:"MEASURED"},
@@ -28,6 +28,14 @@ test("spoofed gathered source and independently attested booleans rejected",()=>
  {source_sha256:"fake"}]){
   assert.throws(()=>validatePublicNcuReport({...fixture("rswgmma_uniform4096"),...change}));
  }
+});
+test("two reports with same metric names but different Nsight sections never compare",()=>{
+ const one=fixture("rswgmma_uniform4096");
+ const two=fixture("memdesc_transpose_uniform4096");
+ one.metrics[0].section="Memory Workload Analysis";
+ two.metrics[0].section="Speed Of Light";
+ const a=validatePublicNcuReport(one),b=validatePublicNcuReport(two);
+ assert.equal(comparePublicNcuReports(a,b).metrics.length,0);
 });
 test("multiple launches and nonmatching units are excluded rather than averaged",()=>{
  const a=validatePublicNcuReport({...fixture("rswgmma_uniform4096"),metrics:[

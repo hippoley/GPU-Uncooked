@@ -155,6 +155,15 @@ h2{font-size:26px;line-height:1.12;letter-spacing:-.04em;margin:11px 0 7px;font-
 <p class="copy">两份 H100 第三方 full_source 报告真实解出的 QGMMA/STS/PRMT 等指令执行计数与该两次报告自身的 Duration。与上方普通报告是不同的 Kernel 身份，不得混合解释。</p>
 <p id="full-sass-status" role="status">THIRD_PARTY_UNVERIFIED / SOURCE VIEW</p>
 <div id="full-sass-table" style="font:11px/1.6 ui-monospace,monospace;max-height:270px;overflow:auto"></div>
+<div id="full-sass-inspector" role="region" aria-label="Hopper opcode execution investigation" style="border:1px solid #47646b;border-radius:9px;padding:10px;margin:12px 0">
+<div class="heading">INSPECT · 点击一条真实 SASS 指令类别</div>
+<p id="full-sass-inspect-title" role="status" aria-live="polite">QGMMA · 矩阵乘法执行</p>
+<p id="full-sass-inspect-operation" class="copy"></p>
+<div id="full-sass-inspect-bars"></div>
+<p id="full-sass-inspect-delta" class="copy"></p>
+<p id="full-sass-inspect-question" class="copy"></p>
+<p id="full-sass-inspect-limit" class="copy"></p>
+</div>
 <pre id="full-sass-provenance" style="white-space:pre-wrap;font:10px/1.45 ui-monospace,monospace"></pre>
 <p class="copy">这些是每个报告的 SASS 指令执行计数（不是 GPU 时钟周期，也不是逐线程时序）。尚无独立硬件认证或单变量因果实验。</p>
 <div class="heading">SASS 静态指令账 · 不等于实际执行次数</div>

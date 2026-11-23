@@ -40,7 +40,7 @@ export function comparePublicNcuReports(a,b){
  const comparable=[];
  const used=new Set();
  for(const row of b.rows){
-  const k=row.name+"|"+row.unit;
+  const k=row.section+"|"+row.name+"|"+row.unit;
   if(used.has(k))continue;
   const matches=same.get(k)||[];
   const other=b.rows.filter(y=>y.section===row.section&&y.name===row.name&&y.unit===row.unit);

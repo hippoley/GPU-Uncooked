@@ -1,12 +1,6 @@
 name: Offline decode of pinned public H100 Nsight reports
 on:
   workflow_dispatch:
-  push:
-    branches: ["feat/interactive-gpu-kitchen-playground"]
-    paths:
-      - ".github/workflows/public-h100-offline-decode.yml"
-      - "tools/public_h100_reports.py"
-      - "tests/test_public_h100_reports.py"
 jobs:
   decode:
     runs-on: ubuntu-24.04

@@ -155,7 +155,7 @@ await page.locator("#public-ncu-right").setInputFiles({
  name:"right-public.json",mimeType:"application/json",
  buffer:Buffer.from(JSON.stringify(publicFixture("memdesc_transpose_uniform4096","2048")))
 });
-await page.waitForFunction(()=>document.querySelector("#public-ncu-status")?.textContent?.includes("1 unique shared metrics"));
+await page.waitForFunction(()=>document.querySelector("#public-ncu-status")?.textContent?.includes("IMPORTED_PUBLIC_REPORTS / 1 unique shared metrics") && document.querySelector("#public-ncu-table")?.textContent?.includes("dram__bytes_read"));
 assert.match(await page.locator("#public-ncu-table").innerText(),/dram__bytes_read/);
 assert.match(await page.locator("#public-ncu-status").innerText(),/THIRD_PARTY_UNVERIFIED/);
 assert.equal(await page.locator("html").getAttribute("data-material-gpu-measured"),"false");

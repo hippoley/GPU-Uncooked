@@ -77,6 +77,12 @@ await page.locator("#receipt-file").setInputFiles({
 await page.waitForFunction(()=>document.querySelector("#receipt-info")?.textContent?.startsWith("REJECTED"),null,{timeout:10000});
 assert.match(await page.locator("#receipt-info").innerText(),/REJECTED/);
 assert.equal(await page.locator("html").getAttribute("data-material-gpu-measured"),"false");
+// Actual upstream-derived read-only snapshot must render without any import.
+assert.match(await page.locator("#public-ncu-status").innerText(),/CURATED_PUBLIC_SNAPSHOT/);
+assert.match(await page.locator("#public-ncu-table").innerText(),/61056/);
+assert.match(await page.locator("#public-ncu-table").innerText(),/38816/);
+assert.match(await page.locator("#public-ncu-provenance").innerText(),/45095035273/);
+assert.equal(await page.locator("html").getAttribute("data-material-gpu-measured"),"false");
 // Imported profiler comparison must remain unauthenticated, even with plausible data.
 const ncuMetrics=["l1tex__t_sectors_pipe_lsu_mem_global_op_ld.sum",
  "dram__bytes_read.sum","dram__bytes_write.sum"];

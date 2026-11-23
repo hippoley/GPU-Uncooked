@@ -1,7 +1,12 @@
 /** Compare pinned public ncu report metadata; NEVER promote third-party values. */
 const SHA256=/^[0-9a-f]{64}$/;
 const REV="53fcfbf0c11430ca9db23f8d90c4ec71b686efc8";
-const ALLOWED=new Set(["rswgmma_uniform4096","memdesc_transpose_uniform4096","rswgmma_uniform4096_full_source","memdesc_transpose_uniform4096_full_source"]);
+const REPORT_IDENTITY=Object.freeze({
+ "rswgmma_uniform4096":{bytes:1100024,blob:"13ce934a7a036a4690bb62aa0be88929a75606d4"},
+ "memdesc_transpose_uniform4096":{bytes:1007277,blob:"c35316d5e68eaee8f9cc005eb030415ec2ccb0ce"},
+ "rswgmma_uniform4096_full_source":{bytes:1419155,blob:"852eaf2bcc2aba85efdf0574ef79b5b3824c08df"},
+ "memdesc_transpose_uniform4096_full_source":{bytes:1357278,blob:"3850ae38e2f158cb42f3dad8db281f58dcc5550a"}
+});
 export function validatePublicNcuReport(x){
  if(!x||typeof x!=="object"||Array.isArray(x)||
  x.schema!=="gpu-uncooked.public-ncu-report.v1"||
@@ -11,7 +16,10 @@ export function validatePublicNcuReport(x){
  x.reproduces_our_stride_experiment!==false||
  x.status!=="PARSED_UNVERIFIED")throw new TypeError("Third-party report is not safely classified");
  if(x.source_repo!=="smartxiaohuolong/triton-tle-attention-optimization-demo"||
-  x.source_revision!==REV||!ALLOWED.has(x.report_id)||!SHA256.test(x.source_sha256||"")||
+  x.source_revision!==REV||!Object.prototype.hasOwnProperty.call(REPORT_IDENTITY,x.report_id)||
+  x.source_size_bytes!==REPORT_IDENTITY[x.report_id].bytes||
+  x.source_git_blob_sha1!==REPORT_IDENTITY[x.report_id].blob||
+  !SHA256.test(x.source_sha256||"")||
   !SHA256.test(x.ncu_stdout_sha256||""))throw new TypeError("Unpinned source identity");
  if(!Array.isArray(x.metrics)||x.metrics.length<1||x.metrics.length>50000)
   throw new TypeError("Metric records missing or excessive");

@@ -1,6 +1,12 @@
 name: Offline decode of pinned public H100 Nsight reports
 on:
   workflow_dispatch:
+  push:
+    branches: ["feat/interactive-gpu-kitchen-playground"]
+    paths:
+      - ".github/workflows/public-h100-offline-decode.yml"
+      - "tools/probe_public_h100_sass.py"
+      - "tests/test_public_h100_sass_probe.py"
 jobs:
   decode:
     runs-on: ubuntu-24.04
@@ -56,6 +62,36 @@ jobs:
           print(items)
           if any(x["status"]!="PARSED_UNVERIFIED" or not x["metrics"] or x["hardware_attested"] for x in items):
               raise SystemExit("Offline decode unsupported or incomplete; raw stdout/stderr retained")
+          PY
+      - name: Validate no-GPU SASS evidence boundaries
+        run: python3 -m unittest discover -s tests -p test_public_h100_sass_probe.py -v
+      - name: Fetch full-source variants by immutable upstream blob hash
+        run: |
+          set -euo pipefail
+          python3 tools/public_h100_reports.py fetch --report rswgmma_uniform4096_full_source --dir dist/public-h100-evidence/reports
+          python3 tools/public_h100_reports.py fetch --report memdesc_transpose_uniform4096_full_source --dir dist/public-h100-evidence/reports
+      - name: Probe archived SASS views from four pinned reports
+        run: |
+          set -euo pipefail
+          python3 tools/probe_public_h100_sass.py --ncu "$NCU_EXE" --report dist/public-h100-evidence/reports/rswgmma_uniform4096.ncu-rep --output dist/public-h100-evidence/sass-rswg || true
+          python3 tools/probe_public_h100_sass.py --ncu "$NCU_EXE" --report dist/public-h100-evidence/reports/memdesc_transpose_uniform4096.ncu-rep --output dist/public-h100-evidence/sass-memdesc || true
+          python3 tools/probe_public_h100_sass.py --ncu "$NCU_EXE" --report dist/public-h100-evidence/reports/rswgmma_uniform4096_full_source_cleaned_20261111.ncu-rep --output dist/public-h100-evidence/sass-rswg-full || true
+          python3 tools/probe_public_h100_sass.py --ncu "$NCU_EXE" --report dist/public-h100-evidence/reports/memdesc_transpose_uniform4096_full_source_cleaned_20261111.ncu-rep --output dist/public-h100-evidence/sass-memdesc-full || true
+      - name: Inventory SASS evidence without claiming unverified instruction equality
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,hashlib
+          root=Path("dist/public-h100-evidence")
+          records=[]
+          for name in ["sass-rswg","sass-memdesc","sass-rswg-full","sass-memdesc-full"]:
+              p=root/name/"sass-probe.json"
+              if not p.exists():
+                  raise SystemExit("Missing SASS probe receipt: "+str(p))
+              record=json.loads(p.read_text())
+              records.append({"name":name,"status":record["status"],"stdout_sha256":record["source_stdout_sha256"],"source_report_sha256":record["source_report_sha256"],"instruction_count":record["instruction_count"]})
+          (root/"sass-inventory.json").write_text(json.dumps({"classification":"THIRD_PARTY_UNVERIFIED","same_binary":"UNKNOWN","records":records},indent=2)+"\n")
+          print(json.dumps(records,indent=2))
           PY
       - uses: actions/upload-artifact@v4
         if: always()

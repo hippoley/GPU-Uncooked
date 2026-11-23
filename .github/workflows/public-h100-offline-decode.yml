@@ -7,6 +7,8 @@ on:
       - ".github/workflows/public-h100-offline-decode.yml"
       - "tools/probe_public_h100_sass.py"
       - "tests/test_public_h100_sass_probe.py"
+      - "tools/diff_public_h100_sass.py"
+      - "tests/test_diff_public_h100_sass.py"
 jobs:
   decode:
     runs-on: ubuntu-24.04
@@ -93,6 +95,23 @@ jobs:
           (root/"sass-inventory.json").write_text(json.dumps({"classification":"THIRD_PARTY_UNVERIFIED","same_binary":"UNKNOWN","records":records},indent=2)+"\n")
           print(json.dumps(records,indent=2))
           PY
+      - name: Validate opcode differences and fail-closed duration linkage
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p test_diff_public_h100_sass.py -v
+          python3 tools/diff_public_h100_sass.py \
+            --left dist/public-h100-evidence/sass-rswg-full/source.stdout.csv \
+            --right dist/public-h100-evidence/sass-memdesc-full/source.stdout.csv \
+            --output dist/public-h100-evidence/full-source-sass-diff.json
+      - name: Decode full-source report metrics as distinct kernel records
+        run: |
+          set -euo pipefail
+          python3 tools/public_h100_reports.py extract --report rswgmma_uniform4096_full_source \
+            --dir dist/public-h100-evidence/reports \
+            --output dist/public-h100-evidence/rsw-full-metrics --ncu "$NCU_EXE" || true
+          python3 tools/public_h100_reports.py extract --report memdesc_transpose_uniform4096_full_source \
+            --dir dist/public-h100-evidence/reports \
+            --output dist/public-h100-evidence/memdesc-full-metrics --ncu "$NCU_EXE" || true
       - uses: actions/upload-artifact@v4
         if: always()
         with:

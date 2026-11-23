@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {validatePublicNcuReport,comparePublicNcuReports} from "../playground/material-lab/public-ncu-view.mjs";
+import {PUBLIC_H100_SNAPSHOT,SNAPSHOT_ORIGIN} from "../playground/material-lab/public-h100-snapshot.mjs";
 function fixture(id){
  return {
   schema:"gpu-uncooked.public-ncu-report.v1",report_id:id,
@@ -47,4 +48,20 @@ test("multiple launches and nonmatching units are excluded rather than averaged"
  assert.equal(comparePublicNcuReports(a,b).metrics.length,0);
  const x=fixture("memdesc_transpose_uniform4096");x.metrics[0].unit="sector";
  assert.equal(comparePublicNcuReports(validatePublicNcuReport(fixture("rswgmma_uniform4096")),validatePublicNcuReport(x)).metrics.length,0);
+});
+
+test("actual pinned public reports ship a small read-only nonattested snapshot",()=>{
+ const left=validatePublicNcuReport(PUBLIC_H100_SNAPSHOT.left);
+ const right=validatePublicNcuReport(PUBLIC_H100_SNAPSHOT.right);
+ const a=comparePublicNcuReports(left,right);
+ assert.equal(a.classification,"THIRD_PARTY_UNVERIFIED");
+ assert.equal(a.metrics.length,11);
+ const duration=a.metrics.find(x=>x.metric==="Duration"&&x.unit==="ns");
+ assert.equal(duration.left,"61056");
+ assert.equal(duration.right,"38816");
+ const regs=a.metrics.find(x=>x.metric==="Registers Per Thread");
+ assert.deepEqual([regs.left,regs.right],["124","80"]);
+ assert.match(SNAPSHOT_ORIGIN.runUrl,/45095035273/);
+ assert.equal(PUBLIC_H100_SNAPSHOT.left.hardware_attested,false);
+ assert.equal(PUBLIC_H100_SNAPSHOT.right.reproduces_our_stride_experiment,false);
 });

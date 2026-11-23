@@ -20,9 +20,10 @@ export function validatePublicNcuReport(x){
    typeof m.kernel!=="string"||!m.kernel||m.kernel.length>500||
    typeof m.metric!=="string"||m.metric.length>240||
    typeof m.unit!=="string"||m.unit.length>80||
+   (m.section!==undefined&&(typeof m.section!=="string"||m.section.length>180))||
    typeof m.raw_value!=="string"||m.raw_value.length>300)
     throw new TypeError("Malformed third-party metric");
-  return {launch:m.launch_id,kernel:m.kernel,name:m.metric,unit:m.unit,value:m.raw_value};
+  return {launch:m.launch_id,kernel:m.kernel,section:m.section||"",name:m.metric,unit:m.unit,value:m.raw_value};
  });
  return Object.freeze({reportId:x.report_id,status:"THIRD_PARTY_UNVERIFIED",
   declaredDevice:x.source_device_claim,sourceRevision:x.source_revision,sourceSha256:x.source_sha256,
@@ -32,7 +33,7 @@ export function comparePublicNcuReports(a,b){
  if(a.reportId===b.reportId)throw new TypeError("Select two different kernel reports");
  const same=new Map();
  for(const row of a.rows){
-  const k=row.name+"|"+row.unit;
+  const k=row.section+"|"+row.name+"|"+row.unit;
   if(!same.has(k))same.set(k,[]);
   same.get(k).push(row);
  }
@@ -42,11 +43,11 @@ export function comparePublicNcuReports(a,b){
   const k=row.name+"|"+row.unit;
   if(used.has(k))continue;
   const matches=same.get(k)||[];
-  const other=b.rows.filter(y=>y.name===row.name&&y.unit===row.unit);
+  const other=b.rows.filter(y=>y.section===row.section&&y.name===row.name&&y.unit===row.unit);
   // Only compare metrics with exactly one row in each report;
   // don't collapse different launches or silently average.
   if(matches.length===1&&other.length===1){
-   comparable.push({metric:row.name,unit:row.unit,left:matches[0].value,right:row.value});
+   comparable.push({section:row.section,metric:row.name,unit:row.unit,left:matches[0].value,right:row.value});
    used.add(k);
   }
  }

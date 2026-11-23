@@ -144,7 +144,7 @@ h2{font-size:26px;line-height:1.12;letter-spacing:-.04em;margin:11px 0 7px;font-
 <tr><td>8</td><td>32</td><td>UNKNOWN</td><td>UNKNOWN</td><td>UNKNOWN</td></tr></tbody></table>
 <p class="copy">导入后仍为 REPORTED_UNVERIFIED。真实 GPU 身份、计数器归属、缓存状态及设备独立见证尚未认证。请勿将 L1 Sector 直接视作 HBM 读取次数。</p>
 <div class="heading">PUBLIC H100 · 第三方 Nsight 报告对照</div>
-<p class="copy">先用 tools/public_h100_reports.py 离线导出两份 report.json，再分别选择。这里只展示报告实际包含的同名同单位指标，不把第三方 WGMMA 数据当成我们 gather 的 H100 实测。</p>
+<p class="copy">已预载两份公开 H100 报告经 NVIDIA Nsight Compute 离线解码的 11 项关键指标，源自固定 Git 提交和原始哈希。你也可以导入两份完整 report.json 查看全部共同指标。第三方数据不等于我们 gather 的 H100 实测。</p>
 <input id="public-ncu-left" type="file" accept=".json,application/json" aria-label="Import RS-WGMMA public report">
 <input id="public-ncu-right" type="file" accept=".json,application/json" aria-label="Import Memdesc public report">
 <p id="public-ncu-status" role="status">UNKNOWN / PUBLIC REPORTS NOT IMPORTED</p>

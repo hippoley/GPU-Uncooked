@@ -8,6 +8,7 @@ import {inspectSassListing} from "./sass-inspector.mjs";
 import {parseNcuComparison} from "./ncu-comparison-view.mjs";
 import {validatePublicNcuReport,comparePublicNcuReports} from "./public-ncu-view.mjs";
 import {PUBLIC_H100_SNAPSHOT,SNAPSHOT_ORIGIN} from "./public-h100-snapshot.mjs";
+import {FULL_SOURCE_SASS,validateFullSourceSass} from "./public-h100-sass-snapshot.mjs";
 
 // Industrial material visual language: ceramic substrate, milled copper, satin metal,
 // glass passivation and address-bearing silicon cells. Not a literal GPU die floorplan.
@@ -456,6 +457,38 @@ $("ncu-comparison-file").addEventListener("change",async()=>{
 });
 // The default values are a small, explicitly attributed subset of vendor-decoded
 // public reports. They never stand in for our own CUDA gather execution.
+function renderFullSourceSass(){
+ const source=validateFullSourceSass(FULL_SOURCE_SASS);
+ const container=$("full-sass-table");container.replaceChildren();
+ const table=document.createElement("table");table.style.width="100%";
+ const rows=[
+  ["Reported value",source.variants[0].label,source.variants[1].label],
+  ["Kernel Duration (ns)",source.variants[0].durationNs,source.variants[1].durationNs],
+  ["Registers / Thread",source.variants[0].registersPerThread,source.variants[1].registersPerThread],
+  ["Static SASS instruction lines",source.variants[0].staticSassLines,source.variants[1].staticSassLines],
+  ["Reported instructions executed",source.variants[0].reportedInstructionExecutions,source.variants[1].reportedInstructionExecutions],
+  ...source.rows.map(r=>["SASS "+r.opcode+" executions",r.left,r.right])
+ ];
+ for(const [i,values] of rows.entries()){
+  const tr=document.createElement("tr");
+  for(const val of values){
+   const cell=document.createElement(i===0?"th":"td");
+   cell.textContent=String(val);cell.style.padding="4px";tr.append(cell);
+  }
+  table.append(tr);
+ }
+ container.append(table);
+ $("full-sass-status").textContent="THIRD_PARTY_UNVERIFIED / FULL_SOURCE / SASS EXECUTION COUNTERS / NOT CYCLE TRACE";
+ $("full-sass-provenance").textContent=
+  "RS KERNEL "+source.variants[0].kernel+
+  "\nMEMDESC KERNEL "+source.variants[1].kernel+
+  "\nRS SASS SHA256 "+source.variants[0].sourceViewSha256+
+  "\nMEMDESC SASS SHA256 "+source.variants[1].sourceViewSha256+
+  "\nDECODE RUN "+source.sourceRun+
+  "\nCausality: UNKNOWN; H100 hardware identity: upstream claim";
+ document.documentElement.dataset.materialGpuMeasured="false";
+}
+renderFullSourceSass();
 const publicNcuFiles={
  left:validatePublicNcuReport(PUBLIC_H100_SNAPSHOT.left),
  right:validatePublicNcuReport(PUBLIC_H100_SNAPSHOT.right)

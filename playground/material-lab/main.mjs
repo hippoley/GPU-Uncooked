@@ -480,7 +480,7 @@ for(const side of ["left","right"]){
     table.append(header);
     for(const item of result.metrics.slice(0,80)){
      const tr=document.createElement("tr");
-     for(const value of [item.metric+" ["+item.unit+"]",item.left,item.right]){
+     for(const value of [(item.section?item.section+" / ":"")+item.metric+" ["+item.unit+"]",item.left,item.right]){
       const cell=document.createElement("td");cell.textContent=value;cell.style.padding="4px";tr.append(cell);
      }
      table.append(tr);

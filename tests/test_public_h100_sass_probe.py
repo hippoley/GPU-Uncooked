@@ -17,7 +17,7 @@ class TestProbe(unittest.TestCase):
     stderr=""
    with patch.object(m.subprocess,"run",return_value=Fake()) as runner:
     d=m.decode("ncu",inp,Path(root)/"out")
-   self.assertEqual(runner.call_args.args[0][-5:],["source","--print-source","sass","--csv"])
+   self.assertEqual(runner.call_args.args[0][-5:],["--page","source","--print-source","sass","--csv"])
    self.assertEqual(d["instruction_count"],"UNKNOWN")
    self.assertFalse(d["hardware_attested"])
    self.assertTrue((Path(root)/"out"/"source.stdout.csv").exists())

@@ -35,7 +35,7 @@ class TestPublicH100Intake(unittest.TestCase):
      stdout=CSV
      stderr=""
     def runner(argv,**kwargs):
-     self.assertEqual(argv[argv.index("--page")+1],"raw")
+     self.assertEqual(argv[argv.index("--page")+1],"details")
      self.assertIn("--import",argv)
      return R()
     with patch.object(m.shutil,"which",return_value="/usr/bin/ncu"):
@@ -47,6 +47,28 @@ class TestPublicH100Intake(unittest.TestCase):
     self.assertTrue((home/"out"/"ncu-stdout.txt").exists())
     with self.assertRaisesRegex(ValueError,"already exists"):
      m.extract(name,root,home/"out")
+ def test_details_csv_preserves_section_and_rejects_empty_kernel(self):
+  sample="ID,Kernel Name,Section Name,Metric Name,Metric Unit,Metric Value\\n1,rswgmma,Memory Workload,dram__bytes_read.sum,byte,4096\\n"
+  x=m.parse_ncu_raw_csv(sample)
+  self.assertEqual(x[0]["kernel"],"rswgmma")
+  self.assertEqual(x[0]["raw_value"],"4096")
+  with self.assertRaisesRegex(ValueError,"identity"):
+   m.parse_ncu_raw_csv(sample.replace("1,rswgmma,","1,,"))
+ def test_extractor_records_failure_without_manufacturing_metrics(self):
+  with tempfile.TemporaryDirectory() as td:
+   home=Path(td);root=home/"reports";root.mkdir()
+   name="rswgmma_uniform4096";filename=m.REPORTS[name][0];payload=b"fake report"
+   with patch.dict(m.REPORTS,{name:(filename,len(payload),m.git_blob_sha(payload))}):
+    (root/filename).write_bytes(payload)
+    class R:
+     returncode=0
+     stdout="this output contains no metric rows"
+     stderr=""
+    with patch.object(m.shutil,"which",return_value="/bin/ncu"):
+     result=m.extract(name,root,home/"out",runner=lambda argv,**kwargs:R())
+    self.assertEqual(result["status"],"UNSUPPORTED_CSV_SCHEMA")
+    self.assertEqual(result["metrics"],[])
+    self.assertFalse(result["hardware_attested"])
  def test_binary_modified_rejected_before_import(self):
   with tempfile.TemporaryDirectory() as td:
    p=Path(td)/m.REPORTS["rswgmma_uniform4096"][0];p.write_bytes(b"spoof")

@@ -7,7 +7,7 @@
 **An interactive, evidence-driven GPU exploration lab.**  
 Walk through a GPU world, inspect CUDA memory behavior, and investigate real Hopper SASS instructions—without confusing a beautiful reconstruction with what the silicon actually did.
 
-[**Explore the Material Lab**](playground/material-lab/index.html) · [**Enter the CUDA Microverse**](playground/microverse/index.html) · [**Explore Silicon City**](playground/city3d/index.html) · [**Inspect the H100 evidence**](docs/PUBLIC_H100_SASS_DIFFERENCE.md)
+[**Run the Material Lab locally ↓**](#run-locally) · [**See the GPU experiences ↓**](#choose-your-way-in) · [**Inspect the real H100 evidence**](docs/PUBLIC_H100_SASS_DIFFERENCE.md)
 
 **Three.js · CUDA C++ · PTX / SASS · Nsight Compute · Python · Node.js**
 
@@ -63,14 +63,15 @@ From the repository root:
 ```bash
 git clone https://github.com/hippoley/GPU-Uncooked.git
 cd GPU-Uncooked
+git switch --track origin/feat/interactive-gpu-kitchen-playground
 python3 -m http.server 8000
 ```
 
 Open the workbench at **http://localhost:8000/playground/material-lab/**.
 
-Other local entry points are `/playground/microverse/`, `/playground/city3d/`, and `/playground/chapters/`. The Python server simply serves files; **no NVIDIA GPU is needed to explore the models or the archived report excerpts**. The source Material Lab uses JavaScript modules with Three.js; for a standalone build, follow the build instructions below.
+Other local entry points are `/playground/microverse/`, `/playground/city3d/`, and `/playground/chapters/`. The Python server simply serves files; **no NVIDIA GPU is needed**. The *source* Material Lab imports Three.js from a pinned CDN URL and therefore needs network access for that dependency. For a **self-contained HTML build** without a runtime CDN dependency, follow the bundling instructions below.
 
-> The active workbench and its latest evidence features are developed in [PR #2](https://github.com/hippoley/GPU-Uncooked/pull/2), branch `feat/interactive-gpu-kitchen-playground`. If your clone's `main` does not contain them yet, switch to that branch. GitHub Pages deployment is **not a verified public entry point** at this time.
+> The latest workbench features live on [Draft PR #2](https://github.com/hippoley/GPU-Uncooked/pull/2), branch `feat/interactive-gpu-kitchen-playground`; the commands above deliberately select that branch. **Links to experience files in this README open GitHub source paths, not a hosted live demo.** GitHub Pages deployment is **not a verified public entry point** at this time.
 
 ## The evidence chain
 
@@ -143,7 +144,7 @@ npm install --no-save --no-audit --no-fund three@0.170.0 esbuild@0.25.12 playwri
 node tools/build-material-lab.mjs
 ```
 
-Open `dist/material-lab/index.html` in a local browser (or serve `dist/` with the Python HTTP server). The build generates a size report and enforces a **1.4 MB Brotli budget**; the budget is a build constraint, **not** a claim about full silicon fidelity.
+Serve `dist/` with a local HTTP server and open `http://localhost:8000/material-lab/` (or open the output HTML directly where local browser module policy permits). The build generates a size report and enforces a **1.4 MB Brotli budget**; the budget is a build constraint, **not** a claim about full silicon fidelity.
 
 ## Architecture, not theater
 
@@ -180,6 +181,6 @@ See [the research charter](docs/RESEARCH_CHARTER.md), [the archived GPU experime
 
 **Don't just watch the kernel. Ask what proves the story.**
 
-[Explore](playground/material-lab/index.html) · [Read the H100 SASS investigation](docs/PUBLIC_H100_SASS_DIFFERENCE.md) · [Contribute](https://github.com/hippoley/GPU-Uncooked/issues)
+[Run locally](#run-locally) · [Read the H100 SASS investigation](docs/PUBLIC_H100_SASS_DIFFERENCE.md) · [Contribute](https://github.com/hippoley/GPU-Uncooked/issues)
 
 </div>

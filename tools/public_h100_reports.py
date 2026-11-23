@@ -48,7 +48,11 @@ def parse_ncu_raw_csv(text):
  ix={k:header.index(k) for k in required}
  records=[]
  for r in rows[begin+1:]:
-  if len(r)!=len(header):continue
+  # Nsight Compute 2026.2 Details CSV emits rows with trailing empty
+  # rule columns omitted (e.g. 16 fields for a 20-column header).
+  # Only indexed mandatory fields must exist; never shift their positions.
+  if len(r)<=max(ix.values()):continue
+  if len(r)>len(header):raise ValueError("Unexpected extra Nsight CSV columns")
   metric=r[ix["Metric Name"]].strip()
   if not metric:continue
   launch=r[ix["ID"]].strip();kernel=r[ix["Kernel Name"]].strip()

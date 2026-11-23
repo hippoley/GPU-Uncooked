@@ -48,7 +48,7 @@ class TestPublicH100Intake(unittest.TestCase):
     with self.assertRaisesRegex(ValueError,"already exists"):
      m.extract(name,root,home/"out")
  def test_details_csv_preserves_section_and_rejects_empty_kernel(self):
-  sample="ID,Kernel Name,Section Name,Metric Name,Metric Unit,Metric Value\\n1,rswgmma,Memory Workload,dram__bytes_read.sum,byte,4096\\n"
+  sample="ID,Kernel Name,Section Name,Metric Name,Metric Unit,Metric Value\n1,rswgmma,Memory Workload,dram__bytes_read.sum,byte,4096\n"
   x=m.parse_ncu_raw_csv(sample)
   self.assertEqual(x[0]["kernel"],"rswgmma")
   self.assertEqual(x[0]["raw_value"],"4096")

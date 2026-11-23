@@ -118,6 +118,20 @@ assert.match(await page.locator("#full-sass-table").innerText(),/803584/);
 assert.match(await page.locator("#full-sass-table").innerText(),/60864/);
 assert.match(await page.locator("#full-sass-table").innerText(),/41184/);
 assert.match(await page.locator("#full-sass-provenance").innerText(),/45096310906/);
+assert.match(await page.locator("#full-sass-inspect-title").innerText(),/QGMMA/);
+assert.match(await page.locator("#full-sass-inspect-limit").innerText(),/非周期级轨迹/);
+await page.locator('[data-full-sass-opcode="STS"]').click();
+assert.match(await page.locator("#full-sass-inspect-delta").innerText(),/1,048,576/);
+assert.match(await page.locator("#full-sass-inspect-title").innerText(),/共享内存写入/);
+assert.equal(await page.locator('[data-full-sass-opcode="STS"]').getAttribute("aria-pressed"),"true");
+await page.locator('[data-full-sass-opcode="PRMT"]').click();
+assert.match(await page.locator("#full-sass-inspect-delta").innerText(),/786,432/);
+assert.match(await page.locator("#full-sass-inspect-question").innerText(),/寄存器/);
+assert.equal(await page.locator('[data-full-sass-opcode="PRMT"]').getAttribute("aria-pressed"),"true");
+await page.locator('[data-full-sass-opcode="QGMMA"]').focus();
+await page.keyboard.press("Enter");
+assert.match(await page.locator("#full-sass-inspect-title").innerText(),/矩阵乘法执行/);
+
 assert.equal(await page.locator("html").getAttribute("data-material-gpu-measured"),"false");
 // Public report intake is separate from the original gather profiler series.
 function publicFixture(id,value){

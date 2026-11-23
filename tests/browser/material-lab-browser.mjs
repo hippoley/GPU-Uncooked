@@ -112,6 +112,8 @@ function publicFixture(id,value){
   reproduces_our_stride_experiment:false,
   source_repo:"smartxiaohuolong/triton-tle-attention-optimization-demo",
   source_revision:"53fcfbf0c11430ca9db23f8d90c4ec71b686efc8",
+  source_size_bytes:id.startsWith("rswgmma")?1100024:1007277,
+  source_git_blob_sha1:id.startsWith("rswgmma")?"13ce934a7a036a4690bb62aa0be88929a75606d4":"c35316d5e68eaee8f9cc005eb030415ec2ccb0ce",
   source_sha256:"a".repeat(64),ncu_stdout_sha256:"b".repeat(64),
   source_device_claim:"H100 third-party author claim",
   metrics:[{launch_id:"1",kernel:"attention_kernel",metric:"dram__bytes_read.sum",unit:"byte",raw_value:value}]};
